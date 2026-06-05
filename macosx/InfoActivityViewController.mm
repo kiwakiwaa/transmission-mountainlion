@@ -6,6 +6,9 @@
 #include <libtransmission/utils.h> //tr_getRatio()
 
 #import "InfoActivityViewController.h"
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+#import "LegacyStackView.h"
+#endif
 #import "NSStringAdditions.h"
 #import "PiecesView.h"
 #import "Torrent.h"
@@ -42,7 +45,11 @@ static CGFloat const kStackViewVerticalSpacing = 8.0;
 @property(nonatomic) IBOutlet PiecesView* fPiecesView;
 @property(nonatomic) IBOutlet NSSegmentedControl* fPiecesControl;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+@property(nonatomic) IBOutlet LegacyStackView* fActivityStackView;
+#else
 @property(nonatomic) IBOutlet NSStackView* fActivityStackView;
+#endif
 @property(nonatomic) IBOutlet NSView* fDatesView;
 @property(nonatomic, readonly) CGFloat fHeightChange;
 @property(nonatomic, readwrite) CGFloat fCurrentHeight;
@@ -67,8 +74,25 @@ static CGFloat const kStackViewVerticalSpacing = 8.0;
 - (void)awakeFromNib
 {
     [super awakeFromNib];
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    self.fActivityStackView.translatesAutoresizingMaskIntoConstraints = YES;
+    self.fActivityStackView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+#endif
     [self checkWindowSize];
 }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+- (CGFloat)layoutWidth
+{
+    return self.view.window ? NSWidth(self.view.window.frame) : NSWidth(self.view.frame);
+}
+
+- (void)layoutLegacyStackView
+{
+    self.fActivityStackView.frame = NSInsetRect(self.view.bounds, kStackViewInset, kStackViewInset);
+    [self.fActivityStackView layoutLegacySubviews];
+}
+#endif
 
 - (CGFloat)fHorizLayoutHeight
 {
@@ -102,6 +126,24 @@ static CGFloat const kStackViewVerticalSpacing = 8.0;
 
 - (void)checkLayout
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    if (self.layoutWidth >= self.fHorizLayoutWidth + 1)
+    {
+        self.fActivityStackView.orientation = TRLegacyStackViewOrientationHorizontal;
+
+        //add some padding between views in horizontal layout
+        self.fActivityStackView.spacing = kStackViewHorizontalSpacing;
+        self.fCurrentHeight = self.fHorizLayoutHeight;
+    }
+    else
+    {
+        self.fActivityStackView.orientation = TRLegacyStackViewOrientationVertical;
+        self.fActivityStackView.spacing = kStackViewVerticalSpacing;
+        self.fCurrentHeight = self.fVertLayoutHeight;
+    }
+
+    [self layoutLegacyStackView];
+#else
     if (NSWidth(self.view.window.frame) >= self.fHorizLayoutWidth + 1)
     {
         self.fActivityStackView.orientation = NSUserInterfaceLayoutOrientationHorizontal;
@@ -116,6 +158,7 @@ static CGFloat const kStackViewVerticalSpacing = 8.0;
         self.fActivityStackView.spacing = kStackViewVerticalSpacing;
         self.fCurrentHeight = self.fVertLayoutHeight;
     }
+#endif
 }
 
 - (void)checkWindowSize
@@ -129,6 +172,13 @@ static CGFloat const kStackViewVerticalSpacing = 8.0;
 {
     [self checkLayout];
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    if (!self.view.window)
+    {
+        return;
+    }
+#endif
+
     CGFloat difference = self.fHeightChange;
 
     NSRect windowRect = self.view.window.frame;
@@ -139,6 +189,9 @@ static CGFloat const kStackViewVerticalSpacing = 8.0;
     self.view.window.maxSize = NSMakeSize(FLT_MAX, NSHeight(windowRect));
 
     self.view.frame = [self viewRect];
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    [self layoutLegacyStackView];
+#endif
     [self.view.window setFrame:windowRect display:YES animate:YES];
 }
 

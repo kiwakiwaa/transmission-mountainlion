@@ -224,15 +224,18 @@ set(XIB_FILES
     AboutWindow.xib
     BlocklistStatusWindow.xib
     FileRenameSheetController.xib
-    FilterBar.xib
     InfoFileView.xib
     InfoPeersView.xib
     InfoTrackersView.xib
     InfoWindow.xib
     MessageWindow.xib
-    StatsWindow.xib
     StatusBar.xib
     URLSheetWindow.xib)
+if(NOT TR_MACOS_LEGACY_COMPAT)
+    list(APPEND XIB_FILES
+        FilterBar.xib
+        StatsWindow.xib)
+endif()
 
 set(RESOURCES
     Defaults.plist
@@ -388,7 +391,15 @@ set(BASE_XIB_FILES
     InfoOptionsView.xib
     MainMenu.xib
     PrefsWindow.xib)
+set(BASE_XIB_SOURCE_FILES ${BASE_XIB_FILES})
+if(TR_MACOS_LEGACY_COMPAT)
+    list(REMOVE_ITEM BASE_XIB_SOURCE_FILES
+        InfoActivityView.xib
+        InfoOptionsView.xib)
+endif()
 list(TRANSFORM BASE_XIB_FILES
+    PREPEND Base.lproj/)
+list(TRANSFORM BASE_XIB_SOURCE_FILES
     PREPEND Base.lproj/)
 
 set(LANG_STRINGS_FILES
@@ -428,7 +439,26 @@ target_sources(${TR_NAME}-mac
 
 tr_target_xib_files(${TR_NAME}-mac
     ${XIB_FILES}
-    ${BASE_XIB_FILES})
+    ${BASE_XIB_SOURCE_FILES})
+
+if(TR_MACOS_LEGACY_COMPAT)
+    tr_wrap_xib(${TR_NAME}-mac
+        LegacyXibs/FilterBar.xib
+        "${CMAKE_CURRENT_BINARY_DIR}/FilterBar.nib"
+        "")
+    tr_wrap_xib(${TR_NAME}-mac
+        LegacyXibs/StatsWindow.xib
+        "${CMAKE_CURRENT_BINARY_DIR}/StatsWindow.nib"
+        "")
+    tr_wrap_xib(${TR_NAME}-mac
+        LegacyXibs/Base.lproj/InfoActivityView.xib
+        "${CMAKE_CURRENT_BINARY_DIR}/Base.lproj/InfoActivityView.nib"
+        Base.lproj)
+    tr_wrap_xib(${TR_NAME}-mac
+        LegacyXibs/Base.lproj/InfoOptionsView.xib
+        "${CMAKE_CURRENT_BINARY_DIR}/Base.lproj/InfoOptionsView.nib"
+        Base.lproj)
+endif()
 
 find_library(SPARKLE_FRAMEWORK Sparkle
     PATHS ${CMAKE_CURRENT_SOURCE_DIR}
