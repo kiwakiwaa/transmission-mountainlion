@@ -264,6 +264,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
         self.indentationPerLevel = 0;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+        // The 10.8 main-menu XIB must stay cell-based so this renderer receives row object values.
         LegacyTorrentTableCell* cell = [[LegacyTorrentTableCell alloc] init];
         cell.tableView = self;
         [[self tableColumnWithIdentifier:@"Torrent"] setDataCell:cell];

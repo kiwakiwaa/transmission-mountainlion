@@ -395,7 +395,8 @@ set(BASE_XIB_SOURCE_FILES ${BASE_XIB_FILES})
 if(TR_MACOS_LEGACY_COMPAT)
     list(REMOVE_ITEM BASE_XIB_SOURCE_FILES
         InfoActivityView.xib
-        InfoOptionsView.xib)
+        InfoOptionsView.xib
+        MainMenu.xib)
 endif()
 list(TRANSFORM BASE_XIB_FILES
     PREPEND Base.lproj/)
@@ -457,6 +458,10 @@ if(TR_MACOS_LEGACY_COMPAT)
     tr_wrap_xib(${TR_NAME}-mac
         LegacyXibs/Base.lproj/InfoOptionsView.xib
         "${CMAKE_CURRENT_BINARY_DIR}/Base.lproj/InfoOptionsView.nib"
+        Base.lproj)
+    tr_wrap_xib(${TR_NAME}-mac
+        LegacyXibs/Base.lproj/MainMenu.xib
+        "${CMAKE_CURRENT_BINARY_DIR}/Base.lproj/MainMenu.nib"
         Base.lproj)
 endif()
 
