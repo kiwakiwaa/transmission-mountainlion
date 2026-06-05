@@ -9,7 +9,14 @@
 #import "ExpandedPathToPathTransformer.h"
 #import "ExpandedPathToIconTransformer.h"
 
+#include <libtransmission/transmission.h>
+
 static NSString* const kGroupTableViewDataType = @"GroupTableViewDataType";
+
+static NSString* TRStringFromUTF8(char const* value)
+{
+    return value != nullptr ? [NSString stringWithUTF8String:value] : nil;
+}
 
 typedef NS_ENUM(NSInteger, SegmentTag) {
     SegmentTagAdd = 0,
@@ -28,6 +35,8 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
 
 @property(nonatomic) IBOutlet NSButton* fAutoAssignRulesEnableCheck;
 @property(nonatomic) IBOutlet NSButton* fAutoAssignRulesEditButton;
+
+@property(nonatomic) IBOutlet NSPopUpButton* fAnnouncedClientIdentityPopUp;
 
 @property(nonatomic) IBOutlet NSWindow* groupRulesSheetWindow;
 @property(nonatomic, weak) IBOutlet NSPredicateEditor* ruleEditor;
@@ -49,6 +58,7 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
         self.fSelectedColorView.colorWellStyle = NSColorWellStyleMinimal;
     }
 
+    [self populateAnnouncedClientIdentityControl];
     [self updateSelectedGroup];
 }
 
@@ -257,6 +267,18 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
     self.fCustomLocationPopUp.enabled = (self.fCustomLocationEnableCheck.state == NSControlStateValueOn);
 }
 
+- (IBAction)setAnnouncedClientIdentity:(id)sender
+{
+    if (self.fTableView.numberOfSelectedRows != 1)
+    {
+        return;
+    }
+
+    NSInteger const index = [GroupsController.groups indexForRow:self.fTableView.selectedRow];
+    NSString* identity = self.fAnnouncedClientIdentityPopUp.selectedItem.representedObject;
+    [GroupsController.groups setAnnouncedClientIdentity:identity forIndex:index];
+}
+
 #pragma mark -
 #pragma mark Rule editor
 
@@ -344,6 +366,34 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
 
 #pragma mark - Private
 
+- (void)populateAnnouncedClientIdentityControl
+{
+    [self.fAnnouncedClientIdentityPopUp removeAllItems];
+
+    for (size_t i = 0, n = tr_announcedClientIdentityCount(); i < n; ++i)
+    {
+        tr_announced_client_identity_info const identity = tr_announcedClientIdentity(i);
+        NSString* identityId = TRStringFromUTF8(identity.id);
+        if (identityId == nil)
+        {
+            identityId = @"";
+        }
+
+        NSString* title = TRStringFromUTF8(identity.display_name);
+        if (title == nil)
+        {
+            title = @"";
+        }
+        if ([identityId isEqualToString:@"real"])
+        {
+            title = [NSString stringWithFormat:NSLocalizedString(@"Real (%@)", "Groups preferences -> announced client identity"), title];
+        }
+
+        [self.fAnnouncedClientIdentityPopUp addItemWithTitle:title];
+        self.fAnnouncedClientIdentityPopUp.lastItem.representedObject = [identityId isEqualToString:@"real"] ? nil : identityId;
+    }
+}
+
 - (void)updateSelectedGroup
 {
     [self.fAddRemoveControl setEnabled:self.fTableView.numberOfSelectedRows > 0 forSegment:SegmentTagRemove];
@@ -356,6 +406,7 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
         self.fSelectedColorNameField.enabled = YES;
 
         [self refreshCustomLocationWithSingleGroup];
+        [self refreshAnnouncedClientIdentityWithSingleGroup];
 
         self.fAutoAssignRulesEnableCheck.state = [GroupsController.groups usesAutoAssignRulesForIndex:index];
         self.fAutoAssignRulesEnableCheck.enabled = YES;
@@ -369,9 +420,30 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
         self.fSelectedColorNameField.enabled = NO;
         self.fCustomLocationEnableCheck.enabled = NO;
         self.fCustomLocationPopUp.enabled = NO;
+        self.fAnnouncedClientIdentityPopUp.enabled = NO;
         self.fAutoAssignRulesEnableCheck.enabled = NO;
         self.fAutoAssignRulesEditButton.enabled = NO;
     }
+}
+
+- (void)refreshAnnouncedClientIdentityWithSingleGroup
+{
+    NSInteger const index = [GroupsController.groups indexForRow:self.fTableView.selectedRow];
+    NSString* identity = [GroupsController.groups announcedClientIdentityForIndex:index];
+
+    NSInteger selectedIndex = 0;
+    for (NSInteger i = 0, n = self.fAnnouncedClientIdentityPopUp.numberOfItems; i < n; ++i)
+    {
+        NSString* itemIdentity = (NSString*)[self.fAnnouncedClientIdentityPopUp itemAtIndex:i].representedObject;
+        if ((identity.length == 0 && itemIdentity.length == 0) || [itemIdentity isEqualToString:identity])
+        {
+            selectedIndex = i;
+            break;
+        }
+    }
+
+    [self.fAnnouncedClientIdentityPopUp selectItemAtIndex:selectedIndex];
+    self.fAnnouncedClientIdentityPopUp.enabled = YES;
 }
 
 - (void)refreshCustomLocationWithSingleGroup

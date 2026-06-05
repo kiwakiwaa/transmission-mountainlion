@@ -1301,10 +1301,18 @@
                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                             </textFieldCell>
                         </textField>
+                        <textField focusRingType="none" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aci-label">
+                            <rect key="frame" x="371" y="184" width="89" height="16"/>
+                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Announce as:" id="aci-label-cell">
+                                <font key="font" metaFont="system"/>
+                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                        </textField>
                         <textField focusRingType="none" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1793">
-                            <rect key="frame" x="231" y="153" width="271" height="21"/>
+                            <rect key="frame" x="231" y="153" width="132" height="21"/>
                             <constraints>
-                                <constraint firstAttribute="width" constant="271" id="Iag-F7-aqK"/>
+                                <constraint firstAttribute="width" constant="132" id="Iag-F7-aqK"/>
                             </constraints>
                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="1794">
                                 <font key="font" metaFont="system"/>
@@ -1316,6 +1324,24 @@
                                 <outlet property="nextKeyView" destination="1774" id="1804"/>
                             </connections>
                         </textField>
+                        <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aci-pop">
+                            <rect key="frame" x="371" y="151" width="130" height="25"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="130" id="aci-pop-width"/>
+                            </constraints>
+                            <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="aci-item" id="aci-cell">
+                                <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="menu"/>
+                                <menu key="menu" id="aci-menu">
+                                    <items>
+                                        <menuItem state="on" id="aci-item"/>
+                                    </items>
+                                </menu>
+                            </popUpButtonCell>
+                            <connections>
+                                <action selector="setAnnouncedClientIdentity:" target="1783" id="aci-action"/>
+                            </connections>
+                        </popUpButton>
                         <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="1772">
                             <rect key="frame" x="19" y="-1" width="71" height="20"/>
                             <segmentedCell key="cell" borderStyle="border" alignment="left" style="roundRect" trackingMode="momentary" id="1773">
@@ -1395,6 +1421,8 @@
                         <constraint firstItem="1795" firstAttribute="leading" secondItem="1800" secondAttribute="trailing" constant="8" symbolic="YES" id="K0C-4B-uQb"/>
                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="1808" secondAttribute="trailing" constant="20" symbolic="YES" id="Kpd-An-Chd"/>
                         <constraint firstItem="1814" firstAttribute="top" secondItem="1800" secondAttribute="bottom" constant="15" id="Kpd-sh-tcg"/>
+                        <constraint firstItem="aci-label" firstAttribute="leading" secondItem="aci-pop" secondAttribute="leading" id="PJi-gE-KoF"/>
+                        <constraint firstItem="aci-pop" firstAttribute="leading" secondItem="1793" secondAttribute="trailing" constant="8" id="Pvu-FE-V4V"/>
                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="1832" secondAttribute="trailing" constant="20" symbolic="YES" id="QFE-oW-g9V"/>
                         <constraint firstItem="1808" firstAttribute="leading" secondItem="1814" secondAttribute="trailing" constant="6" id="Qml-W6-fyB"/>
                         <constraint firstItem="1830" firstAttribute="leading" secondItem="1800" secondAttribute="leading" id="T6n-Il-SVZ"/>
@@ -1402,9 +1430,12 @@
                         <constraint firstItem="1771" firstAttribute="top" secondItem="uFR-ma-abW" secondAttribute="top" id="UBq-PS-A1O"/>
                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="1823" secondAttribute="trailing" constant="20" symbolic="YES" id="VH9-E9-grg"/>
                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="1793" secondAttribute="trailing" constant="20" symbolic="YES" id="Vnn-e5-Oyt"/>
+                        <constraint firstItem="aci-pop" firstAttribute="centerY" secondItem="1793" secondAttribute="centerY" id="WbW-mK-ege"/>
                         <constraint firstItem="1832" firstAttribute="top" secondItem="1830" secondAttribute="bottom" constant="12" id="XWU-VA-EOu"/>
                         <constraint firstItem="1793" firstAttribute="leading" secondItem="1795" secondAttribute="leading" id="YeX-7j-nHt"/>
+                        <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="aci-pop" secondAttribute="trailing" constant="20" symbolic="YES" id="ZCL-gz-RUd"/>
                         <constraint firstItem="1772" firstAttribute="leading" secondItem="1771" secondAttribute="leading" id="ajc-aZ-8Jt"/>
+                        <constraint firstItem="aci-label" firstAttribute="top" secondItem="1795" secondAttribute="top" id="cls-sd-dOL"/>
                         <constraint firstItem="1830" firstAttribute="top" secondItem="1823" secondAttribute="bottom" constant="8" symbolic="YES" id="i8b-f2-13U"/>
                         <constraint firstItem="1834" firstAttribute="leading" secondItem="1823" secondAttribute="leading" id="mcL-pK-ejr"/>
                         <constraint firstItem="1823" firstAttribute="leading" secondItem="1814" secondAttribute="leading" constant="20" id="n09-Oh-jjL"/>
@@ -2678,6 +2709,7 @@
                 <outlet property="fAddRemoveControl" destination="1772" id="1785"/>
                 <outlet property="fAutoAssignRulesEditButton" destination="1832" id="1883"/>
                 <outlet property="fAutoAssignRulesEnableCheck" destination="1830" id="1882"/>
+                <outlet property="fAnnouncedClientIdentityPopUp" destination="aci-pop" id="aci-outlet"/>
                 <outlet property="fCustomLocationEnableCheck" destination="1814" id="1818"/>
                 <outlet property="fCustomLocationPopUp" destination="1808" id="1821"/>
                 <outlet property="fSelectedColorNameField" destination="1793" id="1806"/>
