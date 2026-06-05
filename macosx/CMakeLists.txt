@@ -131,6 +131,8 @@ target_sources(${TR_NAME}-mac
         LegacyColors.mm
         LegacyConstraints.h
         LegacyConstraints.mm
+        LegacyFormatters.h
+        LegacyFormatters.mm
         LegacyPowerActivity.h
         LegacyPowerActivity.mm
         LegacySegmentedControl.h
@@ -154,8 +156,6 @@ target_sources(${TR_NAME}-mac
         NSDataAdditions.mm
         NSImageAdditions.h
         NSImageAdditions.mm
-        NSKeyedUnarchiverAdditions.h
-        NSKeyedUnarchiverAdditions.mm
         NSMutableArrayAdditions.h
         NSMutableArrayAdditions.mm
         NSStringAdditions.h

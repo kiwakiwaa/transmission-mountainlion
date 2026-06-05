@@ -134,7 +134,23 @@ public:
 
     [[nodiscard]] constexpr auto operator<=>(std::string_view that) const noexcept
     {
-        return std::lexicographical_compare_three_way(begin(), end(), that.begin(), that.end());
+        // macOS 10.8's libc++ does not provide std::lexicographical_compare_three_way.
+        auto const less = [](auto lhs, auto rhs) constexpr
+        {
+            return static_cast<unsigned char>(lhs) < static_cast<unsigned char>(rhs);
+        };
+
+        if (std::lexicographical_compare(begin(), end(), that.begin(), that.end(), less))
+        {
+            return std::strong_ordering::less;
+        }
+
+        if (std::lexicographical_compare(that.begin(), that.end(), begin(), end(), less))
+        {
+            return std::strong_ordering::greater;
+        }
+
+        return std::strong_ordering::equal;
     }
     [[nodiscard]] constexpr bool operator==(std::string_view that) const noexcept
     {

@@ -26,3 +26,17 @@ id TRUnarchiveObjectFromData(NSData* data, NSSet* allowedClasses)
     return [NSKeyedUnarchiver unarchiveObjectWithData:data];
 #endif
 }
+
+id TRUnarchiveLegacyObjectFromData(NSData* data)
+{
+    if (data == nil)
+    {
+        return nil;
+    }
+
+    // Transmission 3 used NSArchiver for a few defaults; NSUnarchiver is the only compatible migration path.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    return [NSUnarchiver unarchiveObjectWithData:data];
+#pragma clang diagnostic pop
+}

@@ -4,6 +4,7 @@
 
 #import "StatsWindowController.h"
 #import "Controller.h"
+#import "LegacyFormatters.h"
 #import "NSStringAdditions.h"
 
 static NSTimeInterval const kUpdateSeconds = 1.0;
@@ -161,19 +162,9 @@ tr_session* fLib = NULL;
         NSLocalizedString(@"Total N/A", "stats total");
     self.fRatioAllField.stringValue = totalRatioString;
 
-    static NSDateComponentsFormatter* timeFormatter;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        timeFormatter = [NSDateComponentsFormatter new];
-        timeFormatter.unitsStyle = NSDateComponentsFormatterUnitsStyleFull;
-        timeFormatter.maximumUnitCount = 3;
-        timeFormatter.allowedUnits = NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitWeekOfMonth | NSCalendarUnitDay |
-            NSCalendarUnitHour | NSCalendarUnitMinute;
-    });
-
-    self.fTimeField.stringValue = [timeFormatter stringFromTimeInterval:statsSession.secondsActive];
-    self.fTimeAllField.stringValue = [NSString stringWithFormat:NSLocalizedString(@"%@ total", "stats total"),
-                                                                [timeFormatter stringFromTimeInterval:statsAll.secondsActive]];
+    self.fTimeField.stringValue = TRStatsDurationString(statsSession.secondsActive);
+    self.fTimeAllField.stringValue = [NSString
+        stringWithFormat:NSLocalizedString(@"%@ total", "stats total"), TRStatsDurationString(statsAll.secondsActive)];
 
     if (statsAll.sessionCount == 1)
     {

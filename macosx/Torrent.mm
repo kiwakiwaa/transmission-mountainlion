@@ -16,6 +16,7 @@
 #import "Torrent.h"
 #import "GroupsController.h"
 #import "FileListNode.h"
+#import "LegacyFormatters.h"
 #import "NSStringAdditions.h"
 #import "TrackerNode.h"
 #import "Utils.h"
@@ -2236,18 +2237,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
         return NSLocalizedString(@"remaining time unknown", "Torrent -> eta string");
     }
 
-    static NSDateComponentsFormatter* formatter;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        formatter = [NSDateComponentsFormatter new];
-        formatter.unitsStyle = NSDateComponentsFormatterUnitsStyleShort;
-        formatter.maximumUnitCount = 2;
-        formatter.collapsesLargestUnit = YES;
-        formatter.includesTimeRemainingPhrase = YES;
-    });
-    // the duration of months being variable, setting the reference date to now (instead of 00:00:00 UTC on 1 January 2001)
-    formatter.referenceDate = NSDate.date;
-    NSString* idleString = [formatter stringFromTimeInterval:eta];
+    NSString* idleString = TRTimeRemainingString(eta);
 
     if (fromIdle)
     {

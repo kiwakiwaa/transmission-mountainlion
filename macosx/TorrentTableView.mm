@@ -9,7 +9,6 @@
 #import "FileListNode.h"
 #import "InfoOptionsViewController.h"
 #import "LegacyArchiving.h"
-#import "NSKeyedUnarchiverAdditions.h"
 #import "NSStringAdditions.h"
 #import "Torrent.h"
 #import "TorrentCell.h"
@@ -250,7 +249,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
         }
         else if ((groupData = [_fDefaults dataForKey:@"CollapsedGroups"])) //handle old groups
         {
-            _fCollapsedGroups = [[NSKeyedUnarchiver deprecatedUnarchiveObjectWithData:groupData] mutableCopy];
+            _fCollapsedGroups = [TRUnarchiveLegacyObjectFromData(groupData) mutableCopy];
             [_fDefaults removeObjectForKey:@"CollapsedGroups"];
             [self saveCollapsedGroups];
         }

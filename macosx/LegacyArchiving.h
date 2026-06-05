@@ -6,3 +6,4 @@
 
 NSData* TRArchivedDataForObject(id object);
 id TRUnarchiveObjectFromData(NSData* data, NSSet* allowedClasses);
+id TRUnarchiveLegacyObjectFromData(NSData* data);

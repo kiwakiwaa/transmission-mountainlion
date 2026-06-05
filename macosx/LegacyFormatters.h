@@ -4,12 +4,6 @@
 
 #import <Foundation/Foundation.h>
 
-NS_ASSUME_NONNULL_BEGIN
-
-@interface NSKeyedUnarchiver (NSUnarchiverAdditions)
-
-+ (nullable id)deprecatedUnarchiveObjectWithData:(NSData*)data;
-
-@end
-
-NS_ASSUME_NONNULL_END
+NSString* TRTimeRemainingString(NSTimeInterval interval);
+NSString* TRStatsDurationString(NSTimeInterval interval);
+NSString* TRTrackerCountdownString(NSTimeInterval interval);
