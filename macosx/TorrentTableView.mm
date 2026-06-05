@@ -21,10 +21,168 @@
 #import "TorrentCellControlButton.h"
 #import "TorrentCellRevealButton.h"
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+#import "ProgressBarView.h"
+
+@interface LegacyTorrentTableCell : NSCell
+@property(nonatomic, weak) TorrentTableView* tableView;
+@property(nonatomic, strong) id legacyObjectValue;
+@end
+
+@implementation LegacyTorrentTableCell
+
+static CGFloat const kLegacyGroupDisclosureWidth = 18.0;
+static CGFloat const kLegacyGroupStatusWidth = 170.0;
+
+- (instancetype)init
+{
+    if ((self = [super init]))
+    {
+        self.lineBreakMode = NSLineBreakByTruncatingMiddle;
+    }
+    return self;
+}
+
+- (void)setObjectValue:(id)objectValue
+{
+    self.legacyObjectValue = objectValue;
+}
+
+- (id)objectValue
+{
+    return self.legacyObjectValue;
+}
+
+- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView*)controlView
+{
+    id item = self.objectValue;
+    NSInteger row = [(NSTableView*)controlView rowAtPoint:NSMakePoint(NSMinX(cellFrame) + 1.0, NSMidY(cellFrame))];
+    BOOL selected = row >= 0 && [(NSTableView*)controlView isRowSelected:row];
+
+    if (selected)
+    {
+        [[NSColor alternateSelectedControlColor] setFill];
+    }
+    else
+    {
+        NSColor* color = (row % 2) == 0 ? [NSColor colorWithCalibratedWhite:0.985 alpha:1.0] :
+                                          [NSColor colorWithCalibratedWhite:0.955 alpha:1.0];
+        [color setFill];
+    }
+    NSRectFill(cellFrame);
+
+    [[NSColor colorWithCalibratedWhite:0.82 alpha:1.0] setStroke];
+    NSBezierPath* line = [NSBezierPath bezierPath];
+    [line moveToPoint:NSMakePoint(NSMinX(cellFrame), NSMaxY(cellFrame) - 0.5)];
+    [line lineToPoint:NSMakePoint(NSMaxX(cellFrame), NSMaxY(cellFrame) - 0.5)];
+    [line stroke];
+
+    NSDictionary* titleAttrs = @{
+        NSFontAttributeName : [NSFont boldSystemFontOfSize:[NSFont systemFontSize]],
+        NSForegroundColorAttributeName : selected ? NSColor.whiteColor : NSColor.controlTextColor,
+    };
+    NSDictionary* detailAttrs = @{
+        NSFontAttributeName : [NSFont systemFontOfSize:10.0],
+        NSForegroundColorAttributeName : selected ? NSColor.whiteColor : NSColor.disabledControlTextColor,
+    };
+
+    if ([item isKindOfClass:[Torrent class]])
+    {
+        Torrent* torrent = (Torrent*)item;
+        NSInteger const groupValue = torrent.groupValue;
+        if (groupValue != -1 && ![NSUserDefaults.standardUserDefaults boolForKey:@"SortByGroup"])
+        {
+            [[NSImage discIconWithColor:[GroupsController.groups colorForIndex:groupValue]
+                            insetFactor:0] drawInRect:NSMakeRect(NSMinX(cellFrame) + 2.0, NSMinY(cellFrame) + 26.0, 10.0, 10.0)
+                                             fromRect:NSZeroRect
+                                            operation:NSCompositingOperationSourceOver
+                                             fraction:1.0
+                                       respectFlipped:YES
+                                                hints:nil];
+        }
+
+        NSImage* icon = torrent.anyErrorOrWarning ? [NSImage imageNamed:NSImageNameCaution] : torrent.icon;
+        [icon drawInRect:NSMakeRect(NSMinX(cellFrame) + 13.0, NSMinY(cellFrame) + 13.0, 36.0, 36.0) fromRect:NSZeroRect
+                 operation:NSCompositingOperationSourceOver
+                  fraction:1.0
+            respectFlipped:YES
+                     hints:nil];
+
+        CGFloat const left = NSMinX(cellFrame) + 65.0;
+        CGFloat const width = MAX(80.0, NSWidth(cellFrame) - 90.0);
+        [torrent.name drawInRect:NSMakeRect(left, NSMinY(cellFrame) + 3.0, width, 16.0) withAttributes:titleAttrs];
+        [torrent.progressString drawInRect:NSMakeRect(left - 2.0, NSMinY(cellFrame) + 21.0, width + 4.0, 13.0)
+                            withAttributes:detailAttrs];
+        [ProgressBarView.sharedInstance drawBarInRect:NSMakeRect(left, NSMinY(cellFrame) + 36.0, width, 14.0) forTableView:self.tableView
+                                          withTorrent:torrent];
+        [torrent.statusString drawInRect:NSMakeRect(left - 2.0, NSMinY(cellFrame) + 50.0, width + 4.0, 13.0) withAttributes:detailAttrs];
+    }
+    else if ([item isKindOfClass:[TorrentGroup class]])
+    {
+        TorrentGroup* group = (TorrentGroup*)item;
+        NSInteger groupIndex = group.groupIndex;
+        BOOL expanded = self.tableView == nil || [self.tableView isItemExpanded:group];
+
+        [[NSColor colorWithCalibratedWhite:selected ? 1.0 : 0.35 alpha:1.0] setFill];
+        NSBezierPath* disclosure = [NSBezierPath bezierPath];
+        CGFloat midY = NSMidY(cellFrame);
+        CGFloat minX = NSMinX(cellFrame) + 7.0;
+        if (expanded)
+        {
+            [disclosure moveToPoint:NSMakePoint(minX, midY - 3.0)];
+            [disclosure lineToPoint:NSMakePoint(minX + 8.0, midY - 3.0)];
+            [disclosure lineToPoint:NSMakePoint(minX + 4.0, midY + 3.0)];
+        }
+        else
+        {
+            [disclosure moveToPoint:NSMakePoint(minX + 2.0, midY - 5.0)];
+            [disclosure lineToPoint:NSMakePoint(minX + 2.0, midY + 5.0)];
+            [disclosure lineToPoint:NSMakePoint(minX + 8.0, midY)];
+        }
+        [disclosure closePath];
+        [disclosure fill];
+
+        NSColor* groupColor = groupIndex != -1 ? [GroupsController.groups colorForIndex:groupIndex] :
+                                                 [NSColor colorWithCalibratedWhite:1.0 alpha:0.0];
+        [[NSImage discIconWithColor:groupColor insetFactor:0]
+                drawInRect:NSMakeRect(NSMinX(cellFrame) + kLegacyGroupDisclosureWidth + 3.0, NSMinY(cellFrame) + 3.0, 12.0, 12.0)
+                  fromRect:NSZeroRect
+                 operation:NSCompositingOperationSourceOver
+                  fraction:1.0
+            respectFlipped:YES
+                     hints:nil];
+
+        NSString* groupName = groupIndex != -1 ? [GroupsController.groups nameForIndex:groupIndex] :
+                                                 NSLocalizedString(@"No Group", "Group table row");
+        NSString* title = [NSString localizedStringWithFormat:@"%@ (%lu)", groupName, group.torrents.count];
+        NSDictionary* groupAttrs = @{
+            NSFontAttributeName : [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]],
+            NSForegroundColorAttributeName : selected ? NSColor.whiteColor : NSColor.disabledControlTextColor,
+        };
+        [title drawInRect:NSMakeRect(
+                              NSMinX(cellFrame) + kLegacyGroupDisclosureWidth + 20.0,
+                              NSMinY(cellFrame) + 2.0,
+                              MAX(80.0, NSWidth(cellFrame) - kLegacyGroupStatusWidth - 45.0),
+                              14.0)
+            withAttributes:groupAttrs];
+
+        BOOL displayGroupRowRatio = [NSUserDefaults.standardUserDefaults boolForKey:@"DisplayGroupRowRatio"];
+        NSString* rightText = displayGroupRowRatio ? [NSString stringForRatio:group.ratio] : [NSString stringForSpeed:group.uploadRate];
+        [[NSString stringForSpeed:group.downloadRate] drawInRect:NSMakeRect(NSMaxX(cellFrame) - 165.0, NSMinY(cellFrame) + 2.0, 78.0, 14.0)
+                                                  withAttributes:detailAttrs];
+        [rightText drawInRect:NSMakeRect(NSMaxX(cellFrame) - 82.0, NSMinY(cellFrame) + 2.0, 76.0, 14.0) withAttributes:detailAttrs];
+    }
+}
+
+@end
+#endif
+
 CGFloat const kGroupSeparatorHeight = 18.0;
 
 static NSInteger const kMaxGroup = 999999;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
 static CGFloat const kErrorImageSize = 20.0;
+#endif
 
 static NSTimeInterval const kToggleProgressSeconds = 0.175;
 
@@ -87,7 +245,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
         NSData* groupData;
         if ((groupData = [_fDefaults dataForKey:@"CollapsedGroupIndexes"]))
         {
-            _fCollapsedGroups = [NSKeyedUnarchiver unarchivedObjectOfClass:NSMutableIndexSet.class fromData:groupData error:nil];
+            _fCollapsedGroups = [[NSKeyedUnarchiver deprecatedUnarchiveObjectWithData:groupData] mutableCopy];
         }
         else if ((groupData = [_fDefaults dataForKey:@"CollapsedGroups"])) //handle old groups
         {
@@ -105,9 +263,17 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
         self.delegate = self;
         self.indentationPerLevel = 0;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+        LegacyTorrentTableCell* cell = [[LegacyTorrentTableCell alloc] init];
+        cell.tableView = self;
+        [[self tableColumnWithIdentifier:@"Torrent"] setDataCell:cell];
+#endif
+
         _piecesBarPercent = [_fDefaults boolForKey:@"PiecesBar"] ? 1.0 : 0.0;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
         self.style = NSTableViewStyleFullWidth;
+#endif
     }
 
     return self;
@@ -128,9 +294,27 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
 //make sure we don't lose selection on manual reloads
 - (void)reloadData
 {
-    NSArray<Torrent*>* selectedTorrents = self.selectedTorrents;
+    NSMutableArray* selectedItems = [NSMutableArray arrayWithCapacity:self.selectedRowIndexes.count];
+    [self.selectedRowIndexes enumerateIndexesUsingBlock:^(NSUInteger row, BOOL*) {
+        id item = [self itemAtRow:row];
+        if (item != nil)
+        {
+            [selectedItems addObject:item];
+        }
+    }];
+
     [super reloadData];
-    self.selectedTorrents = selectedTorrents;
+
+    NSMutableIndexSet* selectedRows = [NSMutableIndexSet indexSet];
+    for (id item in selectedItems)
+    {
+        NSInteger row = [self rowForItem:item];
+        if (row >= 0)
+        {
+            [selectedRows addIndex:row];
+        }
+    }
+    [self selectRowIndexes:selectedRows byExtendingSelection:NO];
 }
 
 - (void)reloadVisibleRows
@@ -171,6 +355,10 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
 {
     [super reloadDataForRowIndexes:rowIndexes columnIndexes:columnIndexes];
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    [self setNeedsDisplay:YES];
+#else
+
     //redraw fControlButton
     BOOL minimal = [self.fDefaults boolForKey:@"SmallView"];
     [rowIndexes enumerateIndexesUsingBlock:^(NSUInteger row, BOOL*) {
@@ -189,6 +377,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
             }
         }
     }];
+#endif
 }
 
 - (BOOL)usesAlternatingRowBackgroundColors
@@ -223,8 +412,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
 
 - (void)saveCollapsedGroups
 {
-    [self.fDefaults setObject:[NSKeyedArchiver archivedDataWithRootObject:self.fCollapsedGroups requiringSecureCoding:YES error:nil]
-                       forKey:@"CollapsedGroupIndexes"];
+    [self.fDefaults setObject:[NSKeyedArchiver archivedDataWithRootObject:self.fCollapsedGroups] forKey:@"CollapsedGroupIndexes"];
 }
 
 - (BOOL)outlineView:(NSOutlineView*)outlineView isGroupItem:(id)item
@@ -239,6 +427,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
     return [item isKindOfClass:[Torrent class]] ? self.rowHeight : kGroupSeparatorHeight;
 }
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
 - (NSView*)outlineView:(NSOutlineView*)outlineView viewForTableColumn:(NSTableColumn*)tableColumn item:(id)item
 {
     if ([item isKindOfClass:[Torrent class]])
@@ -365,7 +554,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
         NSInteger groupIndex = group.groupIndex;
 
         NSColor* groupColor = groupIndex != -1 ? [GroupsController.groups colorForIndex:groupIndex] :
-                                                 [NSColor colorWithWhite:1.0 alpha:0];
+                                                 [NSColor colorWithCalibratedWhite:1.0 alpha:0];
         groupCell.fGroupIndicatorView.image = [NSImage discIconWithColor:groupColor insetFactor:0];
 
         NSString* groupName = groupIndex != -1 ? [GroupsController.groups nameForIndex:groupIndex] :
@@ -424,6 +613,15 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
     }
     return nil;
 }
+
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+- (NSRect)frameOfOutlineCellAtRow:(NSInteger)row
+{
+    return NSZeroRect;
+}
+#endif
 
 - (NSString*)outlineView:(NSOutlineView*)outlineView typeSelectStringForTableColumn:(NSTableColumn*)tableColumn item:(id)item
 {
@@ -503,14 +701,25 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
 {
     NSPoint point = [self convertPoint:event.locationInWindow fromView:nil];
     NSInteger const row = [self rowAtPoint:point];
+    id item = row >= 0 ? [self itemAtRow:row] : nil;
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    if (event.clickCount == 1 && [item isKindOfClass:[TorrentGroup class]])
+    {
+        if ([self pointInLegacyGroupDisclosureRect:point])
+        {
+            [self isItemExpanded:item] ? [self collapseItem:item] : [self expandItem:item];
+            return;
+        }
+        if ([self pointInGroupStatusRect:point])
+        {
+            [self toggleGroupRowRatio];
+            return;
+        }
+    }
+#endif
 
     [super mouseDown:event];
-
-    id item = nil;
-    if (row != -1)
-    {
-        item = [self itemAtRow:row];
-    }
 
     if (event.clickCount == 2) //double click
     {
@@ -538,7 +747,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
     }
 }
 
-- (NSArray<Torrent*>*)selectedTorrents
+- (NSArray*)selectedTorrents
 {
     NSIndexSet* selectedIndexes = self.selectedRowIndexes;
     NSMutableArray* torrents = [NSMutableArray arrayWithCapacity:selectedIndexes.count]; //take a shot at guessing capacity
@@ -564,12 +773,16 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
     return torrents;
 }
 
-- (void)setSelectedTorrents:(NSArray<Torrent*>*)selectedTorrents
+- (void)setSelectedTorrents:(NSArray*)selectedTorrents
 {
     NSMutableIndexSet* selectedIndexes = [NSMutableIndexSet new];
     for (Torrent* i in selectedTorrents)
     {
-        [selectedIndexes addIndex:[self rowForItem:i]];
+        NSInteger row = [self rowForItem:i];
+        if (row >= 0)
+        {
+            [selectedIndexes addIndex:row];
+        }
     }
     [self selectRowIndexes:selectedIndexes byExtendingSelection:NO];
 }
@@ -604,7 +817,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
 {
     unichar const firstChar = [event.charactersIgnoringModifiers characterAtIndex:0];
 
-    if (firstChar == 'f' && event.modifierFlags & NSEventModifierFlagOption && event.modifierFlags & NSEventModifierFlagCommand)
+    if (firstChar == 'f' && [event modifierFlags] & NSEventModifierFlagOption && [event modifierFlags] & NSEventModifierFlagCommand)
     {
         [self.fController focusFilterField];
     }
@@ -624,6 +837,10 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
 
 - (NSRect)iconRectForRow:(NSInteger)row
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    NSRect rowRect = [self rectOfRow:row];
+    return NSMakeRect(NSMinX(rowRect) + 13.0, NSMinY(rowRect) + 13.0, 36.0, 36.0);
+#else
     BOOL minimal = [self.fDefaults boolForKey:@"SmallView"];
     NSRect rect;
 
@@ -642,6 +859,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
     rect.origin.y += rowRect.origin.y;
     rect.origin.x += self.intercellSpacing.width;
     return rect;
+#endif
 }
 
 - (BOOL)acceptsFirstResponder
@@ -652,7 +870,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
 
 - (void)copy:(id)sender
 {
-    NSArray<Torrent*>* selectedTorrents = self.selectedTorrents;
+    NSArray* selectedTorrents = self.selectedTorrents;
     if (selectedTorrents.count == 0)
     {
         return;
@@ -674,7 +892,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
 
     if (action == @selector(paste:))
     {
-        if ([NSPasteboard.generalPasteboard.types containsObject:NSPasteboardTypeURL])
+        if ([NSPasteboard.generalPasteboard.types containsObject:NSURLPboardType])
         {
             return YES;
         }
@@ -731,7 +949,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
                 statusString = NSLocalizedString(@"Pause the transfer", "Torrent Table -> tooltip");
             else
             {
-                if (NSApp.currentEvent.modifierFlags & NSEventModifierFlagOption)
+                if ([NSAppCurrentEvent() modifierFlags] & NSEventModifierFlagOption)
                 {
                     statusString = NSLocalizedString(@"Resume the transfer right away", "Torrent cell -> button info");
                 }
@@ -801,7 +1019,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
     }
     else
     {
-        if (NSEvent.modifierFlags & NSEventModifierFlagOption)
+        if ([NSEvent modifierFlags] & NSEventModifierFlagOption)
         {
             [self.fController resumeTorrentsNoWait:@[ torrent ]];
         }
@@ -941,20 +1159,39 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
 
 #pragma mark - Private
 
-- (BOOL)pointInGroupStatusRect:(NSPoint)point
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+- (BOOL)pointInLegacyGroupDisclosureRect:(NSPoint)point
 {
     NSInteger row = [self rowAtPoint:point];
-    if (![[self itemAtRow:row] isKindOfClass:[TorrentGroup class]])
+    if (row < 0 || ![[self itemAtRow:row] isKindOfClass:[TorrentGroup class]])
     {
         return NO;
     }
 
+    NSRect rowRect = [self rectOfRow:row];
+    return point.x >= NSMinX(rowRect) && point.x <= NSMinX(rowRect) + kLegacyGroupDisclosureWidth;
+}
+#endif
+
+- (BOOL)pointInGroupStatusRect:(NSPoint)point
+{
+    NSInteger row = [self rowAtPoint:point];
+    if (row < 0 || ![[self itemAtRow:row] isKindOfClass:[TorrentGroup class]])
+    {
+        return NO;
+    }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    NSRect rowRect = [self rectOfRow:row];
+    return point.x >= NSMaxX(rowRect) - kLegacyGroupStatusWidth;
+#else
     //check if click is within the status/ratio rect
     GroupCell* groupCell = [self viewAtColumn:0 row:row makeIfNecessary:NO];
     NSRect titleRect = groupCell.fGroupTitleField.frame;
     CGFloat maxX = NSMaxX(titleRect);
 
     return point.x > maxX;
+#endif
 }
 
 @end

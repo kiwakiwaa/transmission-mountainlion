@@ -131,6 +131,8 @@ target_sources(${TR_NAME}-mac
         LegacyConstraints.mm
         LegacySegmentedControl.h
         LegacySegmentedControl.mm
+        LegacyStackView.h
+        LegacyStackView.mm
         LegacySymbols.h
         LegacySymbols.mm
         main.mm
