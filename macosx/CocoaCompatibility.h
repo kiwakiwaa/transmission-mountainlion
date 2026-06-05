@@ -4,6 +4,11 @@
 
 #import <AppKit/AppKit.h>
 
+#import "LegacyColors.h"
+#import "LegacyConstraints.h"
+#import "LegacySegmentedControl.h"
+#import "LegacySymbols.h"
+
 #ifndef NSBezelStyleTexturedRounded
 #define NSBezelStyleTexturedRounded NSTexturedRoundedBezelStyle
 #endif
@@ -117,12 +122,6 @@ typedef void (^TRSheetCompletionHandler)(NSModalResponse returnCode);
 @end
 #endif
 
-NSImage* TRImageForSystemSymbol(NSString* symbolName, NSString* description);
-void TRSetSegmentTag(NSSegmentedControl* control, NSInteger tag, NSInteger segment);
-NSInteger TRSelectedSegmentTag(NSSegmentedControl* control);
-void TRSetSegmentToolTip(NSSegmentedControl* control, NSString* toolTip, NSInteger segment);
-void TRSetConstraintActive(NSLayoutConstraint* constraint, BOOL active);
-
 NS_ASSUME_NONNULL_BEGIN
 
 // Compatibility declarations to build `@available(macOS 13.0, *)` code with older Xcode 12.5.1 (the last macOS 11.0 compatible Xcode)
@@ -139,17 +138,6 @@ typedef NS_ENUM(NSInteger, NSColorWellStyle) {
 #endif
 
 NS_ASSUME_NONNULL_END
-
-NSColor* TRLabelColor(void);
-NSColor* TRSecondaryLabelColor(void);
-NSColor* TRSystemRedColor(void);
-NSColor* TRSystemOrangeColor(void);
-NSColor* TRSystemYellowColor(void);
-NSColor* TRSystemGreenColor(void);
-NSColor* TRSystemBlueColor(void);
-NSColor* TRSystemPurpleColor(void);
-NSColor* TRSystemGrayColor(void);
-NSColor* TRSystemTealColor(void);
 
 #ifndef NSTextAlignmentRight
 #define NSTextAlignmentRight NSRightTextAlignment

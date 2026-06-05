@@ -101,7 +101,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
     void (^setImageAndToolTipForSegment)(NSImage*, NSString*, NSInteger) = ^(NSImage* image, NSString* toolTip, NSInteger segment) {
         image.accessibilityDescription = toolTip;
         [self.fTabs setImage:image forSegment:segment];
-        [self.fTabs.cell setToolTip:toolTip forSegment:segment];
+        TRSetSegmentToolTip(self.fTabs, toolTip, segment);
     };
     setImageAndToolTipForSegment(TRImageForSystemSymbol(@"info.circle", nil), NSLocalizedString(@"General Info", "Inspector -> tab"), TabTagGeneral);
     setImageAndToolTipForSegment(TRImageForSystemSymbol(@"square.grid.3x3.fill.square", nil), NSLocalizedString(@"Activity", "Inspector -> tab"), TabTagActivity);

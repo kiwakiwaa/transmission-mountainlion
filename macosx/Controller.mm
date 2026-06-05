@@ -652,7 +652,7 @@ static void removeKeRangerRansomware()
         NSLayoutConstraint* constraint = [self.fActionButton.leadingAnchor constraintEqualToAnchor:self.fActionButton.superview.leadingAnchor
                                                                                           constant:16.0];
         constraint.priority = NSLayoutPriorityRequired;
-        constraint.active = YES;
+        TRSetConstraintActive(constraint, YES);
     }
 
     self.fSpeedLimitButton.toolTip = NSLocalizedString(
