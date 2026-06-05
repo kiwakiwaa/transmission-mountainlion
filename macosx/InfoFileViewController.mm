@@ -138,7 +138,7 @@
 
 - (void)toggleQuickLook:(id)sender
 {
-    if ([QLPreviewPanel sharedPreviewPanel].visible)
+    if ([[QLPreviewPanel sharedPreviewPanel] isVisible])
     {
         [[QLPreviewPanel sharedPreviewPanel] orderOut:nil];
     }

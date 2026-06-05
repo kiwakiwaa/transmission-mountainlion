@@ -14,7 +14,7 @@
 #import "NSMutableArrayAdditions.h"
 #import "NSStringAdditions.h"
 
-static CGFloat const kRowSmallHeight = 18.0;
+static CGFloat const kRowSmallHeight = 22.0;
 
 typedef NS_ENUM(NSUInteger, FileCheckMenuTag) { //
     FileCheckMenuTagCheck,
@@ -49,6 +49,8 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
     [self.fOutline tableColumnWithIdentifier:@"Priority"].headerToolTip = NSLocalizedString(@"Priority", "file table -> header tool tip");
 
     self.fOutline.menu = self.menu;
+    self.fOutline.target = self;
+    self.fOutline.doubleAction = @selector(revealFile:);
 
     self.torrent = nil;
 }
@@ -280,7 +282,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
 - (void)outlineViewSelectionDidChange:(NSNotification*)notification
 {
     [self reloadVisibleRows];
-    if ([QLPreviewPanel sharedPreviewPanelExists] && [QLPreviewPanel sharedPreviewPanel].visible)
+    if ([QLPreviewPanel sharedPreviewPanelExists] && [[QLPreviewPanel sharedPreviewPanel] isVisible])
     {
         [[QLPreviewPanel sharedPreviewPanel] reloadData];
     }
