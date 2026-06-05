@@ -174,8 +174,8 @@ typedef struct PieceInfo
     CGFloat const fullWidth = self.bounds.size.width;
     NSInteger const cellWidth = (NSInteger)((fullWidth - (across + 1) * kBetweenPadding) / across);
     NSInteger const extraBorder = (NSInteger)((fullWidth - ((cellWidth + kBetweenPadding) * across + kBetweenPadding)) / 2);
-    NSMutableArray<NSValue*>* cellBounds = [NSMutableArray arrayWithCapacity:numCells];
-    NSMutableArray<NSColor*>* cellColors = [NSMutableArray arrayWithCapacity:numCells];
+    NSMutableArray* cellBounds = [NSMutableArray arrayWithCapacity:numCells];
+    NSMutableArray* cellColors = [NSMutableArray arrayWithCapacity:numCells];
     for (int index = 0; index < numCells; index++)
     {
         int const row = index / across;

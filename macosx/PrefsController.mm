@@ -104,7 +104,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
 @property(nonatomic) IBOutlet NSTextField* fRPCPortField;
 @property(nonatomic) IBOutlet NSTextField* fRPCPasswordField;
 @property(nonatomic) IBOutlet NSTableView* fRPCWhitelistTable;
-@property(nonatomic, readonly) NSMutableArray<NSString*>* fRPCWhitelistArray;
+@property(nonatomic, readonly) NSMutableArray* fRPCWhitelistArray;
 @property(nonatomic) IBOutlet NSSegmentedControl* fRPCAddRemoveControl;
 @property(nonatomic, copy) NSString* fRPCPassword;
 @property(nonatomic, readonly) DefaultAppHelper* fDefaultAppHelper;
@@ -496,7 +496,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     self.fPortChecker = nil;
 }
 
-- (NSArray<NSString*>*)sounds
+- (NSArray*)sounds
 {
     NSMutableArray* sounds = [NSMutableArray array];
 

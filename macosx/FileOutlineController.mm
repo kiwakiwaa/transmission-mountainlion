@@ -29,7 +29,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
 
 @interface FileOutlineController ()<NSOutlineViewDelegate, NSOutlineViewDataSource, NSMenuItemValidation>
 
-@property(nonatomic) NSMutableArray<FileListNode*>* fFileList;
+@property(nonatomic) NSMutableArray* fFileList;
 
 @property(nonatomic) IBOutlet FileOutlineView* fOutline;
 
@@ -657,7 +657,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
 }
 
 - (NSUInteger)findFileNode:(FileListNode*)node
-                    inList:(NSArray<FileListNode*>*)list
+                    inList:(NSArray*)list
                  atIndexes:(NSIndexSet*)indexes
              currentParent:(FileListNode*)currentParent
                finalParent:(FileListNode* __autoreleasing*)parent
@@ -667,12 +667,12 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
     __block FileListNode* retNode;
     __block NSUInteger retIndex = NSNotFound;
 
-    using FindFileNode = void (^)(FileListNode*, NSArray<FileListNode*>*, NSIndexSet*, FileListNode*);
+    using FindFileNode = void (^)(FileListNode*, NSArray*, NSIndexSet*, FileListNode*);
     __weak __block FindFileNode weakFindFileNode;
     FindFileNode findFileNode;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
-    weakFindFileNode = findFileNode = ^(FileListNode* node, NSArray<FileListNode*>* list, NSIndexSet* indexes, FileListNode* currentParent) {
+    weakFindFileNode = findFileNode = ^(FileListNode* node, NSArray* list, NSIndexSet* indexes, FileListNode* currentParent) {
 #pragma clang diagnostic pop
         [list enumerateObjectsAtIndexes:indexes options:NSEnumerationConcurrent
                              usingBlock:^(FileListNode* checkNode, NSUInteger index, BOOL* stop) {

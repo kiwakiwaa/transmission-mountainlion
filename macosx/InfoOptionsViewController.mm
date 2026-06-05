@@ -29,7 +29,7 @@ static CGFloat const kStackViewSpacing = 8.0;
 
 @interface InfoOptionsViewController ()
 
-@property(nonatomic, copy) NSArray<Torrent*>* fTorrents;
+@property(nonatomic, copy) NSArray* fTorrents;
 
 @property(nonatomic) BOOL fSet;
 
@@ -217,7 +217,7 @@ static CGFloat const kStackViewSpacing = 8.0;
     }
 }
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents
+- (void)setInfoForTorrents:(NSArray*)torrents
 {
     //don't check if it's the same in case the metadata changed
     self.fTorrents = torrents;

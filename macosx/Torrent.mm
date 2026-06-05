@@ -37,8 +37,8 @@ static dispatch_queue_t timeMachineExcludeQueue;
 
 @property(nonatomic) NSImage* fIcon;
 
-@property(nonatomic, copy) NSArray<FileListNode*>* fileList;
-@property(nonatomic, copy) NSArray<FileListNode*>* flatFileList;
+@property(nonatomic, copy) NSArray* fileList;
+@property(nonatomic, copy) NSArray* flatFileList;
 
 @property(nonatomic, copy) NSIndexSet* fPreviousFinishedIndexes;
 @property(nonatomic) NSDate* fPreviousFinishedIndexesDate;
@@ -54,7 +54,7 @@ static dispatch_queue_t timeMachineExcludeQueue;
 - (BOOL)canChangeDownloadChecks;
 
 - (void)renameFinished:(BOOL)success
-                 nodes:(NSArray<FileListNode*>*)nodes
+                 nodes:(NSArray*)nodes
      completionHandler:(void (^)(BOOL))completionHandler
                oldPath:(NSString*)oldPath
                newName:(NSString*)newName;
@@ -263,7 +263,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     [Torrent updateTorrents:@[ self ]];
 }
 
-+ (void)updateTorrents:(NSArray<Torrent*>*)torrents
++ (void)updateTorrents:(NSArray*)torrents
 {
     if (torrents == nil || torrents.count == 0)
     {
@@ -704,7 +704,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     return trackers;
 }
 
-- (NSArray<NSString*>*)allTrackersFlat
+- (NSArray*)allTrackersFlat
 {
     auto const n = tr_torrentTrackerCount(self.fHandle);
     NSMutableArray* allTrackers = [NSMutableArray arrayWithCapacity:n];
@@ -1032,7 +1032,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     return error;
 }
 
-- (NSArray<NSDictionary*>*)peers
+- (NSArray*)peers
 {
     auto const peers = tr_torrentPeers(self.fHandle);
     size_t const totalPeers = peers.size();
@@ -1074,7 +1074,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     return tr_torrentWebseedCount(self.fHandle);
 }
 
-- (NSArray<NSDictionary*>*)webSeeds
+- (NSArray*)webSeeds
 {
     NSUInteger n = tr_torrentWebseedCount(self.fHandle);
     NSMutableArray* webSeeds = [NSMutableArray arrayWithCapacity:n];
@@ -1994,12 +1994,12 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     }
 }
 
-- (void)insertPathForComponents:(NSArray<NSString*>*)components
+- (void)insertPathForComponents:(NSArray*)components
              withComponentIndex:(NSUInteger)componentIndex
                       forParent:(FileListNode*)parent
                        fileSize:(uint64_t)size
                           index:(NSInteger)index
-                       flatList:(NSMutableArray<FileListNode*>*)flatFileList
+                       flatList:(NSMutableArray*)flatFileList
 {
     NSParameterAssert(components.count > 0);
     NSParameterAssert(componentIndex < components.count);
@@ -2051,7 +2051,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     }
 }
 
-- (void)sortFileList:(NSMutableArray<FileListNode*>*)fileNodes
+- (void)sortFileList:(NSMutableArray*)fileNodes
 {
     NSSortDescriptor* descriptor = [NSSortDescriptor sortDescriptorWithKey:@"name" ascending:YES
                                                                   selector:@selector(localizedStandardCompare:)];
@@ -2139,7 +2139,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
 }
 
 - (void)renameFinished:(BOOL)success
-                 nodes:(NSArray<FileListNode*>*)nodes
+                 nodes:(NSArray*)nodes
      completionHandler:(void (^)(BOOL))completionHandler
                oldPath:(NSString*)oldPath
                newName:(NSString*)newName
@@ -2270,7 +2270,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
 }
 
 // For backward compatibility for previously saved Group Predicates.
-- (NSArray<FileListNode*>*)fFlatFileList
+- (NSArray*)fFlatFileList
 {
     return self.flatFileList;
 }

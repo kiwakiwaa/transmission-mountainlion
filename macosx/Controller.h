@@ -5,7 +5,12 @@
 #import <AppKit/AppKit.h>
 #import <Quartz/Quartz.h>
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
 #import <Sparkle/SUUpdaterDelegate.h>
+#else
+@class SUUpdater;
+@protocol SUVersionComparison;
+#endif
 
 #include <libtransmission/transmission.h>
 
@@ -25,10 +30,24 @@ typedef NS_ENUM(NSUInteger, AddType) { //
     AddTypeCreated
 };
 
-@interface Controller
-    : NSObject<NSApplicationDelegate, NSMenuItemValidation, NSPopoverDelegate, NSSharingServiceDelegate, NSSharingServicePickerDelegate, NSSoundDelegate, NSToolbarDelegate, NSToolbarItemValidation, NSWindowDelegate, QLPreviewPanelDataSource, QLPreviewPanelDelegate, VDKQueueDelegate, SUUpdaterDelegate>
+@interface Controller : NSObject<
+                            NSApplicationDelegate,
+                            NSPopoverDelegate,
+                            NSSharingServiceDelegate,
+                            NSSharingServicePickerDelegate,
+                            NSSoundDelegate,
+                            NSToolbarDelegate,
+                            NSWindowDelegate,
+                            QLPreviewPanelDataSource,
+                            QLPreviewPanelDelegate,
+                            VDKQueueDelegate
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+                            ,
+                            SUUpdaterDelegate
+#endif
+                            >
 
-- (void)openFiles:(NSArray<NSString*>*)filenames addType:(AddType)type forcePath:(NSString*)path;
+- (void)openFiles:(NSArray*)filenames addType:(AddType)type forcePath:(NSString*)path;
 
 - (void)askOpenConfirmed:(AddWindowController*)addController add:(BOOL)add;
 - (void)openCreatedFile:(NSNotification*)notification;
@@ -54,28 +73,28 @@ typedef NS_ENUM(NSUInteger, AddType) { //
 
 - (IBAction)resumeSelectedTorrents:(id)sender;
 - (IBAction)resumeAllTorrents:(id)sender;
-- (void)resumeTorrents:(NSArray<Torrent*>*)torrents;
+- (void)resumeTorrents:(NSArray*)torrents;
 
 - (IBAction)resumeSelectedTorrentsNoWait:(id)sender;
 - (IBAction)resumeWaitingTorrents:(id)sender;
-- (void)resumeTorrentsNoWait:(NSArray<Torrent*>*)torrents;
+- (void)resumeTorrentsNoWait:(NSArray*)torrents;
 
 - (IBAction)stopSelectedTorrents:(id)sender;
 - (IBAction)stopAllTorrents:(id)sender;
-- (void)stopTorrents:(NSArray<Torrent*>*)torrents;
+- (void)stopTorrents:(NSArray*)torrents;
 
-- (void)removeTorrents:(NSArray<Torrent*>*)torrents deleteData:(BOOL)deleteData;
-- (void)confirmRemoveTorrents:(NSArray<Torrent*>*)torrents deleteData:(BOOL)deleteData;
+- (void)removeTorrents:(NSArray*)torrents deleteData:(BOOL)deleteData;
+- (void)confirmRemoveTorrents:(NSArray*)torrents deleteData:(BOOL)deleteData;
 - (IBAction)removeNoDelete:(id)sender;
 - (IBAction)removeDeleteData:(id)sender;
 
 - (IBAction)clearCompleted:(id)sender;
 
 - (IBAction)moveDataFilesSelected:(id)sender;
-- (void)moveDataFiles:(NSArray<Torrent*>*)torrents;
+- (void)moveDataFiles:(NSArray*)torrents;
 
 - (IBAction)copyTorrentFiles:(id)sender;
-- (void)copyTorrentFileForTorrents:(NSMutableArray<Torrent*>*)torrents;
+- (void)copyTorrentFileForTorrents:(NSMutableArray*)torrents;
 
 - (IBAction)copyMagnetLinks:(id)sender;
 
@@ -86,9 +105,9 @@ typedef NS_ENUM(NSUInteger, AddType) { //
 - (IBAction)announceSelectedTorrents:(id)sender;
 
 - (IBAction)verifySelectedTorrents:(id)sender;
-- (void)verifyTorrents:(NSArray<Torrent*>*)torrents;
+- (void)verifyTorrents:(NSArray*)torrents;
 
-@property(nonatomic, readonly) NSArray<Torrent*>* selectedTorrents;
+@property(nonatomic, readonly) NSArray* selectedTorrents;
 
 @property(nonatomic, readonly) PrefsController* prefsController;
 - (IBAction)showPreferenceWindow:(id)sender;

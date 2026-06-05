@@ -10,7 +10,7 @@
 {
     [super awakeFromNib];
 
-    self.enabled = self.enabled;
+    self.enabled = [self isEnabled];
 }
 
 - (void)setEnabled:(BOOL)flag

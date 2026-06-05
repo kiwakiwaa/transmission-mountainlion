@@ -4,7 +4,14 @@
 
 #import <Foundation/Foundation.h>
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
 #import <Sparkle/SUVersionComparisonProtocol.h>
+#else
+@protocol SUVersionComparison<NSObject>
+- (NSComparisonResult)compareVersion:(NSString*)versionA toVersion:(NSString*)versionB;
+@end
+
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
 

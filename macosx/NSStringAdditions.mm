@@ -139,9 +139,9 @@
     return [self compare:string options:comparisonOptions range:NSMakeRange(0, self.length) locale:NSLocale.currentLocale];
 }
 
-- (NSArray<NSString*>*)nonEmptyComponentsSeparatedByCharactersInSet:(NSCharacterSet*)separators
+- (NSArray*)nonEmptyComponentsSeparatedByCharactersInSet:(NSCharacterSet*)separators
 {
-    NSMutableArray<NSString*>* components = [NSMutableArray array];
+    NSMutableArray* components = [NSMutableArray array];
     for (NSString* evaluatedObject in [self componentsSeparatedByCharactersInSet:separators])
     {
         if (evaluatedObject.length > 0)

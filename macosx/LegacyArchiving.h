@@ -4,15 +4,5 @@
 
 #import <Foundation/Foundation.h>
 
-@class Torrent;
-
-@protocol InfoViewController
-
-- (void)setInfoForTorrents:(NSArray*)torrents;
-- (void)updateInfo;
-
-@optional
-- (void)clearView;
-- (void)saveViewSize;
-
-@end
+NSData* TRArchivedDataForObject(id object);
+id TRUnarchiveObjectFromData(NSData* data, NSSet* allowedClasses);

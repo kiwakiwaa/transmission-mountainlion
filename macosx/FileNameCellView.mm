@@ -21,7 +21,7 @@ static CGFloat const kPaddingBetweenNameAndFolderStatus = 4.0;
 @property(nonatomic, weak) NSImageView* iconView;
 @property(nonatomic, weak) NSTextField* nameField;
 @property(nonatomic, weak) NSTextField* statusField;
-@property(nonatomic, strong) NSArray<NSLayoutConstraint*>* dynamicConstraints;
+@property(nonatomic, strong) NSArray* dynamicConstraints;
 @end
 
 @implementation FileNameCellView

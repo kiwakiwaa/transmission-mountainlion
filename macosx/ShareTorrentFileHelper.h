@@ -9,7 +9,7 @@
 
 @property(nonatomic, class, readonly) ShareTorrentFileHelper* sharedHelper;
 
-@property(nonatomic, readonly) NSArray<NSURL*>* shareTorrentURLs;
-@property(nonatomic, readonly) NSArray<NSMenuItem*>* menuItems;
+@property(nonatomic, readonly) NSArray* shareTorrentURLs;
+@property(nonatomic, readonly) NSArray* menuItems;
 
 @end

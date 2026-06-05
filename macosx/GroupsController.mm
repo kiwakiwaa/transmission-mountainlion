@@ -4,6 +4,7 @@
 
 #import "GroupsController.h"
 #import "CocoaCompatibility.h"
+#import "LegacyArchiving.h"
 #import "NSImageAdditions.h"
 #import "NSKeyedUnarchiverAdditions.h"
 #import "NSMutableArrayAdditions.h"
@@ -14,7 +15,7 @@ static CGFloat const kIconWidthSmall = 12.0;
 
 @interface GroupsController ()
 
-@property(nonatomic, readonly) NSMutableArray<NSMutableDictionary*>* fGroups;
+@property(nonatomic, readonly) NSMutableArray* fGroups;
 
 @end
 
@@ -38,15 +39,15 @@ GroupsController* fGroupsInstance = nil;
         NSData* data;
         if ((data = [NSUserDefaults.standardUserDefaults dataForKey:@"GroupDicts"]))
         {
-            _fGroups = [NSKeyedUnarchiver unarchivedObjectOfClasses:[NSSet setWithObjects:NSMutableArray.class,
-                                                                                          NSMutableDictionary.class,
-                                                                                          NSNumber.class,
-                                                                                          NSColor.class,
-                                                                                          NSString.class,
-                                                                                          NSPredicate.class,
-                                                                                          nil]
-                                                           fromData:data
-                                                              error:nil];
+            _fGroups = TRUnarchiveObjectFromData(
+                data,
+                [NSSet setWithObjects:NSMutableArray.class,
+                                      NSMutableDictionary.class,
+                                      NSNumber.class,
+                                      NSColor.class,
+                                      NSString.class,
+                                      NSPredicate.class,
+                                      nil]);
         }
         else if ((data = [NSUserDefaults.standardUserDefaults dataForKey:@"Groups"])) //handle old groups
         {
@@ -341,9 +342,7 @@ GroupsController* fGroupsInstance = nil;
         [groups addObject:tempDict];
     }
 
-    [NSUserDefaults.standardUserDefaults setObject:[NSKeyedArchiver archivedDataWithRootObject:groups requiringSecureCoding:YES
-                                                                                         error:nil]
-                                            forKey:@"GroupDicts"];
+    [NSUserDefaults.standardUserDefaults setObject:TRArchivedDataForObject(groups) forKey:@"GroupDicts"];
 }
 
 - (NSImage*)imageForGroupNone

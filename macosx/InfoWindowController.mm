@@ -39,7 +39,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
 
 @interface InfoWindowController ()
 
-@property(nonatomic, copy) NSArray<Torrent*>* fTorrents;
+@property(nonatomic, copy) NSArray* fTorrents;
 
 @property(nonatomic) CGFloat fMinWindowWidth;
 
@@ -183,7 +183,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
     }
 }
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents
+- (void)setInfoForTorrents:(NSArray*)torrents
 {
     if ([self.fTorrents isEqualToArray:torrents])
     {
@@ -195,14 +195,14 @@ typedef NS_ENUM(NSUInteger, TabTag) {
     [self resetInfo];
 }
 
-- (void)removeTorrentsFromInfo:(NSArray<Torrent*>*)torrents
+- (void)removeTorrentsFromInfo:(NSArray*)torrents
 {
     if (self.fTorrents.count == 0 || torrents.count == 0)
     {
         return;
     }
 
-    NSMutableArray<Torrent*>* remaining = [self.fTorrents mutableCopy];
+    NSMutableArray* remaining = [self.fTorrents mutableCopy];
     [remaining removeObjectsInArray:torrents];
     [self setInfoForTorrents:remaining];
 }
@@ -479,7 +479,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
     [self.fOptionsViewController updateOptions];
 }
 
-- (NSArray<NSURL*>*)quickLookURLs
+- (NSArray*)quickLookURLs
 {
     return self.fFileViewController.quickLookURLs;
 }

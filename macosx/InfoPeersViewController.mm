@@ -17,12 +17,12 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
 
 @interface InfoPeersViewController ()<CAAnimationDelegate>
 
-@property(nonatomic, copy) NSArray<Torrent*>* fTorrents;
+@property(nonatomic, copy) NSArray* fTorrents;
 
 @property(nonatomic) BOOL fSet;
 
-@property(nonatomic) NSMutableArray<NSDictionary*>* fPeers;
-@property(nonatomic) NSMutableArray<NSDictionary*>* fWebSeeds;
+@property(nonatomic) NSMutableArray* fPeers;
+@property(nonatomic) NSMutableArray* fWebSeeds;
 
 @property(nonatomic) IBOutlet NSTableView* fPeerTable;
 @property(nonatomic) IBOutlet WebSeedTableView* fWebSeedTable;
@@ -31,7 +31,7 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
 
 @property(nonatomic) CGFloat fViewTopMargin;
 @property(nonatomic) IBOutlet NSLayoutConstraint* fWebSeedTableTopConstraint;
-@property(nonatomic, readonly) NSArray<NSSortDescriptor*>* peerSortDescriptors;
+@property(nonatomic, readonly) NSArray* peerSortDescriptors;
 
 @end
 
@@ -92,7 +92,7 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
     [self setWebSeedTableHidden:YES animate:NO];
 }
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents
+- (void)setInfoForTorrents:(NSArray*)torrents
 {
     //don't check if it's the same in case the metadata changed
     self.fTorrents = torrents;
@@ -621,7 +621,7 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
     (animate ? [self.fWebSeedTableTopConstraint animator] : self.fWebSeedTableTopConstraint).constant = webSeedTableTopMargin;
 }
 
-- (NSArray<NSSortDescriptor*>*)peerSortDescriptors
+- (NSArray*)peerSortDescriptors
 {
     NSMutableArray* descriptors = [NSMutableArray arrayWithCapacity:2];
 

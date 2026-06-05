@@ -34,6 +34,22 @@ static inline NSEvent* NSAppCurrentEvent(void)
 #define NS_ASSUME_NONNULL_END
 #endif
 
+#ifndef nullable
+#define nullable
+#endif
+#ifndef nonnull
+#define nonnull
+#endif
+#ifndef __kindof
+#define __kindof
+#endif
+#ifndef _Nullable
+#define _Nullable
+#endif
+#ifndef _Nonnull
+#define _Nonnull
+#endif
+
 #ifndef API_AVAILABLE
 #define API_AVAILABLE(...)
 #endif

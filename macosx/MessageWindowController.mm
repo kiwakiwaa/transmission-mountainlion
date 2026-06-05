@@ -31,10 +31,10 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
 @property(nonatomic) IBOutlet NSButton* fClearButton;
 @property(nonatomic) IBOutlet NSSearchField* fFilterField;
 
-@property(nonatomic) NSMutableArray<NSDictionary*>* fMessages;
-@property(nonatomic) NSMutableArray<NSDictionary*>* fDisplayedMessages;
+@property(nonatomic) NSMutableArray* fMessages;
+@property(nonatomic) NSMutableArray* fDisplayedMessages;
 
-@property(nonatomic, copy) NSDictionary<NSAttributedStringKey, id>* fAttributes;
+@property(nonatomic, copy) NSDictionary* fAttributes;
 
 @property(nonatomic) NSTimer* fTimer;
 
@@ -213,7 +213,7 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
     }
 
     // cache dictionary
-    static NSMutableDictionary<NSColor*, NSImage*>* icons = [NSMutableDictionary dictionary];
+    static NSMutableDictionary* icons = [NSMutableDictionary dictionary];
     NSImage* icon;
     if ((icon = icons[color]))
     {

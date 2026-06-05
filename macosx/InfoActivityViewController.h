@@ -13,7 +13,7 @@
 - (void)checkWindowSize;
 - (void)updateWindowLayout;
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents;
+- (void)setInfoForTorrents:(NSArray*)torrents;
 - (void)updateInfo;
 
 - (IBAction)setPiecesView:(id)sender;

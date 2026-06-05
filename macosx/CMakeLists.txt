@@ -125,6 +125,8 @@ target_sources(${TR_NAME}-mac
         InfoViewController.h
         InfoWindowController.h
         InfoWindowController.mm
+        LegacyArchiving.h
+        LegacyArchiving.mm
         LegacyColors.h
         LegacyColors.mm
         LegacyConstraints.h

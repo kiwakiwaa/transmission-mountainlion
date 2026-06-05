@@ -12,7 +12,7 @@
 
 @property(nonatomic, readonly) NSInteger groupIndex;
 @property(nonatomic, readonly) NSInteger groupOrderValue;
-@property(nonatomic, readonly) NSMutableArray<Torrent*>* torrents;
+@property(nonatomic, readonly) NSMutableArray* torrents;
 
 @property(nonatomic, readonly) CGFloat ratio;
 @property(nonatomic, readonly) CGFloat uploadRate;

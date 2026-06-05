@@ -26,7 +26,7 @@
 - (NSComparisonResult)compareNumeric:(NSString*)string;
 
 // like componentsSeparatedByCharactersInSet:, but excludes blank values
-- (NSArray<NSString*>*)nonEmptyComponentsSeparatedByCharactersInSet:(NSCharacterSet*)separators;
+- (NSArray*)nonEmptyComponentsSeparatedByCharactersInSet:(NSCharacterSet*)separators;
 
 + (NSString*)convertedStringFromCString:(char const*)bytes;
 

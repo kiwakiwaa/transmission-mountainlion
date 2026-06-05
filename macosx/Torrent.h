@@ -37,7 +37,7 @@ extern NSString* const kTorrentDidChangeGroupNotification;
 
 // Updates one or more torrents by refreshing their libtransmission stats.
 // Prefer using this batch method when updating many torrents at once.
-+ (void)updateTorrents:(NSArray<Torrent*>*)torrents;
++ (void)updateTorrents:(NSArray*)torrents;
 
 - (void)update;
 
@@ -99,7 +99,7 @@ extern NSString* const kTorrentDidChangeGroupNotification;
 @property(nonatomic, readonly) uint64_t sizeLeft;
 
 @property(nonatomic, readonly) NSMutableArray* allTrackerStats;
-@property(nonatomic, readonly) NSArray<NSString*>* allTrackersFlat; //used by GroupRules
+@property(nonatomic, readonly) NSArray* allTrackersFlat; //used by GroupRules
 - (BOOL)addTrackerToNewTier:(NSString*)tracker;
 - (void)removeTrackers:(NSSet*)trackers;
 
@@ -145,10 +145,10 @@ extern NSString* const kTorrentDidChangeGroupNotification;
 @property(nonatomic, getter=isAnyErrorOrWarning, readonly) BOOL anyErrorOrWarning;
 @property(nonatomic, readonly) NSString* errorMessage;
 
-@property(nonatomic, readonly) NSArray<NSDictionary*>* peers;
+@property(nonatomic, readonly) NSArray* peers;
 
 @property(nonatomic, readonly) NSUInteger webSeedCount;
-@property(nonatomic, readonly) NSArray<NSDictionary*>* webSeeds;
+@property(nonatomic, readonly) NSArray* webSeeds;
 
 @property(nonatomic, readonly) NSString* progressString;
 @property(nonatomic, readonly) NSString* statusString;
@@ -192,8 +192,8 @@ extern NSString* const kTorrentDidChangeGroupNotification;
 @property(nonatomic, readonly) NSInteger groupOrderValue;
 - (void)checkGroupValueForRemoval:(NSNotification*)notification;
 
-@property(nonatomic, readonly) NSArray<FileListNode*>* fileList;
-@property(nonatomic, readonly) NSArray<FileListNode*>* flatFileList;
+@property(nonatomic, readonly) NSArray* fileList;
+@property(nonatomic, readonly) NSArray* flatFileList;
 @property(nonatomic, readonly) NSUInteger fileCount;
 
 //methods require fileStats to have been updated recently to be accurate

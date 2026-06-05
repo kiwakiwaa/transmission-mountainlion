@@ -62,11 +62,11 @@ typedef NS_ENUM(NSUInteger, StatusTag) {
     [self.fStatusButton.menu itemWithTag:StatusTagTotalTransfer].title = NSLocalizedString(@"Total Transfer", "Status Bar -> status menu");
     [self.fStatusButton.menu itemWithTag:StatusTagSessionTransfer].title = NSLocalizedString(@"Session Transfer", "Status Bar -> status menu");
 
-    self.fStatusButton.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fTotalDLField.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fTotalULField.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fTotalDLImageView.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fTotalULImageView.cell.backgroundStyle = NSBackgroundStyleRaised;
+    [[self.fStatusButton cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fTotalDLField cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fTotalULField cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fTotalDLImageView cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fTotalULImageView cell] setBackgroundStyle:NSBackgroundStyleRaised];
 
     [self updateSpeedFieldsToolTips];
 

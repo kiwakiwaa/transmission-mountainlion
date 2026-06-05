@@ -3,16 +3,17 @@
 // License text can be found in the licenses/ folder.
 
 #import <AppKit/AppKit.h>
+#import <Quartz/Quartz.h>
 
 @class Torrent;
 
 @interface InfoWindowController : NSWindowController
 
-@property(nonatomic, readonly) NSArray<NSURL*>* quickLookURLs;
+@property(nonatomic, readonly) NSArray* quickLookURLs;
 @property(nonatomic, readonly) BOOL canQuickLook;
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents;
-- (void)removeTorrentsFromInfo:(NSArray<Torrent*>*)torrents;
+- (void)setInfoForTorrents:(NSArray*)torrents;
+- (void)removeTorrentsFromInfo:(NSArray*)torrents;
 - (void)updateInfoStats;
 - (void)updateOptions;
 

@@ -8,6 +8,7 @@
 #import "GroupsController.h"
 #import "ExpandedPathToPathTransformer.h"
 #import "ExpandedPathToIconTransformer.h"
+#import "LegacyArchiving.h"
 
 static NSString* const kGroupTableViewDataType = @"GroupTableViewDataType";
 
@@ -101,8 +102,7 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
 - (BOOL)tableView:(NSTableView*)tableView writeRowsWithIndexes:(NSIndexSet*)rowIndexes toPasteboard:(NSPasteboard*)pboard
 {
     [pboard declareTypes:@[ kGroupTableViewDataType ] owner:self];
-    [pboard setData:[NSKeyedArchiver archivedDataWithRootObject:rowIndexes requiringSecureCoding:YES error:nil]
-            forType:kGroupTableViewDataType];
+    [pboard setData:TRArchivedDataForObject(rowIndexes) forType:kGroupTableViewDataType];
     return YES;
 }
 
@@ -129,8 +129,9 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
     NSPasteboard* pasteboard = info.draggingPasteboard;
     if ([pasteboard.types containsObject:kGroupTableViewDataType])
     {
-        NSIndexSet* indexes = [NSKeyedUnarchiver unarchivedObjectOfClass:NSIndexSet.class fromData:[pasteboard dataForType:kGroupTableViewDataType]
-                                                                   error:nil];
+        NSIndexSet* indexes = TRUnarchiveObjectFromData(
+            [pasteboard dataForType:kGroupTableViewDataType],
+            [NSSet setWithObject:NSIndexSet.class]);
         NSInteger oldRow = indexes.firstIndex;
 
         if (oldRow < newRow)

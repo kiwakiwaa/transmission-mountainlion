@@ -8,6 +8,7 @@
 #import "Controller.h"
 #import "FileListNode.h"
 #import "InfoOptionsViewController.h"
+#import "LegacyArchiving.h"
 #import "NSKeyedUnarchiverAdditions.h"
 #import "NSStringAdditions.h"
 #import "Torrent.h"
@@ -245,7 +246,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
         NSData* groupData;
         if ((groupData = [_fDefaults dataForKey:@"CollapsedGroupIndexes"]))
         {
-            _fCollapsedGroups = [[NSKeyedUnarchiver deprecatedUnarchiveObjectWithData:groupData] mutableCopy];
+            _fCollapsedGroups = [TRUnarchiveObjectFromData(groupData, [NSSet setWithObject:NSMutableIndexSet.class]) mutableCopy];
         }
         else if ((groupData = [_fDefaults dataForKey:@"CollapsedGroups"])) //handle old groups
         {
@@ -413,7 +414,7 @@ static NSTimeInterval const kToggleProgressSeconds = 0.175;
 
 - (void)saveCollapsedGroups
 {
-    [self.fDefaults setObject:[NSKeyedArchiver archivedDataWithRootObject:self.fCollapsedGroups] forKey:@"CollapsedGroupIndexes"];
+    [self.fDefaults setObject:TRArchivedDataForObject(self.fCollapsedGroups) forKey:@"CollapsedGroupIndexes"];
 }
 
 - (BOOL)outlineView:(NSOutlineView*)outlineView isGroupItem:(id)item

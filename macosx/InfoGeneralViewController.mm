@@ -8,7 +8,7 @@
 
 @interface InfoGeneralViewController ()
 
-@property(nonatomic, copy) NSArray<Torrent*>* fTorrents;
+@property(nonatomic, copy) NSArray* fTorrents;
 
 @property(nonatomic) BOOL fSet;
 
@@ -39,7 +39,7 @@
     return self;
 }
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents
+- (void)setInfoForTorrents:(NSArray*)torrents
 {
     //don't check if it's the same in case the metadata changed
     self.fTorrents = torrents;

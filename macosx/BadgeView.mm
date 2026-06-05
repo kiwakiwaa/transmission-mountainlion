@@ -46,7 +46,7 @@ typedef NS_ENUM(NSInteger, ArrowDirection) {
         _fAttributes[NSFontAttributeName] = [NSFont boldSystemFontOfSize:26.0];
 
         // DownloadBadge and UploadBadge should have the same size
-        NSSize badgeSize = [NSImage imageNamed:@"DownloadBadge"].size;
+        NSSize badgeSize = [[NSImage imageNamed:@"DownloadBadge"] size];
         // DownArrowTemplate and UpArrowTemplate should have the same size
         CGFloat arrowWidthHeightRatio = kWhiteDownArrow.size.width / kWhiteDownArrow.size.height;
 
@@ -74,7 +74,7 @@ typedef NS_ENUM(NSInteger, ArrowDirection) {
 
 - (void)drawRect:(NSRect)rect
 {
-    [NSApp.applicationIconImage drawInRect:rect fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
+    [[NSApp applicationIconImage] drawInRect:rect fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
 
     BOOL const upload = self.fUploadRate >= 0.1;
     BOOL const download = self.fDownloadRate >= 0.1;

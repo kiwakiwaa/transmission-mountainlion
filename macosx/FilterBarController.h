@@ -22,7 +22,7 @@ extern NSInteger const kGroupFilterAllTag;
 
 @interface FilterBarController : NSTitlebarAccessoryViewController<NSMenuItemValidation>
 
-@property(nonatomic, readonly) NSArray<NSString*>* searchStrings;
+@property(nonatomic, readonly) NSArray* searchStrings;
 
 - (instancetype)init;
 
