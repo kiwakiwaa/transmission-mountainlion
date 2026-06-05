@@ -193,6 +193,8 @@ target_sources(${TR_NAME}-mac
         StatsWindowController.mm
         StatusBarController.h
         StatusBarController.mm
+        SystemNotificationController.h
+        SystemNotificationController.mm
         Toolbar.h
         Toolbar.mm
         Torrent.h
@@ -500,7 +502,14 @@ if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_GREATER_EQUAL 11.0)
     target_link_libraries(${TR_NAME}-mac PRIVATE "-weak_framework UniformTypeIdentifiers")
 endif()
 
-if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_GREATER_EQUAL 10.14)
+if(IS_ABSOLUTE "${CMAKE_OSX_SYSROOT}")
+    find_library(USERNOTIFICATIONS_FRAMEWORK UserNotifications
+        PATHS "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks"
+        NO_DEFAULT_PATH)
+else()
+    find_library(USERNOTIFICATIONS_FRAMEWORK UserNotifications)
+endif()
+if(USERNOTIFICATIONS_FRAMEWORK)
     target_link_libraries(${TR_NAME}-mac PRIVATE "-weak_framework UserNotifications")
 endif()
 
