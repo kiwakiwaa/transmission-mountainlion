@@ -36,3 +36,17 @@ Its User-Agent header follows a similar format, plus the VCS revision in parenth
   * Transmission/1.30X (6416) &mdash; Beta release leading up to version 1.30
   * Transmission/1.32 (6455) &mdash; Official 1.32 release
   * Transmission/1.32+ (6499) &mdash; Nightly build between 1.32 and 1.33
+
+## Announced Client Identity
+
+Transmission normally announces its real client identity to trackers and peers. The macOS client can optionally set an announced client identity per group for compatibility testing with trackers or peers that treat specific Transmission versions differently.
+
+The selected identity is applied to new protocol traffic from matching torrents:
+
+* the BitTorrent peer-id prefix
+* the HTTP tracker announce `User-Agent`
+* the LTEP handshake `v` value
+
+Changing a running torrent's group identity is deferred for the peer-id prefix until the torrent is stopped and started again, because the peer-id is fixed when a torrent session starts. Tracker announces and LTEP handshakes use the active identity chosen for the torrent.
+
+This setting is a compatibility tool. It is not a privacy, anonymity, or security feature.
