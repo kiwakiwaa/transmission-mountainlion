@@ -633,6 +633,23 @@ void tr_torrentRemove(tr_torrent* tor, bool delete_flag, tr_torrent_remove_func 
 /** @brief Start a torrent */
 void tr_torrentStart(tr_torrent* torrent);
 
+/**
+ * @brief A supported announced client identity for tracker and peer protocol surfaces.
+ *
+ * The identity list is ordered for display; the first entry is the real build identity.
+ */
+struct tr_announced_client_identity_info
+{
+    char const* id = nullptr;
+    char const* display_name = nullptr;
+};
+
+/** @brief Return the number of supported announced client identities. */
+[[nodiscard]] size_t tr_announcedClientIdentityCount();
+
+/** @brief Return a supported announced client identity by index, or an empty entry if out of range. */
+[[nodiscard]] tr_announced_client_identity_info tr_announcedClientIdentity(size_t index);
+
 /** @brief Stop (pause) a torrent */
 void tr_torrentStop(tr_torrent* torrent);
 
