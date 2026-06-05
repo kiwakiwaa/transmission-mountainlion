@@ -27,4 +27,3 @@ struct tr_announced_client_identity
 [[nodiscard]] tr_announced_client_identity const& tr_announced_client_identity_real() noexcept;
 
 [[nodiscard]] tr_announced_client_identity const* tr_announced_client_identity_find(std::string_view id) noexcept;
-

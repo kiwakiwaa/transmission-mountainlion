@@ -142,4 +142,3 @@ tr_announced_client_identity_info tr_announcedClientIdentity(size_t const index)
         .display_name = std::data(identity.display_name),
     };
 }
-
