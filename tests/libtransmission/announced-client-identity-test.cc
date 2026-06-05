@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <set>
 #include <string>
 #include <string_view>
@@ -16,6 +17,7 @@
 #include <libtransmission/announced-client-identity.h>
 #include <libtransmission/clients.h>
 #include <libtransmission/session.h> // TR_NAME
+#include <libtransmission/torrent.h>
 #include <libtransmission/version.h>
 
 #include "test-fixtures.h"
@@ -24,6 +26,11 @@ using namespace std::literals;
 
 namespace
 {
+[[nodiscard]] std::string_view peer_id_prefix(tr_peer_id_t const& peer_id)
+{
+    return { std::data(peer_id), 8U };
+}
+
 [[nodiscard]] std::string client_for_prefix(std::string_view const prefix)
 {
     auto peer_id = tr_peer_id_t{};
@@ -135,3 +142,59 @@ TEST(AnnouncedClientIdentity, publicListApiMirrorsTable)
     EXPECT_EQ(nullptr, out_of_range.display_name);
 }
 
+using AnnouncedClientIdentityTorrentTest = tr::test::SessionTest;
+
+TEST_F(AnnouncedClientIdentityTorrentTest, torrentSetResetAndInvalidIdentity)
+{
+    auto* const tor = zeroTorrentMagnetInit();
+
+    EXPECT_STREQ("real", tr_torrentGetAnnouncedClientIdentity(tor));
+    EXPECT_EQ(std::string_view{ PEERID_PREFIX }, peer_id_prefix(tor->peer_id()));
+    EXPECT_EQ(std::string_view{ TR_NAME "/" SHORT_VERSION_STRING }, tor->announce_user_agent());
+    EXPECT_EQ(std::string_view{ TR_NAME " " USERAGENT_PREFIX }, tor->extended_protocol_client_version());
+
+    ASSERT_TRUE(tr_torrentSetAnnouncedClientIdentity(tor, "transmission-2.94"));
+    EXPECT_STREQ("transmission-2.94", tr_torrentGetAnnouncedClientIdentity(tor));
+    EXPECT_EQ("-TR2940-"sv, peer_id_prefix(tor->peer_id()));
+    EXPECT_EQ("Transmission/2.94"sv, tor->announce_user_agent());
+    EXPECT_EQ("Transmission 2.94"sv, tor->extended_protocol_client_version());
+
+    EXPECT_FALSE(tr_torrentSetAnnouncedClientIdentity(tor, "Transmission/4.0.5"));
+    EXPECT_STREQ("transmission-2.94", tr_torrentGetAnnouncedClientIdentity(tor));
+    EXPECT_EQ("-TR2940-"sv, peer_id_prefix(tor->peer_id()));
+    EXPECT_EQ("Transmission/2.94"sv, tor->announce_user_agent());
+    EXPECT_EQ("Transmission 2.94"sv, tor->extended_protocol_client_version());
+
+    ASSERT_TRUE(tr_torrentSetAnnouncedClientIdentity(tor, ""));
+    EXPECT_STREQ("real", tr_torrentGetAnnouncedClientIdentity(tor));
+    EXPECT_EQ(std::string_view{ PEERID_PREFIX }, peer_id_prefix(tor->peer_id()));
+    EXPECT_EQ(std::string_view{ TR_NAME "/" SHORT_VERSION_STRING }, tor->announce_user_agent());
+    EXPECT_EQ(std::string_view{ TR_NAME " " USERAGENT_PREFIX }, tor->extended_protocol_client_version());
+
+    ASSERT_TRUE(tr_torrentSetAnnouncedClientIdentity(tor, nullptr));
+    EXPECT_STREQ("real", tr_torrentGetAnnouncedClientIdentity(tor));
+}
+
+TEST_F(AnnouncedClientIdentityTorrentTest, runningTorrentDefersActiveIdentityUntilStopped)
+{
+    auto* const tor = zeroTorrentMagnetInit();
+
+    auto started = std::atomic_bool{ false };
+    tor->started_.connect([&started](tr_torrent*) { started = true; });
+
+    tr_torrentStartNow(tor);
+    ASSERT_TRUE(tr::test::waitFor([&started] { return started.load(); }, 5s));
+    ASSERT_TRUE(tor->is_running());
+
+    ASSERT_TRUE(tr_torrentSetAnnouncedClientIdentity(tor, "transmission-4.0.5"));
+    EXPECT_STREQ("transmission-4.0.5", tr_torrentGetAnnouncedClientIdentity(tor));
+    EXPECT_EQ(std::string_view{ PEERID_PREFIX }, peer_id_prefix(tor->peer_id()));
+    EXPECT_EQ(std::string_view{ TR_NAME "/" SHORT_VERSION_STRING }, tor->announce_user_agent());
+    EXPECT_EQ(std::string_view{ TR_NAME " " USERAGENT_PREFIX }, tor->extended_protocol_client_version());
+
+    tr_torrentStop(tor);
+    ASSERT_TRUE(tr::test::waitFor([tor] { return peer_id_prefix(tor->peer_id()) == "-TR4050-"sv; }, 5s));
+    EXPECT_FALSE(tor->is_running());
+    EXPECT_EQ("Transmission/4.0.5"sv, tor->announce_user_agent());
+    EXPECT_EQ("Transmission 4.0.5"sv, tor->extended_protocol_client_version());
+}

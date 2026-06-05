@@ -938,6 +938,7 @@ void on_announce_error(tr_tier* tier, char const* err, tr_announce_event e, time
         .announce_url = current_tracker->announce_url,
         .tracker_id = current_tracker->tracker_id,
         .peer_id = tor->peer_id(),
+        .announce_user_agent = std::string{ tor->announce_user_agent() },
         .info_hash = tor->info_hash(),
         .log_name = tier->buildLogName(),
     };

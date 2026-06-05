@@ -650,6 +650,21 @@ struct tr_announced_client_identity_info
 /** @brief Return a supported announced client identity by index, or an empty entry if out of range. */
 [[nodiscard]] tr_announced_client_identity_info tr_announcedClientIdentity(size_t index);
 
+/**
+ * @brief Return the identity id this torrent is configured to announce.
+ *
+ * This returns "real" when the torrent uses the current build identity.
+ */
+[[nodiscard]] char const* tr_torrentGetAnnouncedClientIdentity(tr_torrent const* torrent);
+
+/**
+ * @brief Set the identity this torrent should announce.
+ *
+ * nullptr, an empty string, and "real" select the current build identity.
+ * Unknown ids return false and leave the torrent unchanged.
+ */
+[[nodiscard]] bool tr_torrentSetAnnouncedClientIdentity(tr_torrent* torrent, char const* identity_id);
+
 /** @brief Stop (pause) a torrent */
 void tr_torrentStop(tr_torrent* torrent);
 

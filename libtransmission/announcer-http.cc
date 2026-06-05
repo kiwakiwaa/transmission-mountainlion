@@ -282,6 +282,10 @@ void tr_tracker_http_announce(
     options.timeout_secs = TrAnnounceTimeoutSec;
     options.sndbuf = 4096;
     options.rcvbuf = 4096;
+    if (!std::empty(request.announce_user_agent))
+    {
+        options.user_agent = request.announce_user_agent;
+    }
 
     auto do_make_request = [&](std::string_view const& protocol_name, tr_web::FetchOptions&& opt)
     {
