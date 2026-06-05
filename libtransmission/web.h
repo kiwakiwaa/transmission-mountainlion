@@ -80,6 +80,10 @@ public:
         std::optional<int> sndbuf;
         std::optional<int> rcvbuf;
 
+        // Optional user agent for this request. If unset, tr_web's default
+        // mediator-provided user agent is used.
+        std::optional<std::string> user_agent;
+
         // Maximum time to wait before timeout
         std::chrono::seconds timeout_secs = DefaultTimeoutSecs;
 

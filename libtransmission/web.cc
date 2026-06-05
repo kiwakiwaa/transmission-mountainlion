@@ -323,6 +323,11 @@ public:
             return options_.rcvbuf;
         }
 
+        [[nodiscard]] constexpr auto const& userAgent() const
+        {
+            return options_.user_agent;
+        }
+
         [[nodiscard]] constexpr auto const& timeoutSecs() const
         {
             return options_.timeout_secs;
@@ -624,7 +629,9 @@ public:
 #endif
         }
 
-        if (auto const& ua = user_agent; !std::empty(ua))
+        auto const& request_user_agent = task.userAgent();
+        auto const& ua = request_user_agent ? *request_user_agent : user_agent;
+        if (!std::empty(ua))
         {
             (void)curl_easy_setopt(e, CURLOPT_USERAGENT, ua.c_str());
         }
