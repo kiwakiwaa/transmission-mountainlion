@@ -164,15 +164,97 @@ typedef NS_ENUM(NSUInteger, PopupPriority) {
                                                  userInfo:nil
                                                   repeats:YES];
     [self updateFiles];
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    self.window.delegate = (id<NSWindowDelegate>)self;
+    [self layoutSettingsViewForLegacyAppKit];
+#endif
 }
 
 - (void)windowDidLoad
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    [self layoutSettingsViewForLegacyAppKit];
+#endif
+
     //if there is no destination, prompt for one right away
     if (!self.fDestination)
     {
         [self setDestination:nil];
     }
+}
+
+- (void)windowDidResize:(NSNotification*)notification
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    [self layoutSettingsViewForLegacyAppKit];
+#endif
+}
+
+- (NSView*)legacySettingsSiblingWithClass:(Class)klass title:(NSString*)title action:(SEL)action
+{
+    NSView* contentView = self.fPriorityPopUp.superview;
+    for (NSView* subview in contentView.subviews)
+    {
+        if (![subview isKindOfClass:klass])
+        {
+            continue;
+        }
+
+        if (title != nil && [subview respondsToSelector:@selector(stringValue)] && [[(id)subview stringValue] isEqualToString:title])
+        {
+            return subview;
+        }
+
+        if (action != NULL && [subview respondsToSelector:@selector(action)] && [(id)subview action] == action)
+        {
+            return subview;
+        }
+    }
+
+    return nil;
+}
+
+- (void)layoutSettingsViewForLegacyAppKit
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    NSView* contentView = self.fPriorityPopUp.superview;
+    if (contentView == nil)
+    {
+        return;
+    }
+
+    CGFloat const width = NSWidth(contentView.bounds);
+    CGFloat const rightMargin = 12.0;
+    CGFloat const popupWidth = 112.0;
+    CGFloat const labelWidth = 66.0;
+    CGFloat const popupX = width - rightMargin - popupWidth;
+    CGFloat const labelX = popupX - 8.0 - labelWidth;
+
+    NSTextField* downloadLabel = (NSTextField*)[self legacySettingsSiblingWithClass:[NSTextField class] title:@"Download to:"
+                                                                             action:NULL];
+    NSTextField* groupLabel = (NSTextField*)[self legacySettingsSiblingWithClass:[NSTextField class] title:@"Group:" action:NULL];
+    NSTextField* priorityLabel = (NSTextField*)[self legacySettingsSiblingWithClass:[NSTextField class] title:@"Priority:"
+                                                                             action:NULL];
+    NSButton* verifyButton = (NSButton*)[self legacySettingsSiblingWithClass:[NSButton class] title:nil
+                                                                      action:@selector(verifyLocalData:)];
+    NSButton* changeButton = (NSButton*)[self legacySettingsSiblingWithClass:[NSButton class] title:nil
+                                                                      action:@selector(setDestination:)];
+    NSView* locationBox = self.fLocationField.superview.superview;
+
+    downloadLabel.frame = NSMakeRect(12.0, 68.0, 84.0, 16.0);
+    changeButton.frame = NSMakeRect(width - rightMargin - 72.0, 66.0, 72.0, 22.0);
+    locationBox.frame = NSMakeRect(100.0, 64.0, MAX(120.0, NSMinX(changeButton.frame) - 108.0), 24.0);
+    self.fLocationImageView.frame = NSMakeRect(4.0, 4.0, 16.0, 16.0);
+    self.fLocationField.frame = NSMakeRect(24.0, 5.0, MAX(40.0, NSWidth(locationBox.frame) - 42.0), 14.0);
+
+    verifyButton.frame = NSMakeRect(12.0, 36.0, 132.0, 24.0);
+    self.fVerifyIndicator.frame = NSMakeRect(12.0, 16.0, 132.0, 12.0);
+
+    groupLabel.frame = NSMakeRect(labelX, 40.0, labelWidth, 16.0);
+    self.fGroupPopUp.frame = NSMakeRect(popupX, 36.0, popupWidth, 24.0);
+    priorityLabel.frame = NSMakeRect(labelX, 12.0, labelWidth, 16.0);
+    self.fPriorityPopUp.frame = NSMakeRect(popupX, 8.0, popupWidth, 24.0);
+#endif
 }
 
 - (void)dealloc

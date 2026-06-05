@@ -624,9 +624,16 @@ static void removeKeRangerRansomware()
     toolbar.autosavesConfiguration = YES;
     toolbar.displayMode = NSToolbarDisplayModeIconOnly;
     self.fWindow.toolbar = toolbar;
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    self.fWindow.toolbar.visible = YES;
+#endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
     self.fWindow.toolbarStyle = NSWindowToolbarStyleUnified;
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
     self.fWindow.titleVisibility = NSWindowTitleHidden;
+#endif
 
     self.fWindow.delegate = self; //do manually to avoid placement issue
 
@@ -666,6 +673,11 @@ static void removeKeRangerRansomware()
 
     [self.fTableView registerForDraggedTypes:@[ kTorrentTableViewDataType ]];
     [self.fWindow registerForDraggedTypes:@[ NSPasteboardTypeFileURL, NSPasteboardTypeURL ]];
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(layoutMainWindowForLegacyAppKit)
+                                               name:NSWindowDidResizeNotification
+                                             object:self.fWindow];
+#endif
 
     //sort the sort menu items (localization is from strings file)
     NSMutableArray* sortMenuItems = [NSMutableArray arrayWithCapacity:7];
@@ -807,7 +819,7 @@ static void removeKeRangerRansomware()
 
     [nc addObserver:self selector:@selector(updateWindowAfterToolbarChange) name:@"ToolbarDidChange" object:nil];
 
-    [self updateMainWindow];
+    [self performSelector:@selector(updateMainWindow) withObject:nil afterDelay:0.0];
 
     //timer to update the interface every second
     self.fTimer = [NSTimer scheduledTimerWithTimeInterval:kUpdateUISeconds target:self selector:@selector(updateUI) userInfo:nil
@@ -816,6 +828,9 @@ static void removeKeRangerRansomware()
     [NSRunLoop.currentRunLoop addTimer:self.fTimer forMode:NSEventTrackingRunLoopMode];
 
     [self.fWindow makeKeyAndOrderFront:nil];
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    [self performSelector:@selector(layoutMainWindowForLegacyAppKit) withObject:nil afterDelay:0.1];
+#endif
 
     if ([self.fDefaults boolForKey:@"InfoVisible"])
     {
@@ -4038,16 +4053,85 @@ static void removeKeRangerRansomware()
     [self.fTableView display];
 }
 
+- (void)layoutMainWindowForLegacyAppKit
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    TRLayoutLegacyTitlebarAccessoryWindow(self.fWindow);
+    NSView* contentView = self.fWindow.contentView;
+    NSScrollView* scrollView = self.fTableView.enclosingScrollView;
+    if (contentView == nil || scrollView == nil)
+    {
+        return;
+    }
+
+    NSView* bottomBar = self.fTotalTorrentsField.superview;
+    NSView* layoutView = scrollView.superview ?: contentView;
+    for (NSLayoutConstraint* constraint in [layoutView.constraints copy])
+    {
+        id firstItem = constraint.firstItem;
+        id secondItem = constraint.secondItem;
+        if (firstItem == scrollView || secondItem == scrollView || firstItem == bottomBar || secondItem == bottomBar)
+        {
+            [layoutView removeConstraint:constraint];
+        }
+    }
+
+    scrollView.translatesAutoresizingMaskIntoConstraints = YES;
+    self.fTableView.translatesAutoresizingMaskIntoConstraints = YES;
+    bottomBar.translatesAutoresizingMaskIntoConstraints = YES;
+
+    NSRect layoutBounds = layoutView.bounds;
+    CGFloat bottomHeight = bottomBar != nil ? MAX(24.0, NSHeight(bottomBar.frame)) : 0.0;
+    if (bottomBar != nil)
+    {
+        bottomBar.frame = NSMakeRect(0.0, 0.0, NSWidth(layoutBounds), bottomHeight);
+        bottomBar.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
+    }
+
+    CGFloat accessoryHeight = 0.0;
+    if (self.fStatusBar != nil && !self.fStatusBar.isHidden)
+    {
+        accessoryHeight += NSHeight(self.fStatusBar.view.frame);
+    }
+    if (self.fFilterBar != nil && !self.fFilterBar.isHidden)
+    {
+        accessoryHeight += NSHeight(self.fFilterBar.view.frame);
+    }
+
+    CGFloat scrollHeight = MAX(1.0, NSHeight(layoutBounds) - bottomHeight - accessoryHeight);
+    scrollView.frame = NSMakeRect(0.0, bottomHeight, NSWidth(layoutBounds), scrollHeight);
+    scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    [scrollView tile];
+
+    NSClipView* clipView = scrollView.contentView;
+    clipView.frame = scrollView.bounds;
+    clipView.bounds = NSMakeRect(0.0, 0.0, NSWidth(scrollView.bounds), NSHeight(scrollView.bounds));
+
+    NSRect tableFrame = clipView.bounds;
+    tableFrame.size.width = MAX(NSWidth(tableFrame), NSWidth(scrollView.bounds));
+    self.fTableView.frame = tableFrame;
+    self.fTableView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+
+    NSTableColumn* torrentColumn = [self.fTableView tableColumnWithIdentifier:@"Torrent"];
+    if (torrentColumn != nil)
+    {
+        torrentColumn.width = MAX(1.0, NSWidth(self.fTableView.bounds));
+    }
+    [scrollView reflectScrolledClipView:clipView];
+    [self.fTableView setNeedsDisplay:YES];
+#endif
+}
+
 - (void)toggleStatusBar:(id)sender
 {
-    BOOL const show = self.fStatusBar == nil || self.fStatusBar.isHidden;
+    BOOL const show = self.fStatusBar == nil || [self.fStatusBar isHidden];
     [self.fDefaults setBool:show forKey:@"StatusBar"];
     [self updateMainWindow];
 }
 
 - (void)toggleFilterBar:(id)sender
 {
-    BOOL const show = self.fFilterBar == nil || self.fFilterBar.isHidden;
+    BOOL const show = self.fFilterBar == nil || [self.fFilterBar isHidden];
 
     //disable filtering when hiding (have to do before updateMainWindow:)
     if (!show)
@@ -4066,7 +4150,7 @@ static void removeKeRangerRansomware()
 
 - (void)focusFilterField
 {
-    if (self.fFilterBar == nil || self.fFilterBar.isHidden)
+    if (self.fFilterBar == nil || [self.fFilterBar isHidden])
     {
         [self toggleFilterBar:self];
     }
@@ -5125,6 +5209,7 @@ static void removeKeRangerRansomware()
 
     [self fullUpdateUI];
     [self updateForAutoSize];
+    [self layoutMainWindowForLegacyAppKit];
 }
 
 - (void)setWindowSizeToFit
@@ -5143,7 +5228,12 @@ static void removeKeRangerRansomware()
             CGFloat height = self.minScrollViewHeightAllowed;
             if (self.fMinHeightConstraint == nil)
             {
-                self.fMinHeightConstraint = [scrollView.heightAnchor constraintGreaterThanOrEqualToConstant:height];
+                self.fMinHeightConstraint = [NSLayoutConstraint constraintWithItem:scrollView attribute:NSLayoutAttributeHeight
+                                                                         relatedBy:NSLayoutRelationGreaterThanOrEqual
+                                                                            toItem:nil
+                                                                         attribute:NSLayoutAttributeNotAnAttribute
+                                                                        multiplier:1.0
+                                                                          constant:height];
             }
             else
             {
@@ -5158,7 +5248,12 @@ static void removeKeRangerRansomware()
             CGFloat height = [self calculateScrollViewHeightWithDockAdjustment];
             if (self.fFixedHeightConstraint == nil)
             {
-                self.fFixedHeightConstraint = [scrollView.heightAnchor constraintEqualToConstant:height];
+                self.fFixedHeightConstraint = [NSLayoutConstraint constraintWithItem:scrollView attribute:NSLayoutAttributeHeight
+                                                                           relatedBy:NSLayoutRelationEqual
+                                                                              toItem:nil
+                                                                           attribute:NSLayoutAttributeNotAnAttribute
+                                                                          multiplier:1.0
+                                                                            constant:height];
             }
             else
             {
@@ -5188,7 +5283,7 @@ static void removeKeRangerRansomware()
     if (screen)
     {
         // This frame respects the Dock and menu bar
-        NSRect visibleFrame = screen.visibleFrame;
+        NSRect visibleFrame = [screen visibleFrame];
         height = MIN(height, visibleFrame.size.height - [self toolbarHeight] - [self mainWindowComponentHeight]);
     }
 
@@ -5214,7 +5309,7 @@ static void removeKeRangerRansomware()
     {
         //macOS shows the unified toolbar by default
         //and we only need to "fix" the layout when showing the toolbar
-        if (!self.fWindow.toolbar.isVisible)
+        if (![[self.fWindow toolbar] isVisible])
         {
             [self removeHeightConstraints];
         }
@@ -5224,6 +5319,7 @@ static void removeKeRangerRansomware()
 
         dispatch_async(dispatch_get_main_queue(), ^{
             [self updateForAutoSize];
+            [self layoutMainWindowForLegacyAppKit];
             [self hideToolBarBezels:NO];
         });
     }
@@ -5264,12 +5360,12 @@ static void removeKeRangerRansomware()
 {
     CGFloat height = kBottomBarHeight;
 
-    if (self.fStatusBar != nil && !self.fStatusBar.isHidden)
+    if (self.fStatusBar != nil && ![self.fStatusBar isHidden])
     {
         height += kStatusBarHeight;
     }
 
-    if (self.fFilterBar != nil && !self.fFilterBar.isHidden)
+    if (self.fFilterBar != nil && ![self.fFilterBar isHidden])
     {
         height += kFilterBarHeight;
     }
@@ -5284,7 +5380,9 @@ static void removeKeRangerRansomware()
 
     if ([self.fDefaults boolForKey:@"AutoSize"])
     {
-        NSUInteger groups = ![self.fDisplayedTorrents.firstObject isKindOfClass:[Torrent class]] ? self.fDisplayedTorrents.count : 0;
+        NSUInteger groups = self.fDisplayedTorrents.count > 0 && ![[self.fDisplayedTorrents objectAtIndex:0] isKindOfClass:[Torrent class]] ?
+            self.fDisplayedTorrents.count :
+            0;
 
         height = (kGroupSeparatorHeight + self.fTableView.intercellSpacing.height) * groups +
             (self.fTableView.rowHeight + self.fTableView.intercellSpacing.height) * (self.fTableView.numberOfRows - groups);
@@ -5304,7 +5402,7 @@ static void removeKeRangerRansomware()
     NSScreen* screen = self.fWindow.screen;
     if (screen)
     {
-        NSSize maxSize = screen.visibleFrame.size;
+        NSSize maxSize = [screen visibleFrame].size;
         maxSize.height -= self.toolbarHeight;
         maxSize.height -= self.mainWindowComponentHeight;
 
@@ -5325,7 +5423,7 @@ static void removeKeRangerRansomware()
 
 - (BOOL)isFullScreen
 {
-    return (self.fWindow.styleMask & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen;
+    return (self.fWindow.styleMask & NSFullScreenWindowMask) == NSFullScreenWindowMask;
 }
 
 - (void)windowWillEnterFullScreen:(NSNotification*)notification
