@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "GroupCell.h"
+#import "CocoaCompatibility.h"
 
 @implementation GroupCell
 
@@ -11,7 +12,7 @@
     [super setBackgroundStyle:backgroundStyle];
 
     __auto_type isEmphasized = backgroundStyle == NSBackgroundStyleEmphasized;
-    self.fGroupTitleField.textColor = isEmphasized ? NSColor.labelColor : NSColor.secondaryLabelColor;
+    self.fGroupTitleField.textColor = isEmphasized ? TRLabelColor() : TRSecondaryLabelColor();
 }
 
 @end

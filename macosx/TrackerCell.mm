@@ -86,8 +86,8 @@ static NSMutableSet* fTrackerIconLoading;
     }
     else
     {
-        nameColor = NSColor.labelColor;
-        statusColor = NSColor.secondaryLabelColor;
+        nameColor = TRLabelColor();
+        statusColor = TRSecondaryLabelColor();
     }
 
     self.fNameAttributes[NSForegroundColorAttributeName] = nameColor;
@@ -183,7 +183,7 @@ static NSMutableSet* fTrackerIconLoading;
         return icon;
     }
 
-    NSImage* result = [NSImage imageWithSystemSymbolName:@"globe" accessibilityDescription:nil];
+    NSImage* result = TRImageForSystemSymbol(@"globe", nil);
     [result lockFocus];
     [NSColor.textColor set];
     NSRect imageRect = { NSZeroPoint, result.size };

@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "GroupsController.h"
+#import "CocoaCompatibility.h"
 #import "NSImageAdditions.h"
 #import "NSKeyedUnarchiverAdditions.h"
 #import "NSMutableArrayAdditions.h"
@@ -57,25 +58,25 @@ GroupsController* fGroupsInstance = nil;
         {
             //default groups
             NSMutableDictionary* red = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemRedColor, @"Color", NSLocalizedString(@"Red", "Groups -> Name"), @"Name", @0, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemRedColor(), @"Color", NSLocalizedString(@"Red", "Groups -> Name"), @"Name", @0, @"Index", nil];
 
             NSMutableDictionary* orange = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemOrangeColor, @"Color", NSLocalizedString(@"Orange", "Groups -> Name"), @"Name", @1, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemOrangeColor(), @"Color", NSLocalizedString(@"Orange", "Groups -> Name"), @"Name", @1, @"Index", nil];
 
             NSMutableDictionary* yellow = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemYellowColor, @"Color", NSLocalizedString(@"Yellow", "Groups -> Name"), @"Name", @2, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemYellowColor(), @"Color", NSLocalizedString(@"Yellow", "Groups -> Name"), @"Name", @2, @"Index", nil];
 
             NSMutableDictionary* green = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemGreenColor, @"Color", NSLocalizedString(@"Green", "Groups -> Name"), @"Name", @3, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemGreenColor(), @"Color", NSLocalizedString(@"Green", "Groups -> Name"), @"Name", @3, @"Index", nil];
 
             NSMutableDictionary* blue = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemBlueColor, @"Color", NSLocalizedString(@"Blue", "Groups -> Name"), @"Name", @4, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemBlueColor(), @"Color", NSLocalizedString(@"Blue", "Groups -> Name"), @"Name", @4, @"Index", nil];
 
             NSMutableDictionary* purple = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemPurpleColor, @"Color", NSLocalizedString(@"Purple", "Groups -> Name"), @"Name", @5, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemPurpleColor(), @"Color", NSLocalizedString(@"Purple", "Groups -> Name"), @"Name", @5, @"Index", nil];
 
             NSMutableDictionary* gray = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemGrayColor, @"Color", NSLocalizedString(@"Gray", "Groups -> Name"), @"Name", @6, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemGrayColor(), @"Color", NSLocalizedString(@"Gray", "Groups -> Name"), @"Name", @6, @"Index", nil];
 
             _fGroups = [[NSMutableArray alloc] initWithObjects:red, orange, yellow, green, blue, purple, gray, nil];
             [self saveGroups]; //make sure this is saved right away

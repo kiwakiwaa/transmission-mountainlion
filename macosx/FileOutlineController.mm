@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "FileOutlineController.h"
+#import "CocoaCompatibility.h"
 #import "Torrent.h"
 #import "FileListNode.h"
 #import "FileOutlineView.h"
@@ -562,7 +563,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
                                            keyEquivalent:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"checkmark.circle" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"checkmark.circle", nil);
     }
     item.target = self;
     item.tag = FileCheckMenuTagCheck;
@@ -573,7 +574,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
                                keyEquivalent:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"circle" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"circle", nil);
     }
     item.target = self;
     item.tag = FileCheckMenuTagUncheck;
@@ -585,7 +586,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
                                keyEquivalent:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"checkmark.circle.dotted" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"checkmark.circle.dotted", nil);
     }
     item.target = self;
     [menu addItem:item];
@@ -597,7 +598,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
     NSMenu* priorityMenu = [[NSMenu alloc] initWithTitle:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"chevron.up.chevron.down" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"chevron.up.chevron.down", nil);
     }
     item.submenu = priorityMenu;
     [menu addItem:item];
@@ -634,7 +635,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
                                keyEquivalent:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"finder" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"finder", nil);
     }
     item.target = self;
     [menu addItem:item];
@@ -647,7 +648,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
                                keyEquivalent:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"pencil" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"pencil", nil);
     }
     item.target = self;
     [menu addItem:item];

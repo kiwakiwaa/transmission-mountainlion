@@ -4225,7 +4225,7 @@ static void removeKeRangerRansomware()
         item.label = NSLocalizedString(@"Create", "Create toolbar item -> label");
         item.paletteLabel = NSLocalizedString(@"Create Torrent File", "Create toolbar item -> palette label");
         item.toolTip = NSLocalizedString(@"Create torrent file", "Create toolbar item -> tooltip");
-        item.image = [NSImage imageWithSystemSymbolName:@"doc.badge.plus" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"doc.badge.plus", nil);
         item.target = self;
         item.action = @selector(createFile:);
         item.autovalidates = NO;
@@ -4239,7 +4239,7 @@ static void removeKeRangerRansomware()
         item.label = NSLocalizedString(@"Open", "Open toolbar item -> label");
         item.paletteLabel = NSLocalizedString(@"Open Torrent Files", "Open toolbar item -> palette label");
         item.toolTip = NSLocalizedString(@"Open torrent files", "Open toolbar item -> tooltip");
-        item.image = [NSImage imageWithSystemSymbolName:@"folder" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"folder", nil);
         item.target = self;
         item.action = @selector(openShowSheet:);
         item.autovalidates = NO;
@@ -4253,7 +4253,7 @@ static void removeKeRangerRansomware()
         item.label = NSLocalizedString(@"Open Address", "Open address toolbar item -> label");
         item.paletteLabel = NSLocalizedString(@"Open Torrent Address", "Open address toolbar item -> palette label");
         item.toolTip = NSLocalizedString(@"Open torrent web address", "Open address toolbar item -> tooltip");
-        item.image = [NSImage imageWithSystemSymbolName:@"globe" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"globe", nil);
         item.target = self;
         item.action = @selector(openURLShowSheet:);
         item.autovalidates = NO;
@@ -4267,7 +4267,7 @@ static void removeKeRangerRansomware()
         item.label = NSLocalizedString(@"Remove", "Remove toolbar item -> label");
         item.paletteLabel = NSLocalizedString(@"Remove Selected", "Remove toolbar item -> palette label");
         item.toolTip = NSLocalizedString(@"Remove selected transfers", "Remove toolbar item -> tooltip");
-        item.image = [NSImage imageWithSystemSymbolName:@"nosign" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"nosign", nil);
         item.target = self;
         item.action = @selector(removeNoDelete:);
         item.visibilityPriority = NSToolbarItemVisibilityPriorityHigh;
@@ -4282,7 +4282,7 @@ static void removeKeRangerRansomware()
         item.label = NSLocalizedString(@"Inspector", "Inspector toolbar item -> label");
         item.paletteLabel = NSLocalizedString(@"Toggle Inspector", "Inspector toolbar item -> palette label");
         item.toolTip = NSLocalizedString(@"Toggle the torrent inspector", "Inspector toolbar item -> tooltip");
-        item.image = [NSImage imageWithSystemSymbolName:@"info.circle" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"info.circle", nil);
         item.target = self;
         item.action = @selector(showInfo:);
 
@@ -4300,17 +4300,13 @@ static void removeKeRangerRansomware()
         segmentedControl.trackingMode = NSSegmentSwitchTrackingMomentary;
         segmentedControl.segmentCount = 2;
 
-        [segmentedControl setTag:ToolbarGroupTagPause forSegment:ToolbarGroupTagPause];
-        [segmentedControl setImage:[NSImage imageWithSystemSymbolName:@"pause.circle.fill" accessibilityDescription:nil]
-                        forSegment:ToolbarGroupTagPause];
-        [segmentedControl setToolTip:NSLocalizedString(@"Pause all transfers", "All toolbar item -> tooltip")
-                          forSegment:ToolbarGroupTagPause];
+        TRSetSegmentTag(segmentedControl, ToolbarGroupTagPause, ToolbarGroupTagPause);
+        [segmentedControl setImage:TRImageForSystemSymbol(@"pause.circle.fill", nil) forSegment:ToolbarGroupTagPause];
+        TRSetSegmentToolTip(segmentedControl, NSLocalizedString(@"Pause all transfers", "All toolbar item -> tooltip"), ToolbarGroupTagPause);
 
-        [segmentedControl setTag:ToolbarGroupTagResume forSegment:ToolbarGroupTagResume];
-        [segmentedControl setImage:[NSImage imageWithSystemSymbolName:@"arrow.clockwise.circle.fill" accessibilityDescription:nil]
-                        forSegment:ToolbarGroupTagResume];
-        [segmentedControl setToolTip:NSLocalizedString(@"Resume all transfers", "All toolbar item -> tooltip")
-                          forSegment:ToolbarGroupTagResume];
+        TRSetSegmentTag(segmentedControl, ToolbarGroupTagResume, ToolbarGroupTagResume);
+        [segmentedControl setImage:TRImageForSystemSymbol(@"arrow.clockwise.circle.fill", nil) forSegment:ToolbarGroupTagResume];
+        TRSetSegmentToolTip(segmentedControl, NSLocalizedString(@"Resume all transfers", "All toolbar item -> tooltip"), ToolbarGroupTagResume);
         if ([toolbar isKindOfClass:Toolbar.class] && ((Toolbar*)toolbar).isRunningCustomizationPalette)
         {
             // On macOS 13.2, the palette autolayout will hang unless the segmentedControl width is longer than the groupItem paletteLabel (matters especially in Russian and French).
@@ -4345,17 +4341,13 @@ static void removeKeRangerRansomware()
         segmentedControl.trackingMode = NSSegmentSwitchTrackingMomentary;
         segmentedControl.segmentCount = 2;
 
-        [segmentedControl setTag:ToolbarGroupTagPause forSegment:ToolbarGroupTagPause];
-        [segmentedControl setImage:[NSImage imageWithSystemSymbolName:@"pause" accessibilityDescription:nil]
-                        forSegment:ToolbarGroupTagPause];
-        [segmentedControl setToolTip:NSLocalizedString(@"Pause selected transfers", "Selected toolbar item -> tooltip")
-                          forSegment:ToolbarGroupTagPause];
+        TRSetSegmentTag(segmentedControl, ToolbarGroupTagPause, ToolbarGroupTagPause);
+        [segmentedControl setImage:TRImageForSystemSymbol(@"pause", nil) forSegment:ToolbarGroupTagPause];
+        TRSetSegmentToolTip(segmentedControl, NSLocalizedString(@"Pause selected transfers", "Selected toolbar item -> tooltip"), ToolbarGroupTagPause);
 
-        [segmentedControl setTag:ToolbarGroupTagResume forSegment:ToolbarGroupTagResume];
-        [segmentedControl setImage:[NSImage imageWithSystemSymbolName:@"arrow.clockwise" accessibilityDescription:nil]
-                        forSegment:ToolbarGroupTagResume];
-        [segmentedControl setToolTip:NSLocalizedString(@"Resume selected transfers", "Selected toolbar item -> tooltip")
-                          forSegment:ToolbarGroupTagResume];
+        TRSetSegmentTag(segmentedControl, ToolbarGroupTagResume, ToolbarGroupTagResume);
+        [segmentedControl setImage:TRImageForSystemSymbol(@"arrow.clockwise", nil) forSegment:ToolbarGroupTagResume];
+        TRSetSegmentToolTip(segmentedControl, NSLocalizedString(@"Resume selected transfers", "Selected toolbar item -> tooltip"), ToolbarGroupTagResume);
         if ([toolbar isKindOfClass:Toolbar.class] && ((Toolbar*)toolbar).isRunningCustomizationPalette)
         {
             // On macOS 13.2, the palette autolayout will hang unless the segmentedControl width is longer than the groupItem paletteLabel (matters especially in Russian and French).
@@ -4386,7 +4378,7 @@ static void removeKeRangerRansomware()
         item.label = NSLocalizedString(@"Filter", "Filter toolbar item -> label");
         item.paletteLabel = NSLocalizedString(@"Toggle Filter", "Filter toolbar item -> palette label");
         item.toolTip = NSLocalizedString(@"Toggle the filter bar", "Filter toolbar item -> tooltip");
-        item.image = [NSImage imageWithSystemSymbolName:@"magnifyingglass" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"magnifyingglass", nil);
         item.target = self;
         item.action = @selector(toggleFilterBar:);
 
@@ -4432,7 +4424,7 @@ static void removeKeRangerRansomware()
 
 - (void)allToolbarClicked:(id)sender
 {
-    NSInteger tagValue = [sender isKindOfClass:[NSSegmentedControl class]] ? [(NSSegmentedControl*)sender selectedTag] :
+    NSInteger tagValue = [sender isKindOfClass:[NSSegmentedControl class]] ? TRSelectedSegmentTag((NSSegmentedControl*)sender) :
                                                                              ((NSControl*)sender).tag;
     switch (tagValue)
     {
@@ -4447,7 +4439,7 @@ static void removeKeRangerRansomware()
 
 - (void)selectedToolbarClicked:(id)sender
 {
-    NSInteger tagValue = [sender isKindOfClass:[NSSegmentedControl class]] ? [(NSSegmentedControl*)sender selectedTag] :
+    NSInteger tagValue = [sender isKindOfClass:[NSSegmentedControl class]] ? TRSelectedSegmentTag((NSSegmentedControl*)sender) :
                                                                              ((NSControl*)sender).tag;
     switch (tagValue)
     {
@@ -5157,7 +5149,7 @@ static void removeKeRangerRansomware()
                 self.fMinHeightConstraint.constant = height;
             }
 
-            self.fMinHeightConstraint.active = YES;
+            TRSetConstraintActive(self.fMinHeightConstraint, YES);
         }
         else
         {
@@ -5175,7 +5167,7 @@ static void removeKeRangerRansomware()
             // Redraw table to avoid empty cells
             [self.fTableView reloadData];
 
-            self.fFixedHeightConstraint.active = YES;
+            TRSetConstraintActive(self.fFixedHeightConstraint, YES);
         }
 
         scrollView.hasVerticalScroller = YES;
@@ -5248,11 +5240,11 @@ static void removeKeRangerRansomware()
 {
     if (self.fFixedHeightConstraint != nil)
     {
-        self.fFixedHeightConstraint.active = NO;
+        TRSetConstraintActive(self.fFixedHeightConstraint, NO);
     }
     if (self.fMinHeightConstraint != nil)
     {
-        self.fMinHeightConstraint.active = NO;
+        TRSetConstraintActive(self.fMinHeightConstraint, NO);
     }
 }
 

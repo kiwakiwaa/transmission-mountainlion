@@ -61,6 +61,7 @@ target_sources(${TR_NAME}-mac
         ButtonToolbarItem.h
         ButtonToolbarItem.mm
         CocoaCompatibility.h
+        CocoaCompatibility.mm
         ColorTextField.h
         ColorTextField.mm
         Controller.h
@@ -204,10 +205,6 @@ target_sources(${TR_NAME}-mac
         WebSeedTableView.mm)
 
 if(TR_MACOS_LEGACY_COMPAT)
-    target_sources(${TR_NAME}-mac
-        PRIVATE
-            CocoaCompatibility.mm)
-
     target_compile_options(${TR_NAME}-mac PRIVATE
         -include ${CMAKE_CURRENT_SOURCE_DIR}/CocoaCompatibility.h
         -Wno-nullability-completeness)

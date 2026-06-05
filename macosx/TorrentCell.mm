@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "TorrentCell.h"
+#import "CocoaCompatibility.h"
 #import "ProgressBarView.h"
 #import "ProgressGradients.h"
 #import "Torrent.h"
@@ -23,7 +24,7 @@
         // set priority icon
         if (torrent.priority != TR_PRI_NORMAL)
         {
-            NSColor* priorityColor = self.backgroundStyle == NSBackgroundStyleEmphasized ? NSColor.whiteColor : NSColor.labelColor;
+            NSColor* priorityColor = self.backgroundStyle == NSBackgroundStyleEmphasized ? NSColor.whiteColor : TRLabelColor();
             NSImage* priorityImage = [[NSImage imageNamed:(torrent.priority == TR_PRI_HIGH ? @"PriorityHighTemplate" : @"PriorityLowTemplate")]
                 imageWithColor:priorityColor];
 

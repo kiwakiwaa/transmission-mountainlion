@@ -4,6 +4,125 @@
 
 #import <AppKit/AppKit.h>
 
+#ifndef NSBezelStyleTexturedRounded
+#define NSBezelStyleTexturedRounded NSTexturedRoundedBezelStyle
+#endif
+
+#ifndef NSBackgroundStyleEmphasized
+#define NSBackgroundStyleEmphasized NSBackgroundStyleDark
+#endif
+
+#ifndef NSEventModifierFlagOption
+#define NSEventModifierFlagOption NSAlternateKeyMask
+#endif
+#ifndef NSEventModifierFlagCommand
+#define NSEventModifierFlagCommand NSCommandKeyMask
+#endif
+
+static inline NSEvent* NSAppCurrentEvent(void)
+{
+    return [NSApp currentEvent];
+}
+
+#ifndef NS_ASSUME_NONNULL_BEGIN
+#define NS_ASSUME_NONNULL_BEGIN
+#define NS_ASSUME_NONNULL_END
+#endif
+
+#ifndef API_AVAILABLE
+#define API_AVAILABLE(...)
+#endif
+
+#ifndef NS_TYPED_EXTENSIBLE_ENUM
+#define NS_TYPED_EXTENSIBLE_ENUM
+#endif
+
+#ifndef __AVAILABILITY_INTERNAL__MAC_NSURLSESSION_AVAILABLE
+#define __AVAILABILITY_INTERNAL__MAC_NSURLSESSION_AVAILABLE
+#endif
+
+#ifndef NSMenuItemValidation
+#define NSMenuItemValidation NSUserInterfaceValidations
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
+@interface NSTitlebarAccessoryViewController : NSViewController
+@property(nonatomic) NSLayoutAttribute layoutAttribute;
+@property(nonatomic, getter=isHidden) BOOL hidden;
+@property(nonatomic) BOOL automaticallyAdjustsSize;
+@end
+
+@interface NSWindow (TransmissionTitlebarAccessoryCompatibility)
+- (void)addTitlebarAccessoryViewController:(NSTitlebarAccessoryViewController*)controller;
+@end
+#endif
+
+void TRLayoutLegacyTitlebarAccessoryWindow(NSWindow* window);
+
+#ifndef NSModalResponseOK
+typedef NSInteger NSModalResponse;
+static NSModalResponse const NSModalResponseOK = 1;
+
+#ifndef NSControlStateValueOn
+typedef NSInteger NSControlStateValue;
+static NSControlStateValue const NSControlStateValueMixed = NSMixedState;
+static NSControlStateValue const NSControlStateValueOff = NSOffState;
+static NSControlStateValue const NSControlStateValueOn = NSOnState;
+#endif
+
+#ifndef NSAlertStyleWarning
+#define NSAlertStyleWarning NSWarningAlertStyle
+#endif
+
+#ifndef NSAlertStyleCritical
+#define NSAlertStyleCritical NSCriticalAlertStyle
+#endif
+
+#ifndef NSAlertStyleInformational
+#define NSAlertStyleInformational NSInformationalAlertStyle
+#endif
+
+#ifndef NSWindowCollectionBehaviorFullScreenNone
+#define NSWindowCollectionBehaviorFullScreenNone 0
+#endif
+
+#ifndef NSCompositingOperationSourceOver
+#define NSCompositingOperationSourceOver NSCompositeSourceOver
+#endif
+
+#ifndef NSCompositingOperationSourceAtop
+#define NSCompositingOperationSourceAtop NSCompositeSourceAtop
+#endif
+
+#ifndef NSCompositingOperationSourceIn
+#define NSCompositingOperationSourceIn NSCompositeSourceIn
+#endif
+
+#ifndef NSCompositingOperationCopy
+#define NSCompositingOperationCopy NSCompositeCopy
+#endif
+static NSModalResponse const NSModalResponseCancel = 0;
+#endif
+
+typedef void (^TRSheetCompletionHandler)(NSModalResponse returnCode);
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+@interface NSWindow (TransmissionCompatibility)
+- (void)beginSheet:(NSWindow*)sheet completionHandler:(TRSheetCompletionHandler)handler;
+- (void)endSheet:(NSWindow*)sheet;
+@end
+
+@interface NSAlert (TransmissionCompatibility)
+- (void)beginSheetModalForWindow:(NSWindow*)window completionHandler:(TRSheetCompletionHandler)handler;
+@end
+#endif
+
+NSImage* TRImageForSystemSymbol(NSString* symbolName, NSString* description);
+void TRSetSegmentTag(NSSegmentedControl* control, NSInteger tag, NSInteger segment);
+NSInteger TRSelectedSegmentTag(NSSegmentedControl* control);
+void TRSetSegmentToolTip(NSSegmentedControl* control, NSString* toolTip, NSInteger segment);
+void TRSetConstraintActive(NSLayoutConstraint* constraint, BOOL active);
+
 NS_ASSUME_NONNULL_BEGIN
 
 // Compatibility declarations to build `@available(macOS 13.0, *)` code with older Xcode 12.5.1 (the last macOS 11.0 compatible Xcode)
@@ -20,3 +139,36 @@ typedef NS_ENUM(NSInteger, NSColorWellStyle) {
 #endif
 
 NS_ASSUME_NONNULL_END
+
+NSColor* TRLabelColor(void);
+NSColor* TRSecondaryLabelColor(void);
+NSColor* TRSystemRedColor(void);
+NSColor* TRSystemOrangeColor(void);
+NSColor* TRSystemYellowColor(void);
+NSColor* TRSystemGreenColor(void);
+NSColor* TRSystemBlueColor(void);
+NSColor* TRSystemPurpleColor(void);
+NSColor* TRSystemGrayColor(void);
+NSColor* TRSystemTealColor(void);
+
+#ifndef NSTextAlignmentRight
+#define NSTextAlignmentRight NSRightTextAlignment
+#endif
+#ifndef NSTextAlignmentCenter
+#define NSTextAlignmentCenter NSCenterTextAlignment
+#endif
+#ifndef NSTextAlignmentLeft
+#define NSTextAlignmentLeft NSLeftTextAlignment
+#endif
+
+#ifndef NSActivityIdleSystemSleepDisabled
+typedef NSUInteger NSActivityOptions;
+#define NSActivityIdleSystemSleepDisabled 0
+#define NSActivityUserInitiatedAllowingIdleSystemSleep 0
+#define NSProcessInfoPowerStateDidChangeNotification @"NSProcessInfoPowerStateDidChangeNotification"
+@interface NSProcessInfo (TransmissionActivityCompatibility)
+- (id<NSObject>)beginActivityWithOptions:(NSActivityOptions)options reason:(NSString*)reason;
+- (void)endActivity:(id<NSObject>)activity;
+- (BOOL)lowPowerModeEnabled;
+@end
+#endif

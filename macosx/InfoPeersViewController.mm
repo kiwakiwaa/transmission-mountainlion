@@ -5,6 +5,7 @@
 #include <libtransmission/transmission.h>
 
 #import "InfoPeersViewController.h"
+#import "CocoaCompatibility.h"
 #import "NSStringAdditions.h"
 #import "PeerProgressIndicatorCell.h"
 #import "Torrent.h"
@@ -354,7 +355,7 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
 
         if ([ident isEqualToString:@"Encryption"])
         {
-            return [peer[@"Encryption"] boolValue] ? [NSImage imageWithSystemSymbolName:@"lock.fill" accessibilityDescription:nil] : nil;
+            return [peer[@"Encryption"] boolValue] ? TRImageForSystemSymbol(@"lock.fill", nil) : nil;
         }
         else if ([ident isEqualToString:@"Client"])
         {

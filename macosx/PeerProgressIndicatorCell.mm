@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "PeerProgressIndicatorCell.h"
+#import "CocoaCompatibility.h"
 #import "NSStringAdditions.h"
 
 @interface PeerProgressIndicatorCell ()
@@ -32,7 +33,7 @@
 
             self.fAttributes = @{
                 NSFontAttributeName : [NSFont systemFontOfSize:11.0],
-                NSForegroundColorAttributeName : NSColor.labelColor,
+                NSForegroundColorAttributeName : TRLabelColor(),
                 NSParagraphStyleAttributeName : paragraphStyle
             };
         }

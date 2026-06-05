@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "InfoWindowController.h"
+#import "CocoaCompatibility.h"
 #import "InfoViewController.h"
 #import "InfoGeneralViewController.h"
 #import "InfoActivityViewController.h"
@@ -102,30 +103,15 @@ typedef NS_ENUM(NSUInteger, TabTag) {
         [self.fTabs setImage:image forSegment:segment];
         [self.fTabs.cell setToolTip:toolTip forSegment:segment];
     };
+    setImageAndToolTipForSegment(TRImageForSystemSymbol(@"info.circle", nil), NSLocalizedString(@"General Info", "Inspector -> tab"), TabTagGeneral);
+    setImageAndToolTipForSegment(TRImageForSystemSymbol(@"square.grid.3x3.fill.square", nil), NSLocalizedString(@"Activity", "Inspector -> tab"), TabTagActivity);
     setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"info.circle" accessibilityDescription:nil],
-        NSLocalizedString(@"General Info", "Inspector -> tab"),
-        TabTagGeneral);
-    setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"square.grid.3x3.fill.square" accessibilityDescription:nil],
-        NSLocalizedString(@"Activity", "Inspector -> tab"),
-        TabTagActivity);
-    setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"antenna.radiowaves.left.and.right" accessibilityDescription:nil],
+        TRImageForSystemSymbol(@"antenna.radiowaves.left.and.right", nil),
         NSLocalizedString(@"Trackers", "Inspector -> tab"),
         TabTagTrackers);
-    setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"person.2" accessibilityDescription:nil],
-        NSLocalizedString(@"Peers", "Inspector -> tab"),
-        TabTagPeers);
-    setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"doc.on.doc" accessibilityDescription:nil],
-        NSLocalizedString(@"Files", "Inspector -> tab"),
-        TabTagFile);
-    setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"gearshape" accessibilityDescription:nil],
-        NSLocalizedString(@"Options", "Inspector -> tab"),
-        TabTagOptions);
+    setImageAndToolTipForSegment(TRImageForSystemSymbol(@"person.2", nil), NSLocalizedString(@"Peers", "Inspector -> tab"), TabTagPeers);
+    setImageAndToolTipForSegment(TRImageForSystemSymbol(@"doc.on.doc", nil), NSLocalizedString(@"Files", "Inspector -> tab"), TabTagFile);
+    setImageAndToolTipForSegment(TRImageForSystemSymbol(@"gearshape", nil), NSLocalizedString(@"Options", "Inspector -> tab"), TabTagOptions);
 
     //set selected tab
     self.fCurrentTabTag = kInvalidTag;

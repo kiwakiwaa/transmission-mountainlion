@@ -5,6 +5,7 @@
 #include <libtransmission/transmission.h>
 
 #import "PiecesView.h"
+#import "CocoaCompatibility.h"
 #import "Torrent.h"
 #import "InfoWindowController.h"
 #import "NSApplicationAdditions.h"
@@ -16,9 +17,20 @@ static CGFloat const kBetweenPadding = 1.0;
 
 static int8_t const kHighPeers = 10;
 
-static NSColor* const DoneColor = NSColor.systemBlueColor;
-static NSColor* const BlinkColor = NSColor.systemOrangeColor;
-static NSColor* const HighColor = NSColor.systemGreenColor; // high availability
+static NSColor* DoneColor(void)
+{
+    return TRSystemBlueColor();
+}
+
+static NSColor* BlinkColor(void)
+{
+    return TRSystemOrangeColor();
+}
+
+static NSColor* HighColor(void)
+{
+    return TRSystemGreenColor(); // high availability
+}
 
 typedef struct PieceInfo
 {
@@ -54,15 +66,15 @@ typedef struct PieceInfo
 {
     if ([self isCompletenessDone:newVal])
     {
-        return noBlink || [self isCompletenessDone:oldVal] ? DoneColor : BlinkColor;
+        return noBlink || [self isCompletenessDone:oldVal] ? DoneColor() : BlinkColor();
     }
 
     if ([self isCompletenessNone:newVal])
     {
-        return noBlink || [self isCompletenessNone:oldVal] ? [self backgroundColor] : BlinkColor;
+        return noBlink || [self isCompletenessNone:oldVal] ? [self backgroundColor] : BlinkColor();
     }
 
-    return [[self backgroundColor] blendedColorWithFraction:newVal ofColor:DoneColor];
+    return [[self backgroundColor] blendedColorWithFraction:newVal ofColor:DoneColor()];
 }
 
 - (BOOL)isAvailabilityDone:(uint8_t)val
@@ -84,21 +96,21 @@ typedef struct PieceInfo
 {
     if ([self isAvailabilityDone:newVal])
     {
-        return noBlink || [self isAvailabilityDone:oldVal] ? DoneColor : BlinkColor;
+        return noBlink || [self isAvailabilityDone:oldVal] ? DoneColor() : BlinkColor();
     }
 
     if ([self isAvailabilityNone:newVal])
     {
-        return noBlink || [self isAvailabilityNone:oldVal] ? [self backgroundColor] : BlinkColor;
+        return noBlink || [self isAvailabilityNone:oldVal] ? [self backgroundColor] : BlinkColor();
     }
 
     if ([self isAvailabilityHigh:newVal])
     {
-        return noBlink || [self isAvailabilityHigh:oldVal] ? HighColor : BlinkColor;
+        return noBlink || [self isAvailabilityHigh:oldVal] ? HighColor() : BlinkColor();
     }
 
     CGFloat percent = CGFloat(newVal) / kHighPeers;
-    return [[self backgroundColor] blendedColorWithFraction:percent ofColor:HighColor];
+    return [[self backgroundColor] blendedColorWithFraction:percent ofColor:HighColor()];
 }
 
 - (void)drawRect:(NSRect)dirtyRect

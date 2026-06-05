@@ -7,6 +7,7 @@
 
 #import "MessageWindowController.h"
 #import "Controller.h"
+#import "CocoaCompatibility.h"
 #import "NSImageAdditions.h"
 #import "NSMutableArrayAdditions.h"
 #import "NSStringAdditions.h"
@@ -187,23 +188,23 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
     {
     case TR_LOG_CRITICAL:
     case TR_LOG_ERROR:
-        color = NSColor.systemRedColor;
+        color = TRSystemRedColor();
         break;
 
     case TR_LOG_WARN:
-        color = NSColor.systemOrangeColor;
+        color = TRSystemOrangeColor();
         break;
 
     case TR_LOG_INFO:
-        color = NSColor.systemGreenColor;
+        color = TRSystemGreenColor();
         break;
 
     case TR_LOG_DEBUG:
-        color = NSColor.systemTealColor;
+        color = TRSystemTealColor();
         break;
 
     case TR_LOG_TRACE:
-        color = NSColor.systemPurpleColor;
+        color = TRSystemPurpleColor();
         break;
 
     default:
