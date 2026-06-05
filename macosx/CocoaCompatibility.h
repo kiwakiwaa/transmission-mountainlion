@@ -6,8 +6,11 @@
 
 #import "LegacyColors.h"
 #import "LegacyConstraints.h"
+#import "LegacyPowerActivity.h"
 #import "LegacySegmentedControl.h"
+#import "LegacySheets.h"
 #import "LegacySymbols.h"
+#import "LegacyTitlebarAccessory.h"
 
 #ifndef NSBezelStyleTexturedRounded
 #define NSBezelStyleTexturedRounded NSTexturedRoundedBezelStyle
@@ -66,24 +69,6 @@ static inline NSEvent* NSAppCurrentEvent(void)
 #define NSMenuItemValidation NSUserInterfaceValidations
 #endif
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
-@interface NSTitlebarAccessoryViewController : NSViewController
-@property(nonatomic) NSLayoutAttribute layoutAttribute;
-@property(nonatomic, getter=isHidden) BOOL hidden;
-@property(nonatomic) BOOL automaticallyAdjustsSize;
-@end
-
-@interface NSWindow (TransmissionTitlebarAccessoryCompatibility)
-- (void)addTitlebarAccessoryViewController:(NSTitlebarAccessoryViewController*)controller;
-@end
-#endif
-
-void TRLayoutLegacyTitlebarAccessoryWindow(NSWindow* window);
-
-#ifndef NSModalResponseOK
-typedef NSInteger NSModalResponse;
-static NSModalResponse const NSModalResponseOK = 1;
-
 #ifndef NSControlStateValueOn
 typedef NSInteger NSControlStateValue;
 static NSControlStateValue const NSControlStateValueMixed = NSMixedState;
@@ -122,21 +107,6 @@ static NSControlStateValue const NSControlStateValueOn = NSOnState;
 #ifndef NSCompositingOperationCopy
 #define NSCompositingOperationCopy NSCompositeCopy
 #endif
-static NSModalResponse const NSModalResponseCancel = 0;
-#endif
-
-typedef void (^TRSheetCompletionHandler)(NSModalResponse returnCode);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
-@interface NSWindow (TransmissionCompatibility)
-- (void)beginSheet:(NSWindow*)sheet completionHandler:(TRSheetCompletionHandler)handler;
-- (void)endSheet:(NSWindow*)sheet;
-@end
-
-@interface NSAlert (TransmissionCompatibility)
-- (void)beginSheetModalForWindow:(NSWindow*)window completionHandler:(TRSheetCompletionHandler)handler;
-@end
-#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -163,16 +133,4 @@ NS_ASSUME_NONNULL_END
 #endif
 #ifndef NSTextAlignmentLeft
 #define NSTextAlignmentLeft NSLeftTextAlignment
-#endif
-
-#ifndef NSActivityIdleSystemSleepDisabled
-typedef NSUInteger NSActivityOptions;
-#define NSActivityIdleSystemSleepDisabled 0
-#define NSActivityUserInitiatedAllowingIdleSystemSleep 0
-#define NSProcessInfoPowerStateDidChangeNotification @"NSProcessInfoPowerStateDidChangeNotification"
-@interface NSProcessInfo (TransmissionActivityCompatibility)
-- (id<NSObject>)beginActivityWithOptions:(NSActivityOptions)options reason:(NSString*)reason;
-- (void)endActivity:(id<NSObject>)activity;
-- (BOOL)lowPowerModeEnabled;
-@end
 #endif

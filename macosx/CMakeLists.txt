@@ -131,12 +131,18 @@ target_sources(${TR_NAME}-mac
         LegacyColors.mm
         LegacyConstraints.h
         LegacyConstraints.mm
+        LegacyPowerActivity.h
+        LegacyPowerActivity.mm
         LegacySegmentedControl.h
         LegacySegmentedControl.mm
+        LegacySheets.h
+        LegacySheets.mm
         LegacyStackView.h
         LegacyStackView.mm
         LegacySymbols.h
         LegacySymbols.mm
+        LegacyTitlebarAccessory.h
+        LegacyTitlebarAccessory.mm
         main.mm
         MessageWindowController.h
         MessageWindowController.mm
