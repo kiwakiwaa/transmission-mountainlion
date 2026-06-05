@@ -52,6 +52,8 @@ static dispatch_queue_t timeMachineExcludeQueue;
 @property(nonatomic, copy, readwrite) NSString* hashString;
 
 - (BOOL)canChangeDownloadChecks;
+- (void)groupsDidUpdate:(NSNotification*)notification;
+- (void)applyAnnouncedClientIdentityForCurrentGroup;
 
 - (void)renameFinished:(BOOL)success
                  nodes:(NSArray<FileListNode*>*)nodes
@@ -168,6 +170,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
 {
     //restore GroupValue
     torrent.groupValue = [history[@"GroupValue"] intValue];
+    [torrent applyAnnouncedClientIdentityForCurrentGroup];
 
     //start transfer
     NSNumber* active;
@@ -1544,6 +1547,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     if (groupValue != self.groupValue)
     {
         self.groupValue = groupValue;
+        [self applyAnnouncedClientIdentityForCurrentGroup];
         [NSNotificationCenter.defaultCenter postNotificationName:kTorrentDidChangeGroupNotification object:self];
     }
     self.fGroupValueDetermination = determinationType;
@@ -1559,6 +1563,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     if (self.groupValue != -1 && [notification.userInfo[@"Index"] integerValue] == self.groupValue)
     {
         self.groupValue = -1;
+        [self applyAnnouncedClientIdentityForCurrentGroup];
     }
 }
 
@@ -1929,6 +1934,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
         _fGroupValueDetermination = TorrentDeterminationAutomatic;
         _groupValue = [GroupsController.groups groupIndexForTorrent:self];
     }
+    [self applyAnnouncedClientIdentityForCurrentGroup];
 
     _removeWhenFinishSeeding = removeWhenFinishSeeding ? removeWhenFinishSeeding.boolValue :
                                                          [_fDefaults boolForKey:@"RemoveWhenFinishSeeding"];
@@ -1936,6 +1942,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(checkGroupValueForRemoval:)
                                                name:@"GroupValueRemoved"
                                              object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(groupsDidUpdate:) name:@"UpdateGroups" object:nil];
 
     [self update];
     [self updateTimeMachineExclude];
@@ -2136,6 +2143,22 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     }
 
     [NSNotificationCenter.defaultCenter postNotificationName:@"ResetInspector" object:self userInfo:@{ @"Torrent" : self }];
+}
+
+- (void)groupsDidUpdate:(NSNotification*)notification
+{
+    [self applyAnnouncedClientIdentityForCurrentGroup];
+}
+
+- (void)applyAnnouncedClientIdentityForCurrentGroup
+{
+    if (!self.fHandle)
+    {
+        return;
+    }
+
+    NSString* identity = [GroupsController.groups announcedClientIdentityForIndex:self.groupValue];
+    tr_torrentSetAnnouncedClientIdentity(self.fHandle, identity.length > 0 ? identity.UTF8String : nullptr);
 }
 
 - (void)renameFinished:(BOOL)success

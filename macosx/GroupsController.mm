@@ -7,9 +7,48 @@
 #import "NSKeyedUnarchiverAdditions.h"
 #import "NSMutableArrayAdditions.h"
 
+#include <libtransmission/transmission.h>
+
 static CGFloat const kIconWidth = 16.0;
 static CGFloat const kBorderWidth = 1.25;
 static CGFloat const kIconWidthSmall = 12.0;
+static NSString* const kAnnouncedClientIdentityKey = @"AnnouncedClientIdentity";
+static NSString* const kAnnounceClientVersionKey = @"AnnounceClientVersion";
+static NSString* const kRealAnnouncedClientIdentity = @"real";
+
+static NSString* TRStringFromUTF8(char const* value)
+{
+    return value != nullptr ? [NSString stringWithUTF8String:value] : nil;
+}
+
+static NSString* TRSupportedAnnouncedClientIdentity(NSString* value)
+{
+    if (value.length == 0)
+    {
+        return nil;
+    }
+
+    for (size_t i = 0, n = tr_announcedClientIdentityCount(); i < n; ++i)
+    {
+        tr_announced_client_identity_info const identity = tr_announcedClientIdentity(i);
+        if ([value isEqualToString:TRStringFromUTF8(identity.id)])
+        {
+            return [value isEqualToString:kRealAnnouncedClientIdentity] ? nil : value;
+        }
+    }
+
+    NSString* migratedIdentity = [@"transmission-" stringByAppendingString:value];
+    for (size_t i = 0, n = tr_announcedClientIdentityCount(); i < n; ++i)
+    {
+        tr_announced_client_identity_info const identity = tr_announcedClientIdentity(i);
+        if ([migratedIdentity isEqualToString:TRStringFromUTF8(identity.id)])
+        {
+            return migratedIdentity;
+        }
+    }
+
+    return nil;
+}
 
 @interface GroupsController ()
 
@@ -228,6 +267,48 @@ GroupsController* fGroupsInstance = nil;
         [dict removeObjectForKey:@"AutoGroupRules"];
         [self setUsesAutoAssignRules:NO forIndex:index];
     }
+}
+
+- (NSString*)announcedClientIdentityForIndex:(NSInteger)index
+{
+    NSInteger orderIndex = [self rowValueForIndex:index];
+    if (orderIndex == -1)
+    {
+        return nil;
+    }
+
+    NSDictionary* dict = self.fGroups[orderIndex];
+    NSString* identity = TRSupportedAnnouncedClientIdentity(dict[kAnnouncedClientIdentityKey]);
+    return identity != nil ? identity : TRSupportedAnnouncedClientIdentity(dict[kAnnounceClientVersionKey]);
+}
+
+- (void)setAnnouncedClientIdentity:(NSString*)identity forIndex:(NSInteger)index
+{
+    NSInteger orderIndex = [self rowValueForIndex:index];
+    if (orderIndex == -1)
+    {
+        return;
+    }
+
+    NSString* supportedIdentity = TRSupportedAnnouncedClientIdentity(identity);
+    if (identity.length > 0 && supportedIdentity == nil)
+    {
+        return;
+    }
+
+    NSMutableDictionary* dict = self.fGroups[orderIndex];
+    if (supportedIdentity.length > 0)
+    {
+        dict[kAnnouncedClientIdentityKey] = supportedIdentity;
+    }
+    else
+    {
+        [dict removeObjectForKey:kAnnouncedClientIdentityKey];
+    }
+    [dict removeObjectForKey:kAnnounceClientVersionKey];
+
+    [GroupsController.groups saveGroups];
+    [NSNotificationCenter.defaultCenter postNotificationName:@"UpdateGroups" object:self];
 }
 
 - (void)addNewGroup
