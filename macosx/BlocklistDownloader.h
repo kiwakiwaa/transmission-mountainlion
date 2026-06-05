@@ -12,7 +12,7 @@ typedef NS_ENUM(NSUInteger, BlocklistDownloadState) {
     BlocklistDownloadStateProcessing
 };
 
-@interface BlocklistDownloader : NSObject<NSURLSessionDownloadDelegate>
+@interface BlocklistDownloader : NSObject
 
 @property(nonatomic) BlocklistDownloaderViewController* viewController;
 @property(nonatomic, class, readonly) BOOL isRunning;

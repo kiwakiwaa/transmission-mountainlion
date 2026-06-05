@@ -6,6 +6,7 @@
 #include <libtransmission/web-utils.h> //tr_addressIsIP()
 
 #import "CocoaCompatibility.h"
+#import "LegacyURLRequest.h"
 
 #import "TrackerCell.h"
 #import "TrackerNode.h"
@@ -23,6 +24,7 @@ static CGFloat const kCountWidth = 60.0;
 // make the favicons accessible to all tracker cells
 static NSCache* fTrackerIconCache;
 static NSMutableSet* fTrackerIconLoading;
+static NSMutableDictionary* fTrackerIconTasks;
 
 @interface TrackerCell ()
 
@@ -42,6 +44,7 @@ static NSMutableSet* fTrackerIconLoading;
 
     fTrackerIconCache = [[NSCache alloc] init];
     fTrackerIconLoading = [[NSMutableSet alloc] init];
+    fTrackerIconTasks = [[NSMutableDictionary alloc] init];
 }
 
 - (instancetype)init
@@ -205,21 +208,25 @@ static NSMutableSet* fTrackerIconLoading;
     NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:favIconUrl] cachePolicy:NSURLRequestUseProtocolCachePolicy
                                          timeoutInterval:30.0];
 
-    NSURLSessionDataTask* task = [NSURLSession.sharedSession
+    TRURLRequestTask* task = [TRURLRequestTask
         dataTaskWithRequest:request completionHandler:^(NSData* iconData, NSURLResponse* response, NSError* error) {
-            if (error)
-            {
-                NSLog(@"Unable to get tracker icon: task failed (%@)", error.localizedDescription);
-                return;
-            }
-            BOOL ok = ((NSHTTPURLResponse*)response).statusCode == 200 ? YES : NO;
-            if (!ok)
-            {
-                NSLog(@"Unable to get tracker icon: status code not OK (%ld)", (long)((NSHTTPURLResponse*)response).statusCode);
-                return;
-            }
-
             dispatch_async(dispatch_get_main_queue(), ^{
+                if (error)
+                {
+                    NSLog(@"Unable to get tracker icon: task failed (%@)", error.localizedDescription);
+                    [fTrackerIconLoading removeObject:baseAddress];
+                    [fTrackerIconTasks removeObjectForKey:baseAddress];
+                    return;
+                }
+                BOOL ok = ((NSHTTPURLResponse*)response).statusCode == 200 ? YES : NO;
+                if (!ok)
+                {
+                    NSLog(@"Unable to get tracker icon: status code not OK (%ld)", (long)((NSHTTPURLResponse*)response).statusCode);
+                    [fTrackerIconLoading removeObject:baseAddress];
+                    [fTrackerIconTasks removeObjectForKey:baseAddress];
+                    return;
+                }
+
                 NSImage* icon = [[NSImage alloc] initWithData:iconData];
                 if (icon)
                 {
@@ -233,8 +240,10 @@ static NSMutableSet* fTrackerIconLoading;
                 }
 
                 [fTrackerIconLoading removeObject:baseAddress];
+                [fTrackerIconTasks removeObjectForKey:baseAddress];
             });
         }];
+    [fTrackerIconTasks setObject:task forKey:baseAddress];
     [task resume];
 }
 

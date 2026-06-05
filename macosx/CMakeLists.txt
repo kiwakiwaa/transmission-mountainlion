@@ -143,6 +143,8 @@ target_sources(${TR_NAME}-mac
         LegacySymbols.mm
         LegacyTitlebarAccessory.h
         LegacyTitlebarAccessory.mm
+        LegacyURLRequest.h
+        LegacyURLRequest.mm
         main.mm
         MessageWindowController.h
         MessageWindowController.mm

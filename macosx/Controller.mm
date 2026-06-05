@@ -28,6 +28,7 @@
 
 #import "CocoaCompatibility.h"
 #import "LegacyArchiving.h"
+#import "LegacyURLRequest.h"
 
 #import "Controller.h"
 #import "Torrent.h"
@@ -261,7 +262,7 @@ static void removeKeRangerRansomware()
     NSLog(@"OSX.KeRanger.A ransomware removal completed, proceeding to normal operation");
 }
 
-@interface Controller ()<UNUserNotificationCenterDelegate, NSURLSessionDataDelegate, NSURLSessionDownloadDelegate, PowerManagerDelegate>
+@interface Controller ()<UNUserNotificationCenterDelegate, PowerManagerDelegate>
 
 @property(nonatomic) IBOutlet NSWindow* fWindow;
 @property(nonatomic) NSLayoutConstraint* fMinHeightConstraint;
@@ -317,7 +318,7 @@ static void removeKeRangerRansomware()
 @property(nonatomic) NSMutableArray* fAutoImportedNames;
 @property(nonatomic) NSTimer* fAutoImportTimer;
 
-@property(nonatomic) NSURLSession* fSession;
+@property(nonatomic) NSMutableDictionary* fURLDownloadTasks;
 
 @property(nonatomic) NSMutableSet* fAddingTransfers;
 
@@ -569,9 +570,7 @@ static void removeKeRangerRansomware()
         _fDisplayedTorrents = [[NSMutableArray alloc] init];
         _fTorrentHashes = [[NSMutableDictionary alloc] init];
 
-        NSURLSessionConfiguration* configuration = NSURLSessionConfiguration.defaultSessionConfiguration;
-        configuration.requestCachePolicy = NSURLRequestReloadIgnoringLocalAndRemoteCacheData;
-        _fSession = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:nil];
+        _fURLDownloadTasks = [[NSMutableDictionary alloc] init];
 
         _fInfoController = [[InfoWindowController alloc] init];
 
@@ -1064,7 +1063,11 @@ static void removeKeRangerRansomware()
     }
 
     //remove all torrent downloads
-    [self.fSession invalidateAndCancel];
+    for (TRURLRequestTask* task in [self.fURLDownloadTasks allValues])
+    {
+        [task cancel];
+    }
+    [self.fURLDownloadTasks removeAllObjects];
 
     //remember window states
     [self.fDefaults setBool:self.fInfoController.window.visible forKey:@"InfoVisible"];
@@ -1131,25 +1134,28 @@ static void removeKeRangerRansomware()
     }
 }
 
-#pragma mark - NSURLSessionDelegate
+#pragma mark - URL Downloads
 
-- (void)URLSession:(nonnull NSURLSession*)session
-              dataTask:(nonnull NSURLSessionDataTask*)dataTask
-    didReceiveResponse:(nonnull NSURLResponse*)response
-     completionHandler:(nonnull void (^)(NSURLSessionResponseDisposition))completionHandler
+- (void)forgetURLDownloadForKey:(NSString*)urlKey
+{
+    if (urlKey)
+    {
+        [self.fURLDownloadTasks removeObjectForKey:urlKey];
+    }
+}
+
+- (BOOL)validateTorrentDownloadResponse:(NSURLResponse*)response originalURLString:(NSString*)originalURLString
 {
     NSString* suggestedName = response.suggestedFilename;
-    if ([suggestedName.pathExtension caseInsensitiveCompare:@"torrent"] == NSOrderedSame)
+    if (suggestedName.length > 0 && [suggestedName.pathExtension caseInsensitiveCompare:@"torrent"] == NSOrderedSame)
     {
-        completionHandler(NSURLSessionResponseBecomeDownload);
-        return;
+        return YES;
     }
-    completionHandler(NSURLSessionResponseCancel);
 
     NSString* message = [NSString
         stringWithFormat:NSLocalizedString(@"It appears that the file \"%@\" from %@ is not a torrent file.", "Download not a torrent -> message"),
-                         suggestedName,
-                         dataTask.originalRequest.URL.absoluteString.stringByRemovingPercentEncoding];
+                         suggestedName ?: @"",
+                         [originalURLString stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     dispatch_async(dispatch_get_main_queue(), ^{
         NSAlert* alert = [[NSAlert alloc] init];
         [alert addButtonWithTitle:NSLocalizedString(@"OK", "Download not a torrent -> button")];
@@ -1157,58 +1163,53 @@ static void removeKeRangerRansomware()
         alert.informativeText = message;
         [alert runModal];
     });
+
+    return NO;
 }
 
-- (void)URLSession:(nonnull NSURLSession*)session
-                 dataTask:(nonnull NSURLSessionDataTask*)dataTask
-    didBecomeDownloadTask:(nonnull NSURLSessionDownloadTask*)downloadTask
+- (void)openDownloadedTorrentAtURL:(NSURL*)location
+                          response:(NSURLResponse*)response
+                 originalURLString:(NSString*)originalURLString
 {
-    // Required delegate method to proceed with  NSURLSessionResponseBecomeDownload.
-    // nothing to do
-}
+    NSString* name = response.suggestedFilename.lastPathComponent;
+    if (name.length == 0)
+    {
+        name = @"downloaded.torrent";
+    }
 
-- (void)URLSession:(nonnull NSURLSession*)session
-                 downloadTask:(nonnull NSURLSessionDownloadTask*)downloadTask
-    didFinishDownloadingToURL:(nonnull NSURL*)location
-{
-    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent:downloadTask.response.suggestedFilename.lastPathComponent];
-    NSError* error;
-    [NSFileManager.defaultManager moveItemAtPath:location.path toPath:path error:&error];
+    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent:name];
+    NSError* error = nil;
+    [[NSFileManager defaultManager] moveItemAtPath:location.path toPath:path error:&error];
     if (error)
     {
-        [self URLSession:session task:downloadTask didCompleteWithError:error];
+        [self showTorrentDownloadError:error originalURLString:originalURLString currentURLString:originalURLString];
         return;
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
         [self openFiles:@[ path ] addType:AddTypeURL forcePath:nil];
-
-        //delete the torrent file after opening
-        [NSFileManager.defaultManager removeItemAtPath:path error:NULL];
+        [[NSFileManager defaultManager] removeItemAtPath:path error:NULL];
     });
 }
 
-- (void)URLSession:(nonnull NSURLSession*)session
-                    task:(nonnull NSURLSessionTask*)task
-    didCompleteWithError:(nullable NSError*)error
+- (void)showTorrentDownloadError:(NSError*)error
+               originalURLString:(NSString*)originalURLString
+                currentURLString:(NSString*)currentURLString
 {
     if (!error || error.code == NSURLErrorCancelled)
     {
-        // no errors or we already displayed an alert
         return;
     }
 
-    NSString* urlString = task.currentRequest.URL.absoluteString;
-    if ([urlString rangeOfString:@"magnet:" options:(NSAnchoredSearch | NSCaseInsensitiveSearch)].location != NSNotFound)
+    if ([currentURLString rangeOfString:@"magnet:" options:(NSAnchoredSearch | NSCaseInsensitiveSearch)].location != NSNotFound)
     {
-        // originalRequest was a redirect to a magnet
-        [self performSelectorOnMainThread:@selector(openMagnet:) withObject:urlString waitUntilDone:NO];
+        [self performSelectorOnMainThread:@selector(openMagnet:) withObject:currentURLString waitUntilDone:NO];
         return;
     }
 
     NSString* message = [NSString
         stringWithFormat:NSLocalizedString(@"The torrent could not be downloaded from %@: %@.", "Torrent download failed -> message"),
-                         task.originalRequest.URL.absoluteString.stringByRemovingPercentEncoding,
+                         [originalURLString stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding],
                          error.localizedDescription];
     dispatch_async(dispatch_get_main_queue(), ^{
         NSAlert* alert = [[NSAlert alloc] init];
@@ -1667,18 +1668,32 @@ static void removeKeRangerRansomware()
             return;
         }
 
-        [self.fSession getAllTasksWithCompletionHandler:^(NSArray* _Nonnull tasks) {
-            for (NSURLSessionTask* task in tasks)
-            {
-                if ([task.originalRequest.URL isEqual:url])
-                {
-                    NSLog(@"Already downloading %@", url);
-                    return;
-                }
-            }
-            NSURLSessionDataTask* download = [self.fSession dataTaskWithURL:url];
-            [download resume];
-        }];
+        NSString* urlKey = url.absoluteString;
+        if ([self.fURLDownloadTasks objectForKey:urlKey])
+        {
+            NSLog(@"Already downloading %@", url);
+            return;
+        }
+
+        NSURLRequest* request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
+                                             timeoutInterval:60.0];
+        TRURLRequestTask* task = [TRURLRequestTask
+            downloadTaskWithRequest:request
+                    progressHandler:nil
+                  completionHandler:^(NSURL* location, NSURLResponse* response, NSError* error) {
+                      [self forgetURLDownloadForKey:urlKey];
+                      if (error)
+                      {
+                          NSString* currentURLString = [error.userInfo objectForKey:NSURLErrorFailingURLStringErrorKey] ?: urlKey;
+                          [self showTorrentDownloadError:error originalURLString:urlKey currentURLString:currentURLString];
+                      }
+                      else if ([self validateTorrentDownloadResponse:response originalURLString:urlKey])
+                      {
+                          [self openDownloadedTorrentAtURL:location response:response originalURLString:urlKey];
+                      }
+                  }];
+        [self.fURLDownloadTasks setObject:task forKey:urlKey];
+        [task resume];
     }
 }
 
