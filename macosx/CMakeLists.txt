@@ -1,6 +1,6 @@
 # minimum macOS target support
-if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS MACOS_SUPPORT_MINIMUM)
-    message(FATAL_ERROR "Targeting macOS versions before ${MACOS_SUPPORT_MINIMUM} is not supported for the macOS project, please adjust CMAKE_OSX_DEPLOYMENT_TARGET (${CMAKE_OSX_DEPLOYMENT_TARGET})")
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS TR_MACOS_LEGACY_SUPPORT_MINIMUM)
+    message(FATAL_ERROR "Targeting macOS versions before ${TR_MACOS_LEGACY_SUPPORT_MINIMUM} is not supported for the macOS project, please adjust CMAKE_OSX_DEPLOYMENT_TARGET (${CMAKE_OSX_DEPLOYMENT_TARGET})")
 endif()
 
 find_program(ACTOOL_EXECUTABLE actool REQUIRED)
@@ -30,7 +30,9 @@ add_link_options(
     # equivalent of XCODE_ATTRIBUTE_DEAD_CODE_STRIPPING YES for this directory
     $<$<LINK_LANGUAGE:C,CXX>:-dead_strip>)
 
-add_subdirectory(QuickLookExtension)
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_GREATER_EQUAL 12.0)
+    add_subdirectory(QuickLookExtension)
+endif()
 add_subdirectory(QuickLookPlugin)
 add_subdirectory(VDKQueue)
 
@@ -201,6 +203,16 @@ target_sources(${TR_NAME}-mac
         WebSeedTableView.h
         WebSeedTableView.mm)
 
+if(TR_MACOS_LEGACY_COMPAT)
+    target_sources(${TR_NAME}-mac
+        PRIVATE
+            CocoaCompatibility.mm)
+
+    target_compile_options(${TR_NAME}-mac PRIVATE
+        -include ${CMAKE_CURRENT_SOURCE_DIR}/CocoaCompatibility.h
+        -Wno-nullability-completeness)
+endif()
+
 set(XIB_FILES
     AboutWindow.xib
     BlocklistStatusWindow.xib
@@ -290,8 +302,18 @@ foreach(SIZE IN ITEMS 16 32 128 256 512)
 endforeach()
 
 set(COMPILED_IMAGE_ASSETS
-    "${CMAKE_CURRENT_BINARY_DIR}/${APPICON_NAME}.icns"
-    "${CMAKE_CURRENT_BINARY_DIR}/Assets.car")
+    "${CMAKE_CURRENT_BINARY_DIR}/${APPICON_NAME}.icns")
+
+if(TR_MACOS_LEGACY_COMPAT)
+    foreach(IMG IN LISTS IMAGESETS)
+        list(APPEND COMPILED_IMAGE_ASSETS
+            "${CMAKE_CURRENT_BINARY_DIR}/${IMG}.png"
+            "${CMAKE_CURRENT_BINARY_DIR}/${IMG}@2x.png")
+    endforeach()
+else()
+    list(APPEND COMPILED_IMAGE_ASSETS
+        "${CMAKE_CURRENT_BINARY_DIR}/Assets.car")
+endif()
 
 add_custom_command(
     OUTPUT
@@ -405,20 +427,30 @@ find_library(SPARKLE_FRAMEWORK Sparkle
     PATHS ${CMAKE_CURRENT_SOURCE_DIR}
     NO_DEFAULT_PATHS)
 
+set(SPARKLE_LINK_LIBRARIES ${SPARKLE_FRAMEWORK} "-weak_framework Sparkle")
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
+    set(SPARKLE_LINK_LIBRARIES)
+endif()
+
 target_link_libraries(${TR_NAME}-mac
     PRIVATE
         ${TR_NAME}
         transmission::fmt-header-only
         vdkqueue
-        ${SPARKLE_FRAMEWORK}
+        ${SPARKLE_LINK_LIBRARIES}
         "-framework AppKit"
         "-framework Carbon"
         "-framework Foundation"
         "-framework Quartz"
-        "-framework Security"
-        "-weak_framework Sparkle"
-        "-weak_framework UniformTypeIdentifiers"
-        "-weak_framework UserNotifications")
+        "-framework Security")
+
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_GREATER_EQUAL 11.0)
+    target_link_libraries(${TR_NAME}-mac PRIVATE "-weak_framework UniformTypeIdentifiers")
+endif()
+
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_GREATER_EQUAL 10.14)
+    target_link_libraries(${TR_NAME}-mac PRIVATE "-weak_framework UserNotifications")
+endif()
 
 if(NOT CMAKE_GENERATOR STREQUAL Xcode)
     add_custom_command(

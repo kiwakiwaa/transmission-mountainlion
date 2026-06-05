@@ -73,6 +73,10 @@ $ cmake --build .
 $ sudo cmake --install .
 ```
 
+### Building the macOS app for OS X 10.8 Mountain Lion
+
+Mountain Lion support is an opt-in compatibility build. See [Building Transmission for OS X 10.8](docs/macOS-10.8.md) for the CMake preset.
+
 ## Contributing
 
 ### Code Style
