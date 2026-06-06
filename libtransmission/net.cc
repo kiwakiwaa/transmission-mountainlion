@@ -20,6 +20,7 @@
 #include <iphlpapi.h>
 #include <ws2tcpip.h>
 #else
+#include <sys/socket.h>
 #include <ifaddrs.h>
 #include <net/if.h>
 #endif
