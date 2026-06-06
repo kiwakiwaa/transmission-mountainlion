@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "InfoWindowController.h"
+#import "CocoaCompatibility.h"
 #import "InfoViewController.h"
 #import "InfoGeneralViewController.h"
 #import "InfoActivityViewController.h"
@@ -38,7 +39,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
 
 @interface InfoWindowController ()
 
-@property(nonatomic, copy) NSArray<Torrent*>* fTorrents;
+@property(nonatomic, copy) NSArray* fTorrents;
 
 @property(nonatomic) CGFloat fMinWindowWidth;
 
@@ -100,32 +101,17 @@ typedef NS_ENUM(NSUInteger, TabTag) {
     void (^setImageAndToolTipForSegment)(NSImage*, NSString*, NSInteger) = ^(NSImage* image, NSString* toolTip, NSInteger segment) {
         image.accessibilityDescription = toolTip;
         [self.fTabs setImage:image forSegment:segment];
-        [self.fTabs.cell setToolTip:toolTip forSegment:segment];
+        TRSetSegmentToolTip(self.fTabs, toolTip, segment);
     };
+    setImageAndToolTipForSegment(TRImageForSystemSymbol(@"info.circle", nil), NSLocalizedString(@"General Info", "Inspector -> tab"), TabTagGeneral);
+    setImageAndToolTipForSegment(TRImageForSystemSymbol(@"square.grid.3x3.fill.square", nil), NSLocalizedString(@"Activity", "Inspector -> tab"), TabTagActivity);
     setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"info.circle" accessibilityDescription:nil],
-        NSLocalizedString(@"General Info", "Inspector -> tab"),
-        TabTagGeneral);
-    setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"square.grid.3x3.fill.square" accessibilityDescription:nil],
-        NSLocalizedString(@"Activity", "Inspector -> tab"),
-        TabTagActivity);
-    setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"antenna.radiowaves.left.and.right" accessibilityDescription:nil],
+        TRImageForSystemSymbol(@"antenna.radiowaves.left.and.right", nil),
         NSLocalizedString(@"Trackers", "Inspector -> tab"),
         TabTagTrackers);
-    setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"person.2" accessibilityDescription:nil],
-        NSLocalizedString(@"Peers", "Inspector -> tab"),
-        TabTagPeers);
-    setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"doc.on.doc" accessibilityDescription:nil],
-        NSLocalizedString(@"Files", "Inspector -> tab"),
-        TabTagFile);
-    setImageAndToolTipForSegment(
-        [NSImage imageWithSystemSymbolName:@"gearshape" accessibilityDescription:nil],
-        NSLocalizedString(@"Options", "Inspector -> tab"),
-        TabTagOptions);
+    setImageAndToolTipForSegment(TRImageForSystemSymbol(@"person.2", nil), NSLocalizedString(@"Peers", "Inspector -> tab"), TabTagPeers);
+    setImageAndToolTipForSegment(TRImageForSystemSymbol(@"doc.on.doc", nil), NSLocalizedString(@"Files", "Inspector -> tab"), TabTagFile);
+    setImageAndToolTipForSegment(TRImageForSystemSymbol(@"gearshape", nil), NSLocalizedString(@"Options", "Inspector -> tab"), TabTagOptions);
 
     //set selected tab
     self.fCurrentTabTag = kInvalidTag;
@@ -197,7 +183,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
     }
 }
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents
+- (void)setInfoForTorrents:(NSArray*)torrents
 {
     if ([self.fTorrents isEqualToArray:torrents])
     {
@@ -209,14 +195,14 @@ typedef NS_ENUM(NSUInteger, TabTag) {
     [self resetInfo];
 }
 
-- (void)removeTorrentsFromInfo:(NSArray<Torrent*>*)torrents
+- (void)removeTorrentsFromInfo:(NSArray*)torrents
 {
     if (self.fTorrents.count == 0 || torrents.count == 0)
     {
         return;
     }
 
-    NSMutableArray<Torrent*>* remaining = [self.fTorrents mutableCopy];
+    NSMutableArray* remaining = [self.fTorrents mutableCopy];
     [remaining removeObjectsInArray:torrents];
     [self setInfoForTorrents:remaining];
 }
@@ -230,7 +216,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
 
 - (void)windowWillClose:(NSNotification*)notification
 {
-    if (self.fCurrentTabTag == TabTagFile && ([QLPreviewPanel sharedPreviewPanelExists] && [QLPreviewPanel sharedPreviewPanel].visible))
+    if (self.fCurrentTabTag == TabTagFile && ([QLPreviewPanel sharedPreviewPanelExists] && [[QLPreviewPanel sharedPreviewPanel] isVisible]))
     {
         [[QLPreviewPanel sharedPreviewPanel] reloadData];
     }
@@ -434,7 +420,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
                                                                  views:@{ @"tabs" : self.fTabs, @"view" : view }]];
 
     if ((self.fCurrentTabTag == TabTagFile || oldTabTag == TabTagFile) &&
-        ([QLPreviewPanel sharedPreviewPanelExists] && [QLPreviewPanel sharedPreviewPanel].visible))
+        ([QLPreviewPanel sharedPreviewPanelExists] && [[QLPreviewPanel sharedPreviewPanel] isVisible]))
     {
         [[QLPreviewPanel sharedPreviewPanel] reloadData];
     }
@@ -493,14 +479,14 @@ typedef NS_ENUM(NSUInteger, TabTag) {
     [self.fOptionsViewController updateOptions];
 }
 
-- (NSArray<NSURL*>*)quickLookURLs
+- (NSArray*)quickLookURLs
 {
     return self.fFileViewController.quickLookURLs;
 }
 
 - (BOOL)canQuickLook
 {
-    if (self.fCurrentTabTag != TabTagFile || !self.window.visible)
+    if (self.fCurrentTabTag != TabTagFile || ![self.window isVisible])
     {
         return NO;
     }

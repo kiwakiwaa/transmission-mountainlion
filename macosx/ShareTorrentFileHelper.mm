@@ -19,9 +19,9 @@
     return helper;
 }
 
-- (NSArray<NSURL*>*)shareTorrentURLs
+- (NSArray*)shareTorrentURLs
 {
-    NSArray* torrents = ((Controller*)NSApp.delegate).selectedTorrents;
+    NSArray* torrents = ((Controller*)[NSApp delegate]).selectedTorrents;
     NSMutableArray* fileURLs = [NSMutableArray arrayWithCapacity:torrents.count];
     for (Torrent* torrent in torrents)
     {
@@ -34,7 +34,7 @@
     return fileURLs;
 }
 
-- (NSArray<NSMenuItem*>*)menuItems
+- (NSArray*)menuItems
 {
     NSArray* services = [NSSharingService sharingServicesForItems:self.shareTorrentURLs];
     NSMutableArray* items = [NSMutableArray arrayWithCapacity:services.count];
@@ -45,7 +45,7 @@
                                                keyEquivalent:@""];
         item.image = service.image;
         item.representedObject = service;
-        service.delegate = (Controller*)NSApp.delegate;
+        service.delegate = (Controller*)[NSApp delegate];
         item.target = self;
         [items addObject:item];
     }

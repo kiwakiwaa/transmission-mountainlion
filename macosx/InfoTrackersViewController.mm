@@ -17,7 +17,7 @@ typedef NS_ENUM(NSInteger, TrackerSegmentTag) {
 
 @interface InfoTrackersViewController ()
 
-@property(nonatomic, copy) NSArray<Torrent*>* fTorrents;
+@property(nonatomic, copy) NSArray* fTorrents;
 
 @property(nonatomic) BOOL fSet;
 
@@ -61,7 +61,7 @@ typedef NS_ENUM(NSInteger, TrackerSegmentTag) {
     }
 }
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents
+- (void)setInfoForTorrents:(NSArray*)torrents
 {
     //don't check if it's the same in case the metadata changed
     self.fTorrents = torrents;
@@ -88,7 +88,7 @@ typedef NS_ENUM(NSInteger, TrackerSegmentTag) {
 
         if (self.fTorrents.count == 1)
         {
-            self.fTrackers = self.fTorrents[0].allTrackerStats;
+            self.fTrackers = ((Torrent*)[self.fTorrents objectAtIndex:0]).allTrackerStats;
         }
         else
         {
@@ -117,7 +117,7 @@ typedef NS_ENUM(NSInteger, TrackerSegmentTag) {
         NSIndexSet* addedIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(self.fTrackers.count - 2, 2)];
         NSArray* tierAndTrackerBeingAdded = [self.fTrackers objectsAtIndexes:addedIndexes];
 
-        self.fTrackers = self.fTorrents[0].allTrackerStats;
+        self.fTrackers = ((Torrent*)[self.fTorrents objectAtIndex:0]).allTrackerStats;
         [self.fTrackers addObjectsFromArray:tierAndTrackerBeingAdded];
 
         self.fTrackerTable.trackers = self.fTrackers;

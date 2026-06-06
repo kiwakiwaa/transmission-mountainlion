@@ -8,7 +8,11 @@
 
 - (BOOL)isDarkMode
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     return [self.effectiveAppearance.name isEqualToString:NSAppearanceNameDarkAqua];
+#else
+    return NO;
+#endif
 }
 
 @end

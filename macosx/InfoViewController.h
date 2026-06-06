@@ -8,7 +8,7 @@
 
 @protocol InfoViewController
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents;
+- (void)setInfoForTorrents:(NSArray*)torrents;
 - (void)updateInfo;
 
 @optional

@@ -6,10 +6,11 @@
 #import "BlocklistDownloaderViewController.h"
 #import "BlocklistScheduler.h"
 #import "Controller.h"
+#import "LegacyURLRequest.h"
 
 @interface BlocklistDownloader ()
 
-@property(nonatomic) NSURLSession* fSession;
+@property(nonatomic) TRURLRequestTask* fTask;
 @property(nonatomic) NSUInteger fCurrentSize;
 @property(nonatomic) long long fExpectedSize;
 @property(nonatomic) BlocklistDownloadState fState;
@@ -60,48 +61,29 @@ BlocklistDownloader* fBLDownloader = nil;
 {
     [_viewController setFinished];
 
-    [self.fSession invalidateAndCancel];
+    [self.fTask cancel];
+    self.fTask = nil;
 
     [BlocklistScheduler.scheduler updateSchedule];
 
     fBLDownloader = nil;
 }
 
-- (void)URLSession:(NSURLSession*)session
-                 downloadTask:(NSURLSessionDownloadTask*)downloadTask
-                 didWriteData:(int64_t)bytesWritten
-            totalBytesWritten:(int64_t)totalBytesWritten
-    totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite
+- (void)downloadDidFailWithError:(NSError*)error
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.fState = BlocklistDownloadStateDownloading;
-
-        self.fCurrentSize = totalBytesWritten;
-        self.fExpectedSize = totalBytesExpectedToWrite;
-
-        [self.viewController setStatusProgressForCurrentSize:self.fCurrentSize expectedSize:self.fExpectedSize];
-    });
-}
-
-- (void)URLSession:(NSURLSession*)session task:(NSURLSessionTask*)task didCompleteWithError:(NSError*)error
-{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (error)
-        {
-            [self.viewController setFailed:error.localizedDescription];
-        }
-
-        [NSUserDefaults.standardUserDefaults setObject:[NSDate date] forKey:@"BlocklistNewLastUpdate"];
+        [self.viewController setFailed:error.localizedDescription];
+        NSDate* date = [NSDate date];
+        NSUserDefaults* defaults = NSUserDefaults.standardUserDefaults;
+        [defaults setObject:date forKey:@"BlocklistNewLastUpdate"];
         [BlocklistScheduler.scheduler updateSchedule];
 
-        [self.fSession finishTasksAndInvalidate];
+        self.fTask = nil;
         fBLDownloader = nil;
     });
 }
 
-- (void)URLSession:(NSURLSession*)session
-                 downloadTask:(NSURLSessionDownloadTask*)downloadTask
-    didFinishDownloadingToURL:(NSURL*)location
+- (void)downloadDidFinishToURL:(NSURL*)location response:(NSURLResponse*)response
 {
     self.fState = BlocklistDownloadStateProcessing;
 
@@ -109,31 +91,35 @@ BlocklistDownloader* fBLDownloader = nil;
         [self.viewController setStatusProcessing];
     });
 
-    NSString* filename = downloadTask.response.suggestedFilename;
+    NSString* filename = response.suggestedFilename;
     if (filename == nil)
     {
         filename = @"transmission-blocklist.tmp";
     }
 
-    NSString* tempFile = [NSTemporaryDirectory() stringByAppendingPathComponent:filename];
-    NSString* blocklistFile = [NSTemporaryDirectory() stringByAppendingPathComponent:@"transmission-blocklist"];
+    NSString* tempDir = NSTemporaryDirectory();
+    NSString* tempFile = [tempDir stringByAppendingPathComponent:filename];
+    NSString* blocklistFile = [tempDir stringByAppendingPathComponent:@"transmission-blocklist"];
 
-    [NSFileManager.defaultManager moveItemAtPath:location.path toPath:tempFile error:nil];
+    NSString* sourcePath = location.path;
+    [NSFileManager.defaultManager moveItemAtPath:sourcePath toPath:tempFile error:nil];
 
-    if ([@"text/plain" isEqualToString:downloadTask.response.MIMEType])
+    if ([@"text/plain" isEqualToString:response.MIMEType])
     {
         blocklistFile = tempFile;
     }
     else
     {
-        [self decompressFrom:[NSURL fileURLWithPath:tempFile] to:[NSURL fileURLWithPath:blocklistFile] error:nil];
+        NSURL* tempURL = [NSURL fileURLWithPath:tempFile];
+        NSURL* blocklistURL = [NSURL fileURLWithPath:blocklistFile];
+        [self decompressFrom:tempURL to:blocklistURL error:nil];
         [NSFileManager.defaultManager removeItemAtPath:tempFile error:nil];
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        auto const count = tr_blocklistSetContent(((Controller*)NSApp.delegate).sessionHandle, blocklistFile.UTF8String);
+        Controller* controller = (Controller*)[NSApp delegate];
+        auto const count = tr_blocklistSetContent(controller.sessionHandle, blocklistFile.UTF8String);
 
-        //delete downloaded file
         [NSFileManager.defaultManager removeItemAtPath:blocklistFile error:nil];
 
         if (count)
@@ -142,19 +128,19 @@ BlocklistDownloader* fBLDownloader = nil;
         }
         else
         {
-            [self.viewController
-                setFailed:NSLocalizedString(@"The specified blocklist file did not contain any valid rules.", "blocklist fail message")];
+            NSString* message = NSLocalizedString(@"The specified blocklist file did not contain any valid rules.", "blocklist fail message");
+            [self.viewController setFailed:message];
         }
 
-        //update last updated date for schedule
         NSDate* date = [NSDate date];
-        [NSUserDefaults.standardUserDefaults setObject:date forKey:@"BlocklistNewLastUpdate"];
-        [NSUserDefaults.standardUserDefaults setObject:date forKey:@"BlocklistNewLastUpdateSuccess"];
+        NSUserDefaults* defaults = NSUserDefaults.standardUserDefaults;
+        [defaults setObject:date forKey:@"BlocklistNewLastUpdate"];
+        [defaults setObject:date forKey:@"BlocklistNewLastUpdateSuccess"];
         [BlocklistScheduler.scheduler updateSchedule];
 
         [NSNotificationCenter.defaultCenter postNotificationName:@"BlocklistUpdated" object:nil];
 
-        [self.fSession finishTasksAndInvalidate];
+        self.fTask = nil;
         fBLDownloader = nil;
     });
 }
@@ -165,9 +151,6 @@ BlocklistDownloader* fBLDownloader = nil;
 {
     self.fState = BlocklistDownloadStateStart;
 
-    self.fSession = [NSURLSession sessionWithConfiguration:NSURLSessionConfiguration.ephemeralSessionConfiguration delegate:self
-                                             delegateQueue:nil];
-
     [BlocklistScheduler.scheduler cancelSchedule];
 
     NSString* urlString = [NSUserDefaults.standardUserDefaults stringForKey:@"BlocklistURL"];
@@ -177,15 +160,39 @@ BlocklistDownloader* fBLDownloader = nil;
     }
     else
     {
-        urlString = [urlString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        NSCharacterSet* whitespace = [NSCharacterSet whitespaceCharacterSet];
+        urlString = [urlString stringByTrimmingCharactersInSet:whitespace];
         if (![urlString isEqualToString:@""] && [urlString rangeOfString:@"://"].location == NSNotFound)
         {
             urlString = [@"https://" stringByAppendingString:urlString];
         }
     }
 
-    NSURLSessionDownloadTask* task = [self.fSession downloadTaskWithURL:[NSURL URLWithString:urlString]];
-    [task resume];
+    NSURL* url = [NSURL URLWithString:urlString];
+    NSURLRequest* request = [NSURLRequest requestWithURL:url];
+    self.fTask = [TRURLRequestTask downloadTaskWithRequest:request
+        progressHandler:^(long long bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite) {
+            (void)bytesWritten;
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.fState = BlocklistDownloadStateDownloading;
+
+                self.fCurrentSize = totalBytesWritten;
+                self.fExpectedSize = totalBytesExpectedToWrite;
+
+                [self.viewController setStatusProgressForCurrentSize:self.fCurrentSize expectedSize:self.fExpectedSize];
+            });
+        } completionHandler:^(NSURL* location, NSURLResponse* response, NSError* error) {
+            if (error)
+            {
+                [self downloadDidFailWithError:error];
+            }
+            else
+            {
+                [self downloadDidFinishToURL:location response:response];
+            }
+        }];
+    [self.fTask resume];
 }
 
 - (BOOL)decompressFrom:(NSURL*)file to:(NSURL*)destination error:(NSError**)error
@@ -262,7 +269,7 @@ BlocklistDownloader* fBLDownloader = nil;
 
         NSString* output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 
-        filename = [output componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet].firstObject;
+        filename = [[output componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet] objectAtIndex:0];
     }
     @catch (NSException* exception)
     {
@@ -361,7 +368,7 @@ BlocklistDownloader* fBLDownloader = nil;
 
         NSString* output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 
-        filename = [output componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet].firstObject;
+        filename = [[output componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet] objectAtIndex:0];
     }
     @catch (NSException* exception)
     {

@@ -1,0 +1,37 @@
+{
+    "version": 2,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "macos-10.8",
+            "displayName": "OS X 10.8 compatibility",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-10.8",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/MacOS108Toolchain.cmake",
+                "ENABLE_CLI": "OFF",
+                "ENABLE_DAEMON": "ON",
+                "ENABLE_GTK": "OFF",
+                "ENABLE_MAC": "ON",
+                "ENABLE_QT": "OFF",
+                "ENABLE_TESTS": "OFF",
+                "ENABLE_UTILS": "ON",
+                "REBUILD_WEB": "OFF",
+                "USE_SYSTEM_DEFAULT": "OFF",
+                "WITH_CRYPTO": "openssl"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "macos-10.8",
+            "configurePreset": "macos-10.8",
+            "jobs": 2
+        }
+    ]
+}

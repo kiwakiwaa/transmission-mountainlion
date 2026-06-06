@@ -5,6 +5,7 @@
 #include <libtransmission/transmission.h>
 
 #import "InfoPeersViewController.h"
+#import "CocoaCompatibility.h"
 #import "NSStringAdditions.h"
 #import "PeerProgressIndicatorCell.h"
 #import "Torrent.h"
@@ -14,14 +15,18 @@
 static NSString* const kAnimationIdKey = @"animationId";
 static NSString* const kWebSeedAnimationId = @"webSeed";
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 @interface InfoPeersViewController ()<CAAnimationDelegate>
+#else
+@interface InfoPeersViewController ()
+#endif
 
-@property(nonatomic, copy) NSArray<Torrent*>* fTorrents;
+@property(nonatomic, copy) NSArray* fTorrents;
 
 @property(nonatomic) BOOL fSet;
 
-@property(nonatomic) NSMutableArray<NSDictionary*>* fPeers;
-@property(nonatomic) NSMutableArray<NSDictionary*>* fWebSeeds;
+@property(nonatomic) NSMutableArray* fPeers;
+@property(nonatomic) NSMutableArray* fWebSeeds;
 
 @property(nonatomic) IBOutlet NSTableView* fPeerTable;
 @property(nonatomic) IBOutlet WebSeedTableView* fWebSeedTable;
@@ -30,7 +35,7 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
 
 @property(nonatomic) CGFloat fViewTopMargin;
 @property(nonatomic) IBOutlet NSLayoutConstraint* fWebSeedTableTopConstraint;
-@property(nonatomic, readonly) NSArray<NSSortDescriptor*>* peerSortDescriptors;
+@property(nonatomic, readonly) NSArray* peerSortDescriptors;
 
 @end
 
@@ -58,13 +63,19 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
     }
 
     //set table header text
-    [self.fPeerTable tableColumnWithIdentifier:@"IP"].headerCell.stringValue = NSLocalizedString(@"IP Address", "inspector -> peer table -> header");
-    [self.fPeerTable tableColumnWithIdentifier:@"Client"].headerCell.stringValue = NSLocalizedString(@"Client", "inspector -> peer table -> header");
-    [self.fPeerTable tableColumnWithIdentifier:@"DL From"].headerCell.stringValue = NSLocalizedString(@"DL", "inspector -> peer table -> header");
-    [self.fPeerTable tableColumnWithIdentifier:@"UL To"].headerCell.stringValue = NSLocalizedString(@"UL", "inspector -> peer table -> header");
+    [[[self.fPeerTable tableColumnWithIdentifier:@"IP"] headerCell]
+        setStringValue:NSLocalizedString(@"IP Address", "inspector -> peer table -> header")];
+    [[[self.fPeerTable tableColumnWithIdentifier:@"Client"] headerCell]
+        setStringValue:NSLocalizedString(@"Client", "inspector -> peer table -> header")];
+    [[[self.fPeerTable tableColumnWithIdentifier:@"DL From"] headerCell]
+        setStringValue:NSLocalizedString(@"DL", "inspector -> peer table -> header")];
+    [[[self.fPeerTable tableColumnWithIdentifier:@"UL To"] headerCell]
+        setStringValue:NSLocalizedString(@"UL", "inspector -> peer table -> header")];
 
-    [self.fWebSeedTable tableColumnWithIdentifier:@"Address"].headerCell.stringValue = NSLocalizedString(@"Web Seeds", "inspector -> web seed table -> header");
-    [self.fWebSeedTable tableColumnWithIdentifier:@"DL From"].headerCell.stringValue = NSLocalizedString(@"DL", "inspector -> web seed table -> header");
+    [[[self.fWebSeedTable tableColumnWithIdentifier:@"Address"] headerCell]
+        setStringValue:NSLocalizedString(@"Web Seeds", "inspector -> web seed table -> header")];
+    [[[self.fWebSeedTable tableColumnWithIdentifier:@"DL From"] headerCell]
+        setStringValue:NSLocalizedString(@"DL", "inspector -> web seed table -> header")];
 
     //set table header tool tips
     [self.fPeerTable tableColumnWithIdentifier:@"Encryption"].headerToolTip = NSLocalizedString(
@@ -91,7 +102,7 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
     [self setWebSeedTableHidden:YES animate:NO];
 }
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents
+- (void)setInfoForTorrents:(NSArray*)torrents
 {
     //don't check if it's the same in case the metadata changed
     self.fTorrents = torrents;
@@ -354,7 +365,7 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
 
         if ([ident isEqualToString:@"Encryption"])
         {
-            return [peer[@"Encryption"] boolValue] ? [NSImage imageWithSystemSymbolName:@"lock.fill" accessibilityDescription:nil] : nil;
+            return [peer[@"Encryption"] boolValue] ? TRImageForSystemSymbol(@"lock.fill", nil) : nil;
         }
         else if ([ident isEqualToString:@"Client"])
         {
@@ -610,17 +621,17 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
 
 - (void)setWebSeedTableHidden:(BOOL)hide animate:(BOOL)animate
 {
-    if (animate && (!self.view.window || !self.view.window.visible))
+    if (animate && (!self.view.window || ![self.view.window isVisible]))
     {
         animate = NO;
     }
 
     CGFloat const webSeedTableTopMargin = hide ? -NSHeight(self.fWebSeedTable.enclosingScrollView.frame) : self.fViewTopMargin;
 
-    (animate ? [self.fWebSeedTableTopConstraint animator] : self.fWebSeedTableTopConstraint).constant = webSeedTableTopMargin;
+    [(NSLayoutConstraint*)(animate ? [self.fWebSeedTableTopConstraint animator] : self.fWebSeedTableTopConstraint) setConstant:webSeedTableTopMargin];
 }
 
-- (NSArray<NSSortDescriptor*>*)peerSortDescriptors
+- (NSArray*)peerSortDescriptors
 {
     NSMutableArray* descriptors = [NSMutableArray arrayWithCapacity:2];
 

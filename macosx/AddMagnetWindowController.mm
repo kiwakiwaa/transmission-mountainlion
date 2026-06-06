@@ -123,7 +123,7 @@ typedef NS_ENUM(NSUInteger, PopupPriority) {
     [panel beginSheetModalForWindow:self.window completionHandler:^(NSInteger result) {
         if (result == NSModalResponseOK)
         {
-            [self setDestinationPath:panel.URLs[0].path determinationType:TorrentDeterminationUserSpecified];
+            [self setDestinationPath:[(NSURL*)[panel.URLs objectAtIndex:0] path] determinationType:TorrentDeterminationUserSpecified];
         }
         else
         {

@@ -18,6 +18,21 @@ typedef NS_ENUM(NSUInteger, PopupPriority) {
     PopupPriorityLow = 2,
 };
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+static void TRPrepareLegacySettingsLabel(NSTextField* label)
+{
+    NSTextFieldCell* cell = (NSTextFieldCell*)label.cell;
+    cell.usesSingleLineMode = YES;
+    cell.lineBreakMode = NSLineBreakByTruncatingTail;
+}
+
+static CGFloat TRLegacySettingsLabelWidth(NSTextField* label, CGFloat minimumWidth, CGFloat maximumWidth)
+{
+    CGFloat const measuredWidth = ceil([label.cell cellSize].width);
+    return MIN(MAX(measuredWidth, minimumWidth), maximumWidth);
+}
+#endif
+
 @interface AddWindowController ()
 
 @property(nonatomic) IBOutlet NSImageView* fIconView;
@@ -25,6 +40,9 @@ typedef NS_ENUM(NSUInteger, PopupPriority) {
 @property(nonatomic) IBOutlet NSTextField* fNameField;
 @property(nonatomic) IBOutlet NSTextField* fStatusField;
 @property(nonatomic) IBOutlet NSTextField* fLocationField;
+@property(nonatomic) IBOutlet NSTextField* fDownloadLabel;
+@property(nonatomic) IBOutlet NSTextField* fGroupLabel;
+@property(nonatomic) IBOutlet NSTextField* fPriorityLabel;
 @property(nonatomic) IBOutlet NSButton* fStartCheck;
 @property(nonatomic) IBOutlet NSButton* fDeleteCheck;
 @property(nonatomic) IBOutlet NSPopUpButton* fGroupPopUp;
@@ -164,15 +182,114 @@ typedef NS_ENUM(NSUInteger, PopupPriority) {
                                                  userInfo:nil
                                                   repeats:YES];
     [self updateFiles];
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    self.window.delegate = (id<NSWindowDelegate>)self;
+    [self layoutSettingsViewForLegacyAppKit];
+#endif
 }
 
 - (void)windowDidLoad
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    [self layoutSettingsViewForLegacyAppKit];
+#endif
+
     //if there is no destination, prompt for one right away
     if (!self.fDestination)
     {
         [self setDestination:nil];
     }
+}
+
+- (void)windowDidResize:(NSNotification*)notification
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    [self layoutSettingsViewForLegacyAppKit];
+#endif
+}
+
+- (NSView*)legacySettingsSiblingWithClass:(Class)klass title:(NSString*)title action:(SEL)action
+{
+    NSView* contentView = self.fPriorityPopUp.superview;
+    for (NSView* subview in contentView.subviews)
+    {
+        if (![subview isKindOfClass:klass])
+        {
+            continue;
+        }
+
+        if (title != nil && [subview respondsToSelector:@selector(stringValue)] && [[(id)subview stringValue] isEqualToString:title])
+        {
+            return subview;
+        }
+
+        if (action != NULL && [subview respondsToSelector:@selector(action)] && [(id)subview action] == action)
+        {
+            return subview;
+        }
+    }
+
+    return nil;
+}
+
+- (void)layoutSettingsViewForLegacyAppKit
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    NSView* contentView = self.fPriorityPopUp.superview;
+    if (contentView == nil)
+    {
+        return;
+    }
+
+    CGFloat const width = NSWidth(contentView.bounds);
+    CGFloat const leftMargin = 12.0;
+    CGFloat const rightMargin = 12.0;
+    CGFloat const controlGap = 8.0;
+    CGFloat const popupWidth = 112.0;
+    CGFloat const popupX = width - rightMargin - popupWidth;
+
+    NSTextField* downloadLabel = self.fDownloadLabel;
+    NSTextField* groupLabel = self.fGroupLabel;
+    NSTextField* priorityLabel = self.fPriorityLabel;
+    NSButton* verifyButton = (NSButton*)[self legacySettingsSiblingWithClass:[NSButton class] title:nil
+                                                                      action:@selector(verifyLocalData:)];
+    NSButton* changeButton = (NSButton*)[self legacySettingsSiblingWithClass:[NSButton class] title:nil
+                                                                      action:@selector(setDestination:)];
+    NSView* locationBox = self.fLocationField.superview.superview;
+
+    if (downloadLabel == nil || groupLabel == nil || priorityLabel == nil || verifyButton == nil || changeButton == nil || locationBox == nil)
+    {
+        return;
+    }
+
+    TRPrepareLegacySettingsLabel(downloadLabel);
+    TRPrepareLegacySettingsLabel(groupLabel);
+    TRPrepareLegacySettingsLabel(priorityLabel);
+
+    CGFloat const downloadLabelWidth = TRLegacySettingsLabelWidth(downloadLabel, 84.0, 132.0);
+    CGFloat const locationX = leftMargin + downloadLabelWidth + controlGap;
+
+    downloadLabel.frame = NSMakeRect(leftMargin, 68.0, downloadLabelWidth, 16.0);
+    changeButton.frame = NSMakeRect(width - rightMargin - 72.0, 66.0, 72.0, 22.0);
+    locationBox.frame = NSMakeRect(locationX, 64.0, MAX(120.0, NSMinX(changeButton.frame) - controlGap - locationX), 24.0);
+    self.fLocationImageView.frame = NSMakeRect(4.0, 4.0, 16.0, 16.0);
+    self.fLocationField.frame = NSMakeRect(24.0, 5.0, MAX(40.0, NSWidth(locationBox.frame) - 42.0), 14.0);
+
+    verifyButton.frame = NSMakeRect(leftMargin, 36.0, 132.0, 24.0);
+    self.fVerifyIndicator.frame = NSMakeRect(leftMargin, 16.0, 132.0, 12.0);
+
+    CGFloat const labelLeftLimit = NSMaxX(verifyButton.frame) + controlGap;
+    CGFloat const availableLabelWidth = MAX(48.0, popupX - controlGap - labelLeftLimit);
+    CGFloat const labelWidth = MIN(MAX(TRLegacySettingsLabelWidth(groupLabel, 66.0, 120.0),
+                                       TRLegacySettingsLabelWidth(priorityLabel, 66.0, 120.0)),
+                                  availableLabelWidth);
+    CGFloat const labelX = popupX - controlGap - labelWidth;
+
+    groupLabel.frame = NSMakeRect(labelX, 40.0, labelWidth, 16.0);
+    self.fGroupPopUp.frame = NSMakeRect(popupX, 36.0, popupWidth, 24.0);
+    priorityLabel.frame = NSMakeRect(labelX, 12.0, labelWidth, 16.0);
+    self.fPriorityPopUp.frame = NSMakeRect(popupX, 8.0, popupWidth, 24.0);
+#endif
 }
 
 - (void)dealloc
@@ -197,7 +314,7 @@ typedef NS_ENUM(NSUInteger, PopupPriority) {
         if (result == NSModalResponseOK)
         {
             self.fLockDestination = YES;
-            [self setDestinationPath:panel.URLs[0].path determinationType:TorrentDeterminationUserSpecified];
+            [self setDestinationPath:[(NSURL*)[panel.URLs objectAtIndex:0] path] determinationType:TorrentDeterminationUserSpecified];
         }
         else
         {

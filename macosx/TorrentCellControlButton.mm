@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "TorrentCellControlButton.h"
+#import "CocoaCompatibility.h"
 #import "TorrentTableView.h"
 #import "Torrent.h"
 #import "TorrentCell.h"
@@ -75,7 +76,7 @@
     }
     else
     {
-        if (NSApp.currentEvent.modifierFlags & NSEventModifierFlagOption)
+        if ([NSAppCurrentEvent() modifierFlags] & NSEventModifierFlagOption)
         {
             controlImage = [NSImage imageNamed:[@"ResumeNoWait" stringByAppendingString:self.controlImageSuffix]];
         }

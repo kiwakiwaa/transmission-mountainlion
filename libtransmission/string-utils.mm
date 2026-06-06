@@ -13,6 +13,45 @@
 // macOS implementation of tr_strv_to_utf8_string() that autodetects the encoding.
 // This replaces the generic implementation of the function in utils.cc.
 
+static NSString* TRStringByDetectingEncoding(std::string_view sv)
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+    NSString* convertedString = nil;
+    NSStringEncoding const stringEncoding = [NSString
+        stringEncodingForData:[NSData dataWithBytes:std::data(sv) length:std::size(sv)]
+              encodingOptions:@{
+                  NSStringEncodingDetectionAllowLossyKey : @NO,
+                  NSStringEncodingDetectionLikelyLanguageKey : NSLocale.currentLocale.languageCode
+              }
+              convertedString:&convertedString
+          usedLossyConversion:nil];
+
+    if (stringEncoding != 0 && convertedString != nil && convertedString.UTF8String != nullptr)
+    {
+        return convertedString;
+    }
+#endif
+
+    NSStringEncoding const encodings[] = {
+        NSWindowsCP1252StringEncoding,  NSISOLatin1StringEncoding,         NSMacOSRomanStringEncoding,
+        NSWindowsCP1250StringEncoding,  NSWindowsCP1251StringEncoding,     NSWindowsCP1253StringEncoding,
+        NSWindowsCP1254StringEncoding,  NSISOLatin2StringEncoding,         NSShiftJISStringEncoding,
+        NSJapaneseEUCStringEncoding,    NSISO2022JPStringEncoding,         NSUTF16StringEncoding,
+        NSUTF16BigEndianStringEncoding, NSUTF16LittleEndianStringEncoding,
+    };
+
+    for (auto const encoding : encodings)
+    {
+        NSString* const convertedString = [[NSString alloc] initWithBytes:std::data(sv) length:std::size(sv) encoding:encoding];
+        if (convertedString != nil && convertedString.UTF8String != nullptr)
+        {
+            return convertedString;
+        }
+    }
+
+    return nil;
+}
+
 std::string tr_strv_to_utf8_string(std::string_view sv)
 {
     // local pool for non-app tools like transmission-daemon, transmission-remote, transmission-create, ...
@@ -25,23 +64,8 @@ std::string tr_strv_to_utf8_string(std::string_view sv)
             return tr_strv_to_utf8_string(utf8);
         }
 
-        // Try to make a UTF8 string from the detected encoding.
-        // 1. Disallow lossy conversion in this step. Lossy conversion
-        // is done as last resort later in `tr_strv_replace_invalid()`.
-        // 2. We only provide the likely language. If we also supplied
-        // suggested encodings, the first one listed could override the
-        // others (e.g. cp932 vs cp866).
-        NSString* convertedString;
-        NSStringEncoding stringEncoding = [NSString
-            stringEncodingForData:[NSData dataWithBytes:std::data(sv) length:std::size(sv)]
-                  encodingOptions:@{
-                      NSStringEncodingDetectionAllowLossyKey : @NO,
-                      NSStringEncodingDetectionLikelyLanguageKey : NSLocale.currentLocale.languageCode
-                  }
-                  convertedString:&convertedString
-              usedLossyConversion:nil];
-
-        if (stringEncoding && convertedString != nil && convertedString.UTF8String != nullptr)
+        NSString* const convertedString = TRStringByDetectingEncoding(sv);
+        if (convertedString != nil)
         {
             return tr_strv_to_utf8_string(convertedString);
         }

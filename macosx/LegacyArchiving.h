@@ -4,12 +4,6 @@
 
 #import <Foundation/Foundation.h>
 
-NS_ASSUME_NONNULL_BEGIN
-
-@interface NSKeyedUnarchiver (NSUnarchiverAdditions)
-
-+ (nullable id)deprecatedUnarchiveObjectWithData:(NSData*)data;
-
-@end
-
-NS_ASSUME_NONNULL_END
+NSData* TRArchivedDataForObject(id object);
+id TRUnarchiveObjectFromData(NSData* data, NSSet* allowedClasses);
+id TRUnarchiveLegacyObjectFromData(NSData* data);

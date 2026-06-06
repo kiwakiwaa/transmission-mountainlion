@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "FileOutlineController.h"
+#import "CocoaCompatibility.h"
 #import "Torrent.h"
 #import "FileListNode.h"
 #import "FileOutlineView.h"
@@ -13,7 +14,7 @@
 #import "NSMutableArrayAdditions.h"
 #import "NSStringAdditions.h"
 
-static CGFloat const kRowSmallHeight = 18.0;
+static CGFloat const kRowSmallHeight = 22.0;
 
 typedef NS_ENUM(NSUInteger, FileCheckMenuTag) { //
     FileCheckMenuTagCheck,
@@ -28,7 +29,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
 
 @interface FileOutlineController ()<NSOutlineViewDelegate, NSOutlineViewDataSource, NSMenuItemValidation>
 
-@property(nonatomic) NSMutableArray<FileListNode*>* fFileList;
+@property(nonatomic) NSMutableArray* fFileList;
 
 @property(nonatomic) IBOutlet FileOutlineView* fOutline;
 
@@ -48,6 +49,8 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
     [self.fOutline tableColumnWithIdentifier:@"Priority"].headerToolTip = NSLocalizedString(@"Priority", "file table -> header tool tip");
 
     self.fOutline.menu = self.menu;
+    self.fOutline.target = self;
+    self.fOutline.doubleAction = @selector(revealFile:);
 
     self.torrent = nil;
 }
@@ -279,7 +282,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
 - (void)outlineViewSelectionDidChange:(NSNotification*)notification
 {
     [self reloadVisibleRows];
-    if ([QLPreviewPanel sharedPreviewPanelExists] && [QLPreviewPanel sharedPreviewPanel].visible)
+    if ([QLPreviewPanel sharedPreviewPanelExists] && [[QLPreviewPanel sharedPreviewPanel] isVisible])
     {
         [[QLPreviewPanel sharedPreviewPanel] reloadData];
     }
@@ -562,7 +565,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
                                            keyEquivalent:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"checkmark.circle" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"checkmark.circle", nil);
     }
     item.target = self;
     item.tag = FileCheckMenuTagCheck;
@@ -573,7 +576,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
                                keyEquivalent:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"circle" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"circle", nil);
     }
     item.target = self;
     item.tag = FileCheckMenuTagUncheck;
@@ -585,7 +588,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
                                keyEquivalent:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"checkmark.circle.dotted" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"checkmark.circle.dotted", nil);
     }
     item.target = self;
     [menu addItem:item];
@@ -597,7 +600,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
     NSMenu* priorityMenu = [[NSMenu alloc] initWithTitle:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"chevron.up.chevron.down" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"chevron.up.chevron.down", nil);
     }
     item.submenu = priorityMenu;
     [menu addItem:item];
@@ -634,7 +637,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
                                keyEquivalent:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"finder" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"finder", nil);
     }
     item.target = self;
     [menu addItem:item];
@@ -647,7 +650,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
                                keyEquivalent:@""];
     if (@available(macOS 26.0, *))
     {
-        item.image = [NSImage imageWithSystemSymbolName:@"pencil" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"pencil", nil);
     }
     item.target = self;
     [menu addItem:item];
@@ -656,7 +659,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
 }
 
 - (NSUInteger)findFileNode:(FileListNode*)node
-                    inList:(NSArray<FileListNode*>*)list
+                    inList:(NSArray*)list
                  atIndexes:(NSIndexSet*)indexes
              currentParent:(FileListNode*)currentParent
                finalParent:(FileListNode* __autoreleasing*)parent
@@ -666,12 +669,12 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
     __block FileListNode* retNode;
     __block NSUInteger retIndex = NSNotFound;
 
-    using FindFileNode = void (^)(FileListNode*, NSArray<FileListNode*>*, NSIndexSet*, FileListNode*);
+    using FindFileNode = void (^)(FileListNode*, NSArray*, NSIndexSet*, FileListNode*);
     __weak __block FindFileNode weakFindFileNode;
     FindFileNode findFileNode;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
-    weakFindFileNode = findFileNode = ^(FileListNode* node, NSArray<FileListNode*>* list, NSIndexSet* indexes, FileListNode* currentParent) {
+    weakFindFileNode = findFileNode = ^(FileListNode* node, NSArray* list, NSIndexSet* indexes, FileListNode* currentParent) {
 #pragma clang diagnostic pop
         [list enumerateObjectsAtIndexes:indexes options:NSEnumerationConcurrent
                              usingBlock:^(FileListNode* checkNode, NSUInteger index, BOOL* stop) {

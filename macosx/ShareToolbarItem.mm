@@ -11,9 +11,9 @@
 - (NSMenuItem*)menuFormRepresentation
 {
     NSMenuItem* menuItem = [[NSMenuItem alloc] initWithTitle:self.label action:nil keyEquivalent:@""];
-    menuItem.enabled = [self.target validateToolbarItem:self];
+    [menuItem setEnabled:[self.target validateToolbarItem:self]];
 
-    if (menuItem.enabled)
+    if ([menuItem isEnabled])
     {
         NSMenu* servicesMenu = [[NSMenu alloc] initWithTitle:@""];
         for (NSMenuItem* item in ShareTorrentFileHelper.sharedHelper.menuItems)

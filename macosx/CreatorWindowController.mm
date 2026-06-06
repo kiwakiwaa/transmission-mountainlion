@@ -46,7 +46,7 @@ typedef NS_ENUM(NSUInteger, TrackerSegmentTag) {
 @property(nonatomic, readonly) NSURL* fPath;
 @property(nonatomic) std::shared_future<tr_error> fFuture;
 @property(nonatomic) NSURL* fLocation; // path to new torrent file
-@property(nonatomic) NSMutableArray<NSString*>* fTrackers;
+@property(nonatomic) NSMutableArray* fTrackers;
 
 @property(nonatomic) NSTimer* fTimer;
 @property(nonatomic) BOOL fStarted;
@@ -145,7 +145,7 @@ static NSMutableSet* creatorWindowControllerSet;
         //remove potentially invalid addresses
         for (NSInteger i = _fTrackers.count - 1; i >= 0; i--)
         {
-            if (!tr_urlIsValidTracker(_fTrackers[i].UTF8String))
+            if (!tr_urlIsValidTracker([(NSString*)[_fTrackers objectAtIndex:i] UTF8String]))
             {
                 [_fTrackers removeObjectAtIndex:i];
             }
@@ -240,7 +240,7 @@ static NSMutableSet* creatorWindowControllerSet;
         return;
     }
 
-    NSWindow* window = [self createTorrentFile:((Controller*)NSApp.delegate).sessionHandle forFile:path].window;
+    NSWindow* window = [self createTorrentFile:((Controller*)[NSApp delegate]).sessionHandle forFile:path].window;
     completionHandler(window, nil);
 }
 
@@ -600,7 +600,7 @@ static NSMutableSet* creatorWindowControllerSet;
     auto trackers = tr_announce_list{};
     for (NSUInteger i = 0; i < self.fTrackers.count; ++i)
     {
-        trackers.add((char*)(self.fTrackers[i]).UTF8String, trackers.nextTier());
+        trackers.add((char*)[(NSString*)[self.fTrackers objectAtIndex:i] UTF8String], trackers.nextTier());
     }
     self.fBuilder->set_announce_list(std::move(trackers));
 
@@ -645,7 +645,7 @@ static NSMutableSet* creatorWindowControllerSet;
             window.frameAutosaveName = @"";
 
             NSRect windowRect = window.frame;
-            CGFloat difference = self.fProgressView.frame.size.height - window.contentView.frame.size.height;
+            CGFloat difference = self.fProgressView.frame.size.height - [[window contentView] frame].size.height;
             windowRect.origin.y -= difference;
             windowRect.size.height += difference;
 

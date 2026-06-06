@@ -8,6 +8,7 @@ endif()
 
 # Value should follow latest stable Xcode's RECOMMENDED_MACOSX_DEPLOYMENT_TARGET
 set(MACOS_SUPPORT_MINIMUM 11.0)
+set(TR_MACOS_LEGACY_SUPPORT_MINIMUM 10.8)
 
 # The value of this variable should be set prior to the first project() command invocation.
 # See: https://cmake.org/cmake/help/latest/variable/CMAKE_OSX_DEPLOYMENT_TARGET.html
@@ -22,6 +23,12 @@ if(VCPKG_TARGET_ANDROID)
 endif()
 
 project(transmission)
+
+set(TR_MACOS_LEGACY_COMPAT OFF)
+if(APPLE AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS MACOS_SUPPORT_MINIMUM)
+    set(TR_MACOS_LEGACY_COMPAT ON)
+    add_compile_definitions(_LIBCPP_DISABLE_AVAILABILITY)
+endif()
 
 set(TR_THIRD_PARTY_DIR_NAME third-party)
 set(TR_THIRD_PARTY_SOURCE_DIR ${PROJECT_SOURCE_DIR}/${TR_THIRD_PARTY_DIR_NAME})

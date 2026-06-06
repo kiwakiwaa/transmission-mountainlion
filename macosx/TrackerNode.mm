@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "TrackerNode.h"
+#import "LegacyFormatters.h"
 #import "NSStringAdditions.h"
 
 @interface TrackerNode ()
@@ -167,18 +168,9 @@
 
     case TR_TRACKER_WAITING:
         {
-            NSTimeInterval const nextAnnounceTimeLeft = self.fStat.nextAnnounceTime - [NSDate date].timeIntervalSince1970;
+            NSTimeInterval const nextAnnounceTimeLeft = self.fStat.nextAnnounceTime - [[NSDate date] timeIntervalSince1970];
 
-            static NSDateComponentsFormatter* formatter;
-            static dispatch_once_t onceToken;
-            dispatch_once(&onceToken, ^{
-                formatter = [NSDateComponentsFormatter new];
-                formatter.unitsStyle = NSDateComponentsFormatterUnitsStyleAbbreviated;
-                formatter.zeroFormattingBehavior = NSDateComponentsFormatterZeroFormattingBehaviorDropLeading;
-                formatter.collapsesLargestUnit = YES;
-            });
-
-            NSString* timeString = [formatter stringFromTimeInterval:nextAnnounceTimeLeft];
+            NSString* timeString = TRTrackerCountdownString(nextAnnounceTimeLeft);
             return [NSString stringWithFormat:NSLocalizedString(@"Next announce in %@", "Tracker next announce"), timeString];
         }
     case TR_TRACKER_QUEUED:

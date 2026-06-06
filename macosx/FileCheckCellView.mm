@@ -18,8 +18,14 @@
     {
         // Create checkbox button
         NSButton* checkButton = [[NSButton alloc] initWithFrame:NSZeroRect];
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+        checkButton.translatesAutoresizingMaskIntoConstraints = YES;
+        checkButton.autoresizingMask = NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin;
+        [checkButton setButtonType:NSSwitchButton];
+#else
         checkButton.translatesAutoresizingMaskIntoConstraints = NO;
         [checkButton setButtonType:NSButtonTypeSwitch];
+#endif
         checkButton.title = @"";
         checkButton.allowsMixedState = YES;
         checkButton.target = self;
@@ -27,14 +33,26 @@
         [self addSubview:checkButton];
         _checkButton = checkButton;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
         // Setup constraints
         [NSLayoutConstraint activateConstraints:@[
             [checkButton.centerXAnchor constraintEqualToAnchor:self.centerXAnchor],
             [checkButton.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
         ]];
+#endif
     }
     return self;
 }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+- (void)layout
+{
+    [super layout];
+
+    CGFloat const size = 18.0;
+    self.checkButton.frame = NSMakeRect(floor(NSMidX(self.bounds) - size * 0.5), floor(NSMidY(self.bounds) - size * 0.5), size, size);
+}
+#endif
 
 - (void)setNode:(FileListNode*)node
 {
@@ -94,7 +112,11 @@
     Torrent* torrent = node.torrent;
 
     NSIndexSet* indexSet;
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    if ([NSEvent modifierFlags] & NSAlternateKeyMask)
+#else
     if (NSEvent.modifierFlags & NSEventModifierFlagOption)
+#endif
     {
         indexSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, torrent.fileCount)];
     }

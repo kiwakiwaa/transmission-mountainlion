@@ -14,8 +14,10 @@
 #include <libtransmission/string-utils.h>
 
 #import "Torrent.h"
+#import "CocoaCompatibility.h"
 #import "GroupsController.h"
 #import "FileListNode.h"
+#import "LegacyFormatters.h"
 #import "NSStringAdditions.h"
 #import "TrackerNode.h"
 #import "Utils.h"
@@ -37,8 +39,8 @@ static dispatch_queue_t timeMachineExcludeQueue;
 
 @property(nonatomic) NSImage* fIcon;
 
-@property(nonatomic, copy) NSArray<FileListNode*>* fileList;
-@property(nonatomic, copy) NSArray<FileListNode*>* flatFileList;
+@property(nonatomic, copy) NSArray* fileList;
+@property(nonatomic, copy) NSArray* flatFileList;
 
 @property(nonatomic, copy) NSIndexSet* fPreviousFinishedIndexes;
 @property(nonatomic) NSDate* fPreviousFinishedIndexesDate;
@@ -56,7 +58,7 @@ static dispatch_queue_t timeMachineExcludeQueue;
 - (void)applyAnnouncedClientIdentityForCurrentGroup;
 
 - (void)renameFinished:(BOOL)success
-                 nodes:(NSArray<FileListNode*>*)nodes
+                 nodes:(NSArray*)nodes
      completionHandler:(void (^)(BOOL))completionHandler
                oldPath:(NSString*)oldPath
                newName:(NSString*)newName;
@@ -266,7 +268,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     [Torrent updateTorrents:@[ self ]];
 }
 
-+ (void)updateTorrents:(NSArray<Torrent*>*)torrents
++ (void)updateTorrents:(NSArray*)torrents
 {
     if (torrents == nil || torrents.count == 0)
     {
@@ -707,7 +709,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     return trackers;
 }
 
-- (NSArray<NSString*>*)allTrackersFlat
+- (NSArray*)allTrackersFlat
 {
     auto const n = tr_torrentTrackerCount(self.fHandle);
     NSMutableArray* allTrackers = [NSMutableArray arrayWithCapacity:n];
@@ -1035,7 +1037,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     return error;
 }
 
-- (NSArray<NSDictionary*>*)peers
+- (NSArray*)peers
 {
     auto const peers = tr_torrentPeers(self.fHandle);
     size_t const totalPeers = peers.size();
@@ -1077,7 +1079,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     return tr_torrentWebseedCount(self.fHandle);
 }
 
-- (NSArray<NSDictionary*>*)webSeeds
+- (NSArray*)webSeeds
 {
     NSUInteger n = tr_torrentWebseedCount(self.fHandle);
     NSMutableArray* webSeeds = [NSMutableArray arrayWithCapacity:n];
@@ -2001,12 +2003,12 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     }
 }
 
-- (void)insertPathForComponents:(NSArray<NSString*>*)components
+- (void)insertPathForComponents:(NSArray*)components
              withComponentIndex:(NSUInteger)componentIndex
                       forParent:(FileListNode*)parent
                        fileSize:(uint64_t)size
                           index:(NSInteger)index
-                       flatList:(NSMutableArray<FileListNode*>*)flatFileList
+                       flatList:(NSMutableArray*)flatFileList
 {
     NSParameterAssert(components.count > 0);
     NSParameterAssert(componentIndex < components.count);
@@ -2058,7 +2060,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
     }
 }
 
-- (void)sortFileList:(NSMutableArray<FileListNode*>*)fileNodes
+- (void)sortFileList:(NSMutableArray*)fileNodes
 {
     NSSortDescriptor* descriptor = [NSSortDescriptor sortDescriptorWithKey:@"name" ascending:YES
                                                                   selector:@selector(localizedStandardCompare:)];
@@ -2091,7 +2093,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
                 (NSString*)kLSQuarantineTypeKey : (NSString*)kLSQuarantineTypeOtherDownload
             };
             NSError* error = nil;
-            if (![dataLocationUrl setResourceValue:quarantineProperties forKey:NSURLQuarantinePropertiesKey error:&error])
+            if (![dataLocationUrl setResourceValue:quarantineProperties forKey:TRURLQuarantinePropertiesKey error:&error])
             {
                 NSLog(@"Failed to quarantine %@: %@", dataLocation, error.description);
             }
@@ -2162,7 +2164,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
 }
 
 - (void)renameFinished:(BOOL)success
-                 nodes:(NSArray<FileListNode*>*)nodes
+                 nodes:(NSArray*)nodes
      completionHandler:(void (^)(BOOL))completionHandler
                oldPath:(NSString*)oldPath
                newName:(NSString*)newName
@@ -2259,18 +2261,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
         return NSLocalizedString(@"remaining time unknown", "Torrent -> eta string");
     }
 
-    static NSDateComponentsFormatter* formatter;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        formatter = [NSDateComponentsFormatter new];
-        formatter.unitsStyle = NSDateComponentsFormatterUnitsStyleShort;
-        formatter.maximumUnitCount = 2;
-        formatter.collapsesLargestUnit = YES;
-        formatter.includesTimeRemainingPhrase = YES;
-    });
-    // the duration of months being variable, setting the reference date to now (instead of 00:00:00 UTC on 1 January 2001)
-    formatter.referenceDate = NSDate.date;
-    NSString* idleString = [formatter stringFromTimeInterval:eta];
+    NSString* idleString = TRTimeRemainingString(eta);
 
     if (fromIdle)
     {
@@ -2293,7 +2284,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
 }
 
 // For backward compatibility for previously saved Group Predicates.
-- (NSArray<FileListNode*>*)fFlatFileList
+- (NSArray*)fFlatFileList
 {
     return self.flatFileList;
 }

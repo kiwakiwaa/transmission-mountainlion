@@ -5,6 +5,10 @@
 #import <AppKit/AppKit.h>
 #import "TorrentTableView.h"
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+#import "LegacyStackView.h"
+#endif
+
 @interface TorrentCell : NSTableCellView
 
 @property(nonatomic) IBOutlet NSButton* fActionButton;
@@ -14,7 +18,11 @@
 @property(nonatomic) IBOutlet NSImageView* fIconView;
 @property(nonatomic) IBOutlet NSImageView* fGroupIndicatorView;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+@property(nonatomic) IBOutlet LegacyStackView* fStackView;
+#else
 @property(nonatomic) IBOutlet NSStackView* fStackView;
+#endif
 @property(nonatomic) IBOutlet NSTextField* fTorrentTitleField;
 @property(nonatomic) IBOutlet NSImageView* fTorrentPriorityView;
 @property(nonatomic) IBOutlet NSLayoutConstraint* fTorrentPriorityViewWidthConstraint;

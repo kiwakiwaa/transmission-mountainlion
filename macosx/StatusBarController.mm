@@ -23,6 +23,23 @@ typedef NS_ENUM(NSUInteger, StatusTag) {
     StatusTagSessionTransfer = 3
 };
 
+static CGFloat const kSpeedFieldMinimumWidth = 82.0;
+
+static void TRPrepareStatusSpeedField(NSTextField* field)
+{
+    NSTextFieldCell* cell = (NSTextFieldCell*)field.cell;
+    cell.usesSingleLineMode = YES;
+    cell.lineBreakMode = NSLineBreakByClipping;
+
+    [field addConstraint:[NSLayoutConstraint constraintWithItem:field
+                                                      attribute:NSLayoutAttributeWidth
+                                                      relatedBy:NSLayoutRelationGreaterThanOrEqual
+                                                         toItem:nil
+                                                      attribute:NSLayoutAttributeNotAnAttribute
+                                                     multiplier:1.0
+                                                       constant:kSpeedFieldMinimumWidth]];
+}
+
 @interface StatusBarController ()
 
 @property(nonatomic) IBOutlet NSButton* fStatusButton;
@@ -62,11 +79,13 @@ typedef NS_ENUM(NSUInteger, StatusTag) {
     [self.fStatusButton.menu itemWithTag:StatusTagTotalTransfer].title = NSLocalizedString(@"Total Transfer", "Status Bar -> status menu");
     [self.fStatusButton.menu itemWithTag:StatusTagSessionTransfer].title = NSLocalizedString(@"Session Transfer", "Status Bar -> status menu");
 
-    self.fStatusButton.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fTotalDLField.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fTotalULField.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fTotalDLImageView.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fTotalULImageView.cell.backgroundStyle = NSBackgroundStyleRaised;
+    [[self.fStatusButton cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fTotalDLField cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fTotalULField cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fTotalDLImageView cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fTotalULImageView cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    TRPrepareStatusSpeedField(self.fTotalDLField);
+    TRPrepareStatusSpeedField(self.fTotalULField);
 
     [self updateSpeedFieldsToolTips];
 

@@ -3,8 +3,9 @@
 // License text can be found in the licenses/ folder.
 
 #import "GroupsController.h"
+#import "CocoaCompatibility.h"
+#import "LegacyArchiving.h"
 #import "NSImageAdditions.h"
-#import "NSKeyedUnarchiverAdditions.h"
 #import "NSMutableArrayAdditions.h"
 
 #include <libtransmission/transmission.h>
@@ -52,7 +53,7 @@ static NSString* TRSupportedAnnouncedClientIdentity(NSString* value)
 
 @interface GroupsController ()
 
-@property(nonatomic, readonly) NSMutableArray<NSMutableDictionary*>* fGroups;
+@property(nonatomic, readonly) NSMutableArray* fGroups;
 
 @end
 
@@ -76,19 +77,19 @@ GroupsController* fGroupsInstance = nil;
         NSData* data;
         if ((data = [NSUserDefaults.standardUserDefaults dataForKey:@"GroupDicts"]))
         {
-            _fGroups = [NSKeyedUnarchiver unarchivedObjectOfClasses:[NSSet setWithObjects:NSMutableArray.class,
-                                                                                          NSMutableDictionary.class,
-                                                                                          NSNumber.class,
-                                                                                          NSColor.class,
-                                                                                          NSString.class,
-                                                                                          NSPredicate.class,
-                                                                                          nil]
-                                                           fromData:data
-                                                              error:nil];
+            _fGroups = TRUnarchiveObjectFromData(
+                data,
+                [NSSet setWithObjects:NSMutableArray.class,
+                                      NSMutableDictionary.class,
+                                      NSNumber.class,
+                                      NSColor.class,
+                                      NSString.class,
+                                      NSPredicate.class,
+                                      nil]);
         }
         else if ((data = [NSUserDefaults.standardUserDefaults dataForKey:@"Groups"])) //handle old groups
         {
-            _fGroups = [NSKeyedUnarchiver deprecatedUnarchiveObjectWithData:data];
+            _fGroups = TRUnarchiveLegacyObjectFromData(data);
             [NSUserDefaults.standardUserDefaults removeObjectForKey:@"Groups"];
             [self saveGroups];
         }
@@ -96,25 +97,25 @@ GroupsController* fGroupsInstance = nil;
         {
             //default groups
             NSMutableDictionary* red = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemRedColor, @"Color", NSLocalizedString(@"Red", "Groups -> Name"), @"Name", @0, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemRedColor(), @"Color", NSLocalizedString(@"Red", "Groups -> Name"), @"Name", @0, @"Index", nil];
 
             NSMutableDictionary* orange = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemOrangeColor, @"Color", NSLocalizedString(@"Orange", "Groups -> Name"), @"Name", @1, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemOrangeColor(), @"Color", NSLocalizedString(@"Orange", "Groups -> Name"), @"Name", @1, @"Index", nil];
 
             NSMutableDictionary* yellow = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemYellowColor, @"Color", NSLocalizedString(@"Yellow", "Groups -> Name"), @"Name", @2, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemYellowColor(), @"Color", NSLocalizedString(@"Yellow", "Groups -> Name"), @"Name", @2, @"Index", nil];
 
             NSMutableDictionary* green = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemGreenColor, @"Color", NSLocalizedString(@"Green", "Groups -> Name"), @"Name", @3, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemGreenColor(), @"Color", NSLocalizedString(@"Green", "Groups -> Name"), @"Name", @3, @"Index", nil];
 
             NSMutableDictionary* blue = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemBlueColor, @"Color", NSLocalizedString(@"Blue", "Groups -> Name"), @"Name", @4, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemBlueColor(), @"Color", NSLocalizedString(@"Blue", "Groups -> Name"), @"Name", @4, @"Index", nil];
 
             NSMutableDictionary* purple = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemPurpleColor, @"Color", NSLocalizedString(@"Purple", "Groups -> Name"), @"Name", @5, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemPurpleColor(), @"Color", NSLocalizedString(@"Purple", "Groups -> Name"), @"Name", @5, @"Index", nil];
 
             NSMutableDictionary* gray = [NSMutableDictionary
-                dictionaryWithObjectsAndKeys:NSColor.systemGrayColor, @"Color", NSLocalizedString(@"Gray", "Groups -> Name"), @"Name", @6, @"Index", nil];
+                dictionaryWithObjectsAndKeys:TRSystemGrayColor(), @"Color", NSLocalizedString(@"Gray", "Groups -> Name"), @"Name", @6, @"Index", nil];
 
             _fGroups = [[NSMutableArray alloc] initWithObjects:red, orange, yellow, green, blue, purple, gray, nil];
             [self saveGroups]; //make sure this is saved right away
@@ -421,9 +422,7 @@ GroupsController* fGroupsInstance = nil;
         [groups addObject:tempDict];
     }
 
-    [NSUserDefaults.standardUserDefaults setObject:[NSKeyedArchiver archivedDataWithRootObject:groups requiringSecureCoding:YES
-                                                                                         error:nil]
-                                            forKey:@"GroupDicts"];
+    [NSUserDefaults.standardUserDefaults setObject:TRArchivedDataForObject(groups) forKey:@"GroupDicts"];
 }
 
 - (NSImage*)imageForGroupNone
@@ -479,7 +478,11 @@ GroupsController* fGroupsInstance = nil;
     }
 
     NSPredicate* predicate = [self autoAssignRulesForIndex:index];
-    [predicate allowEvaluation];
+    if ([predicate respondsToSelector:@selector(allowEvaluation)])
+    {
+        [predicate allowEvaluation];
+    }
+
     BOOL eval = NO;
     @try
     {

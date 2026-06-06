@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "PortChecker.h"
+#import "LegacyURLRequest.h"
 
 static NSTimeInterval const kCheckFireInterval = 3.0;
 
@@ -10,9 +11,7 @@ static NSTimeInterval const kCheckFireInterval = 3.0;
 
 @property(nonatomic, weak) NSObject<PortCheckerDelegate>* fDelegate;
 @property(nonatomic) PortStatus fStatus;
-
-@property(nonatomic) NSURLSession* fSession;
-@property(nonatomic) NSURLSessionDataTask* fTask;
+@property(nonatomic) TRURLRequestTask* fTask;
 
 @property(nonatomic) NSTimer* fTimer;
 
@@ -24,8 +23,6 @@ static NSTimeInterval const kCheckFireInterval = 3.0;
 {
     if ((self = [super init]))
     {
-        _fSession = [NSURLSession sessionWithConfiguration:NSURLSessionConfiguration.ephemeralSessionConfiguration delegate:nil
-                                             delegateQueue:nil];
         _fDelegate = delegate;
 
         _fStatus = PortStatusChecking;
@@ -58,6 +55,7 @@ static NSTimeInterval const kCheckFireInterval = 3.0;
     self.fTimer = nil;
 
     [self.fTask cancel];
+    self.fTask = nil;
 }
 
 #pragma mark - Private
@@ -71,35 +69,35 @@ static NSTimeInterval const kCheckFireInterval = 3.0;
                                                       cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
                                                   timeoutInterval:15.0];
 
-    _fTask = [_fSession dataTaskWithRequest:portProbeRequest
-                          completionHandler:^(NSData* _Nullable data, NSURLResponse* _Nullable, NSError* _Nullable error) {
-                              if (error)
-                              {
-                                  NSLog(@"Unable to get port status: connection failed (%@)", error.localizedDescription);
-                                  [self callBackWithStatus:PortStatusError];
-                                  return;
-                              }
-                              NSString* probeString = [[NSString alloc] initWithData:data ?: NSData.data encoding:NSUTF8StringEncoding];
-                              if (!probeString)
-                              {
-                                  NSLog(@"Unable to get port status: invalid data received");
-                                  [self callBackWithStatus:PortStatusError];
-                              }
-                              else if ([probeString isEqualToString:@"1"])
-                              {
-                                  [self callBackWithStatus:PortStatusOpen];
-                              }
-                              else if ([probeString isEqualToString:@"0"])
-                              {
-                                  [self callBackWithStatus:PortStatusClosed];
-                              }
-                              else
-                              {
-                                  NSLog(@"Unable to get port status: invalid response (%@)", probeString);
-                                  [self callBackWithStatus:PortStatusError];
-                              }
-                          }];
-    [_fTask resume];
+    self.fTask = [TRURLRequestTask dataTaskWithRequest:portProbeRequest completionHandler:^(NSData* data, NSURLResponse*, NSError* error) {
+        self.fTask = nil;
+        if (error)
+        {
+            NSLog(@"Unable to get port status: connection failed (%@)", error.localizedDescription);
+            [self callBackWithStatus:PortStatusError];
+            return;
+        }
+        NSString* probeString = [[NSString alloc] initWithData:data ?: [NSData data] encoding:NSUTF8StringEncoding];
+        if (!probeString)
+        {
+            NSLog(@"Unable to get port status: invalid data received");
+            [self callBackWithStatus:PortStatusError];
+        }
+        else if ([probeString isEqualToString:@"1"])
+        {
+            [self callBackWithStatus:PortStatusOpen];
+        }
+        else if ([probeString isEqualToString:@"0"])
+        {
+            [self callBackWithStatus:PortStatusClosed];
+        }
+        else
+        {
+            NSLog(@"Unable to get port status: invalid response (%@)", probeString);
+            [self callBackWithStatus:PortStatusError];
+        }
+    }];
+    [self.fTask resume];
 }
 
 - (void)callBackWithStatus:(PortStatus)status

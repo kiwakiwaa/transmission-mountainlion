@@ -1,6 +1,6 @@
 # minimum macOS target support
-if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS MACOS_SUPPORT_MINIMUM)
-    message(FATAL_ERROR "Targeting macOS versions before ${MACOS_SUPPORT_MINIMUM} is not supported for the macOS project, please adjust CMAKE_OSX_DEPLOYMENT_TARGET (${CMAKE_OSX_DEPLOYMENT_TARGET})")
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS TR_MACOS_LEGACY_SUPPORT_MINIMUM)
+    message(FATAL_ERROR "Targeting macOS versions before ${TR_MACOS_LEGACY_SUPPORT_MINIMUM} is not supported for the macOS project, please adjust CMAKE_OSX_DEPLOYMENT_TARGET (${CMAKE_OSX_DEPLOYMENT_TARGET})")
 endif()
 
 find_program(ACTOOL_EXECUTABLE actool REQUIRED)
@@ -30,11 +30,31 @@ add_link_options(
     # equivalent of XCODE_ATTRIBUTE_DEAD_CODE_STRIPPING YES for this directory
     $<$<LINK_LANGUAGE:C,CXX>:-dead_strip>)
 
-add_subdirectory(QuickLookExtension)
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_GREATER_EQUAL 12.0)
+    add_subdirectory(QuickLookExtension)
+endif()
 add_subdirectory(QuickLookPlugin)
 add_subdirectory(VDKQueue)
 
 add_executable(${TR_NAME}-mac MACOSX_BUNDLE)
+
+set(TR_ENABLE_SPARKLE ON)
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
+    set(TR_ENABLE_SPARKLE OFF)
+endif()
+
+set(TR_SPARKLE_INFO_PLIST_KEYS "")
+if(TR_ENABLE_SPARKLE)
+    set(TR_SPARKLE_INFO_PLIST_KEYS [=[
+	<key>SUAllowsAutomaticUpdates</key>
+	<false/>
+	<key>SUFeedURL</key>
+	<string>https://update.transmissionbt.com/appcast.xml</string>
+	<key>SUPublicDSAKeyFile</key>
+	<string>sparkle_dsa_pub.pem</string>
+	<key>SUScheduledCheckInterval</key>
+	<string>86400</string>]=])
+endif()
 
 target_sources(${TR_NAME}-mac
     PRIVATE
@@ -59,6 +79,7 @@ target_sources(${TR_NAME}-mac
         ButtonToolbarItem.h
         ButtonToolbarItem.mm
         CocoaCompatibility.h
+        CocoaCompatibility.mm
         ColorTextField.h
         ColorTextField.mm
         Controller.h
@@ -122,6 +143,28 @@ target_sources(${TR_NAME}-mac
         InfoViewController.h
         InfoWindowController.h
         InfoWindowController.mm
+        LegacyArchiving.h
+        LegacyArchiving.mm
+        LegacyColors.h
+        LegacyColors.mm
+        LegacyConstraints.h
+        LegacyConstraints.mm
+        LegacyFormatters.h
+        LegacyFormatters.mm
+        LegacyPowerActivity.h
+        LegacyPowerActivity.mm
+        LegacySegmentedControl.h
+        LegacySegmentedControl.mm
+        LegacySheets.h
+        LegacySheets.mm
+        LegacyStackView.h
+        LegacyStackView.mm
+        LegacySymbols.h
+        LegacySymbols.mm
+        LegacyTitlebarAccessory.h
+        LegacyTitlebarAccessory.mm
+        LegacyURLRequest.h
+        LegacyURLRequest.mm
         main.mm
         MessageWindowController.h
         MessageWindowController.mm
@@ -131,8 +174,6 @@ target_sources(${TR_NAME}-mac
         NSDataAdditions.mm
         NSImageAdditions.h
         NSImageAdditions.mm
-        NSKeyedUnarchiverAdditions.h
-        NSKeyedUnarchiverAdditions.mm
         NSMutableArrayAdditions.h
         NSMutableArrayAdditions.mm
         NSStringAdditions.h
@@ -165,11 +206,12 @@ target_sources(${TR_NAME}-mac
         ShareTorrentFileHelper.mm
         SmallTorrentCell.h
         SmallTorrentCell.mm
-        SparkleProxy.mm
         StatsWindowController.h
         StatsWindowController.mm
         StatusBarController.h
         StatusBarController.mm
+        SystemNotificationController.h
+        SystemNotificationController.mm
         Toolbar.h
         Toolbar.mm
         Torrent.h
@@ -201,26 +243,47 @@ target_sources(${TR_NAME}-mac
         WebSeedTableView.h
         WebSeedTableView.mm)
 
+target_compile_definitions(${TR_NAME}-mac
+    PRIVATE
+        TR_ENABLE_SPARKLE=$<BOOL:${TR_ENABLE_SPARKLE}>)
+
+if(TR_ENABLE_SPARKLE)
+    target_sources(${TR_NAME}-mac
+        PRIVATE
+            SparkleProxy.mm)
+endif()
+
+if(TR_MACOS_LEGACY_COMPAT)
+    target_compile_options(${TR_NAME}-mac PRIVATE
+        -include ${CMAKE_CURRENT_SOURCE_DIR}/CocoaCompatibility.h
+        -Wno-nullability-completeness)
+endif()
+
 set(XIB_FILES
     AboutWindow.xib
     BlocklistStatusWindow.xib
     FileRenameSheetController.xib
-    FilterBar.xib
     InfoFileView.xib
     InfoPeersView.xib
     InfoTrackersView.xib
     InfoWindow.xib
     MessageWindow.xib
-    StatsWindow.xib
     StatusBar.xib
     URLSheetWindow.xib)
+if(NOT TR_MACOS_LEGACY_COMPAT)
+    list(APPEND XIB_FILES
+        FilterBar.xib
+        StatsWindow.xib)
+endif()
 
 set(RESOURCES
     Defaults.plist
     Credits.rtf
-    sparkle_dsa_pub.pem
     ../COPYING
     Images/TransmissionDocument.icns)
+if(TR_ENABLE_SPARKLE)
+    list(APPEND RESOURCES sparkle_dsa_pub.pem)
+endif()
 source_group(Resources
     FILES ${RESOURCES})
 
@@ -290,8 +353,18 @@ foreach(SIZE IN ITEMS 16 32 128 256 512)
 endforeach()
 
 set(COMPILED_IMAGE_ASSETS
-    "${CMAKE_CURRENT_BINARY_DIR}/${APPICON_NAME}.icns"
-    "${CMAKE_CURRENT_BINARY_DIR}/Assets.car")
+    "${CMAKE_CURRENT_BINARY_DIR}/${APPICON_NAME}.icns")
+
+if(TR_MACOS_LEGACY_COMPAT)
+    foreach(IMG IN LISTS IMAGESETS)
+        list(APPEND COMPILED_IMAGE_ASSETS
+            "${CMAKE_CURRENT_BINARY_DIR}/${IMG}.png"
+            "${CMAKE_CURRENT_BINARY_DIR}/${IMG}@2x.png")
+    endforeach()
+else()
+    list(APPEND COMPILED_IMAGE_ASSETS
+        "${CMAKE_CURRENT_BINARY_DIR}/Assets.car")
+endif()
 
 add_custom_command(
     OUTPUT
@@ -359,7 +432,16 @@ set(BASE_XIB_FILES
     InfoOptionsView.xib
     MainMenu.xib
     PrefsWindow.xib)
+set(BASE_XIB_SOURCE_FILES ${BASE_XIB_FILES})
+if(TR_MACOS_LEGACY_COMPAT)
+    list(REMOVE_ITEM BASE_XIB_SOURCE_FILES
+        InfoActivityView.xib
+        InfoOptionsView.xib
+        MainMenu.xib)
+endif()
 list(TRANSFORM BASE_XIB_FILES
+    PREPEND Base.lproj/)
+list(TRANSFORM BASE_XIB_SOURCE_FILES
     PREPEND Base.lproj/)
 
 set(LANG_STRINGS_FILES
@@ -399,26 +481,65 @@ target_sources(${TR_NAME}-mac
 
 tr_target_xib_files(${TR_NAME}-mac
     ${XIB_FILES}
-    ${BASE_XIB_FILES})
+    ${BASE_XIB_SOURCE_FILES})
 
-find_library(SPARKLE_FRAMEWORK Sparkle
-    PATHS ${CMAKE_CURRENT_SOURCE_DIR}
-    NO_DEFAULT_PATHS)
+if(TR_MACOS_LEGACY_COMPAT)
+    tr_wrap_xib(${TR_NAME}-mac
+        LegacyXibs/FilterBar.xib
+        "${CMAKE_CURRENT_BINARY_DIR}/FilterBar.nib"
+        "")
+    tr_wrap_xib(${TR_NAME}-mac
+        LegacyXibs/StatsWindow.xib
+        "${CMAKE_CURRENT_BINARY_DIR}/StatsWindow.nib"
+        "")
+    tr_wrap_xib(${TR_NAME}-mac
+        LegacyXibs/Base.lproj/InfoActivityView.xib
+        "${CMAKE_CURRENT_BINARY_DIR}/Base.lproj/InfoActivityView.nib"
+        Base.lproj)
+    tr_wrap_xib(${TR_NAME}-mac
+        LegacyXibs/Base.lproj/InfoOptionsView.xib
+        "${CMAKE_CURRENT_BINARY_DIR}/Base.lproj/InfoOptionsView.nib"
+        Base.lproj)
+    tr_wrap_xib(${TR_NAME}-mac
+        LegacyXibs/Base.lproj/MainMenu.xib
+        "${CMAKE_CURRENT_BINARY_DIR}/Base.lproj/MainMenu.nib"
+        Base.lproj)
+endif()
+
+set(SPARKLE_LINK_LIBRARIES)
+if(TR_ENABLE_SPARKLE)
+    find_library(SPARKLE_FRAMEWORK Sparkle
+        PATHS ${CMAKE_CURRENT_SOURCE_DIR}
+        NO_DEFAULT_PATHS)
+    set(SPARKLE_LINK_LIBRARIES ${SPARKLE_FRAMEWORK} "-weak_framework Sparkle")
+endif()
 
 target_link_libraries(${TR_NAME}-mac
     PRIVATE
         ${TR_NAME}
         transmission::fmt-header-only
         vdkqueue
-        ${SPARKLE_FRAMEWORK}
+        ${SPARKLE_LINK_LIBRARIES}
         "-framework AppKit"
         "-framework Carbon"
         "-framework Foundation"
         "-framework Quartz"
-        "-framework Security"
-        "-weak_framework Sparkle"
-        "-weak_framework UniformTypeIdentifiers"
-        "-weak_framework UserNotifications")
+        "-framework Security")
+
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_GREATER_EQUAL 11.0)
+    target_link_libraries(${TR_NAME}-mac PRIVATE "-weak_framework UniformTypeIdentifiers")
+endif()
+
+if(IS_ABSOLUTE "${CMAKE_OSX_SYSROOT}")
+    find_library(USERNOTIFICATIONS_FRAMEWORK UserNotifications
+        PATHS "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks"
+        NO_DEFAULT_PATH)
+else()
+    find_library(USERNOTIFICATIONS_FRAMEWORK UserNotifications)
+endif()
+if(USERNOTIFICATIONS_FRAMEWORK)
+    target_link_libraries(${TR_NAME}-mac PRIVATE "-weak_framework UserNotifications")
+endif()
 
 if(NOT CMAKE_GENERATOR STREQUAL Xcode)
     add_custom_command(

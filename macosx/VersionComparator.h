@@ -4,7 +4,18 @@
 
 #import <Foundation/Foundation.h>
 
+#ifndef TR_ENABLE_SPARKLE
+#define TR_ENABLE_SPARKLE 1
+#endif
+
+#if TR_ENABLE_SPARKLE
 #import <Sparkle/SUVersionComparisonProtocol.h>
+#else
+@protocol SUVersionComparison<NSObject>
+- (NSComparisonResult)compareVersion:(NSString*)versionA toVersion:(NSString*)versionB;
+@end
+
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
 

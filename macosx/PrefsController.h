@@ -9,7 +9,7 @@
 
 @interface PrefsController : NSWindowController<NSToolbarDelegate, PortCheckerDelegate>
 
-@property(nonatomic, readonly) NSArray<NSString*>* sounds;
+@property(nonatomic, readonly) NSArray* sounds;
 
 /// - returns: number of minutes
 + (int)dateToTimeSum:(NSDate*)date;

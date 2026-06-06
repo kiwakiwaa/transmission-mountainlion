@@ -5,6 +5,7 @@
 #include <libtransmission/transmission.h>
 
 #import "PiecesView.h"
+#import "CocoaCompatibility.h"
 #import "Torrent.h"
 #import "InfoWindowController.h"
 #import "NSApplicationAdditions.h"
@@ -16,9 +17,20 @@ static CGFloat const kBetweenPadding = 1.0;
 
 static int8_t const kHighPeers = 10;
 
-static NSColor* const DoneColor = NSColor.systemBlueColor;
-static NSColor* const BlinkColor = NSColor.systemOrangeColor;
-static NSColor* const HighColor = NSColor.systemGreenColor; // high availability
+static NSColor* DoneColor(void)
+{
+    return TRSystemBlueColor();
+}
+
+static NSColor* BlinkColor(void)
+{
+    return TRSystemOrangeColor();
+}
+
+static NSColor* HighColor(void)
+{
+    return TRSystemGreenColor(); // high availability
+}
 
 typedef struct PieceInfo
 {
@@ -37,7 +49,7 @@ typedef struct PieceInfo
 
 - (NSColor*)backgroundColor
 {
-    return NSApp.darkMode ? NSColor.blackColor : NSColor.whiteColor;
+    return [NSApp isDarkMode] ? NSColor.blackColor : NSColor.whiteColor;
 }
 
 - (BOOL)isCompletenessDone:(float)val
@@ -54,15 +66,15 @@ typedef struct PieceInfo
 {
     if ([self isCompletenessDone:newVal])
     {
-        return noBlink || [self isCompletenessDone:oldVal] ? DoneColor : BlinkColor;
+        return noBlink || [self isCompletenessDone:oldVal] ? DoneColor() : BlinkColor();
     }
 
     if ([self isCompletenessNone:newVal])
     {
-        return noBlink || [self isCompletenessNone:oldVal] ? [self backgroundColor] : BlinkColor;
+        return noBlink || [self isCompletenessNone:oldVal] ? [self backgroundColor] : BlinkColor();
     }
 
-    return [[self backgroundColor] blendedColorWithFraction:newVal ofColor:DoneColor];
+    return [[self backgroundColor] blendedColorWithFraction:newVal ofColor:DoneColor()];
 }
 
 - (BOOL)isAvailabilityDone:(uint8_t)val
@@ -84,21 +96,21 @@ typedef struct PieceInfo
 {
     if ([self isAvailabilityDone:newVal])
     {
-        return noBlink || [self isAvailabilityDone:oldVal] ? DoneColor : BlinkColor;
+        return noBlink || [self isAvailabilityDone:oldVal] ? DoneColor() : BlinkColor();
     }
 
     if ([self isAvailabilityNone:newVal])
     {
-        return noBlink || [self isAvailabilityNone:oldVal] ? [self backgroundColor] : BlinkColor;
+        return noBlink || [self isAvailabilityNone:oldVal] ? [self backgroundColor] : BlinkColor();
     }
 
     if ([self isAvailabilityHigh:newVal])
     {
-        return noBlink || [self isAvailabilityHigh:oldVal] ? HighColor : BlinkColor;
+        return noBlink || [self isAvailabilityHigh:oldVal] ? HighColor() : BlinkColor();
     }
 
     CGFloat percent = CGFloat(newVal) / kHighPeers;
-    return [[self backgroundColor] blendedColorWithFraction:percent ofColor:HighColor];
+    return [[self backgroundColor] blendedColorWithFraction:percent ofColor:HighColor()];
 }
 
 - (void)drawRect:(NSRect)dirtyRect
@@ -162,8 +174,8 @@ typedef struct PieceInfo
     CGFloat const fullWidth = self.bounds.size.width;
     NSInteger const cellWidth = (NSInteger)((fullWidth - (across + 1) * kBetweenPadding) / across);
     NSInteger const extraBorder = (NSInteger)((fullWidth - ((cellWidth + kBetweenPadding) * across + kBetweenPadding)) / 2);
-    NSMutableArray<NSValue*>* cellBounds = [NSMutableArray arrayWithCapacity:numCells];
-    NSMutableArray<NSColor*>* cellColors = [NSMutableArray arrayWithCapacity:numCells];
+    NSMutableArray* cellBounds = [NSMutableArray arrayWithCapacity:numCells];
+    NSMutableArray* cellColors = [NSMutableArray arrayWithCapacity:numCells];
     for (int index = 0; index < numCells; index++)
     {
         int const row = index / across;
@@ -187,7 +199,7 @@ typedef struct PieceInfo
             NSRect cFillRects[kMaxCells];
             for (int i = 0; i < numCells; ++i)
             {
-                cFillRects[i] = cellBounds[i].rectValue;
+                cFillRects[i] = [(NSValue*)[cellBounds objectAtIndex:i] rectValue];
             }
             NSColor* cFillColors[kMaxCells];
             for (int i = 0; i < numCells; ++i)

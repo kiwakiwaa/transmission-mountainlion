@@ -3,6 +3,9 @@
 // License text can be found in the licenses/ folder.
 
 #import "InfoOptionsViewController.h"
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+#import "LegacyStackView.h"
+#endif
 #import "NSStringAdditions.h"
 #import "Torrent.h"
 #import "Utils.h"
@@ -26,7 +29,7 @@ static CGFloat const kStackViewSpacing = 8.0;
 
 @interface InfoOptionsViewController ()
 
-@property(nonatomic, copy) NSArray<Torrent*>* fTorrents;
+@property(nonatomic, copy) NSArray* fTorrents;
 
 @property(nonatomic) BOOL fSet;
 
@@ -51,7 +54,11 @@ static CGFloat const kStackViewSpacing = 8.0;
 
 @property(nonatomic, copy) NSString* fInitialString;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+@property(nonatomic) IBOutlet LegacyStackView* fOptionsStackView;
+#else
 @property(nonatomic) IBOutlet NSStackView* fOptionsStackView;
+#endif
 @property(nonatomic) IBOutlet NSView* fSeedingView;
 @property(nonatomic, readonly) CGFloat fHeightChange;
 @property(nonatomic, readwrite) CGFloat fCurrentHeight;
@@ -76,6 +83,10 @@ static CGFloat const kStackViewSpacing = 8.0;
 - (void)awakeFromNib
 {
     [super awakeFromNib];
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    self.fOptionsStackView.translatesAutoresizingMaskIntoConstraints = YES;
+    self.fOptionsStackView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+#endif
     [self checkWindowSize];
 
     [self setGlobalLabels];
@@ -85,6 +96,19 @@ static CGFloat const kStackViewSpacing = 8.0;
                                                name:@"UpdateOptionsNotification"
                                              object:nil];
 }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+- (CGFloat)layoutWidth
+{
+    return self.view.window ? NSWidth(self.view.window.frame) : NSWidth(self.view.frame);
+}
+
+- (void)layoutLegacyStackView
+{
+    self.fOptionsStackView.frame = NSInsetRect(self.view.bounds, kStackViewInset, kStackViewInset);
+    [self.fOptionsStackView layoutLegacySubviews];
+}
+#endif
 
 - (CGFloat)fHorizLayoutHeight
 {
@@ -124,6 +148,20 @@ static CGFloat const kStackViewSpacing = 8.0;
 
 - (void)checkLayout
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    if (self.layoutWidth >= self.fHorizLayoutWidth + 1)
+    {
+        self.fOptionsStackView.orientation = TRLegacyStackViewOrientationHorizontal;
+        self.fCurrentHeight = self.fHorizLayoutHeight;
+    }
+    else
+    {
+        self.fOptionsStackView.orientation = TRLegacyStackViewOrientationVertical;
+        self.fCurrentHeight = self.fVertLayoutHeight;
+    }
+
+    [self layoutLegacyStackView];
+#else
     if (NSWidth(self.view.window.frame) >= self.fHorizLayoutWidth + 1)
     {
         self.fOptionsStackView.orientation = NSUserInterfaceLayoutOrientationHorizontal;
@@ -134,6 +172,7 @@ static CGFloat const kStackViewSpacing = 8.0;
         self.fOptionsStackView.orientation = NSUserInterfaceLayoutOrientationVertical;
         self.fCurrentHeight = self.fVertLayoutHeight;
     }
+#endif
 }
 
 - (void)checkWindowSize
@@ -161,6 +200,9 @@ static CGFloat const kStackViewSpacing = 8.0;
         self.view.window.maxSize = NSMakeSize(FLT_MAX, NSHeight(windowRect));
 
         self.view.frame = [self viewRect];
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+        [self layoutLegacyStackView];
+#endif
         [self.view.window setFrame:windowRect display:YES animate:YES];
     }
     else
@@ -169,10 +211,13 @@ static CGFloat const kStackViewSpacing = 8.0;
         NSRect rect = self.view.frame;
         rect.size.width = NSWidth(self.fOptionsStackView.frame) + (2 * kStackViewInset);
         self.view.frame = rect;
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+        [self layoutLegacyStackView];
+#endif
     }
 }
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents
+- (void)setInfoForTorrents:(NSArray*)torrents
 {
     //don't check if it's the same in case the metadata changed
     self.fTorrents = torrents;

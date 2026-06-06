@@ -17,7 +17,7 @@ extern CGFloat const kGroupSeparatorHeight;
 - (void)removeAllCollapsedGroups;
 - (void)saveCollapsedGroups;
 
-@property(nonatomic) NSArray<Torrent*>* selectedTorrents;
+@property(nonatomic) NSArray* selectedTorrents;
 
 - (NSRect)iconRectForRow:(NSInteger)row;
 

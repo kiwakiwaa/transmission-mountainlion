@@ -19,8 +19,7 @@
 
 - (instancetype)initForWindow:(NSWindow*)window
 {
-    if ((self = ([super initWithContentRect:window.frame styleMask:NSWindowStyleMaskBorderless backing:NSBackingStoreBuffered
-                                      defer:NO])))
+    if ((self = ([super initWithContentRect:window.frame styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO])))
     {
         self.backgroundColor = [NSColor colorWithCalibratedWhite:0.0 alpha:0.5];
         self.alphaValue = 0.0;
@@ -50,7 +49,7 @@
     return self;
 }
 
-- (void)setTorrents:(NSArray<NSString*>*)files
+- (void)setTorrents:(NSArray*)files
 {
     uint64_t size = 0;
     NSUInteger count = 0;
@@ -144,7 +143,7 @@
 - (void)fadeIn
 {
     //stop other animation and set to same progress
-    if (self.fFadeOutAnimation.animating)
+    if ([self.fFadeOutAnimation isAnimating])
     {
         [self.fFadeOutAnimation stopAnimation];
         self.fFadeInAnimation.currentProgress = 1.0 - self.fFadeOutAnimation.currentProgress;
@@ -155,7 +154,7 @@
 - (void)fadeOut
 {
     //stop other animation and set to same progress
-    if (self.fFadeInAnimation.animating)
+    if ([self.fFadeInAnimation isAnimating])
     {
         [self.fFadeInAnimation stopAnimation];
         self.fFadeOutAnimation.currentProgress = 1.0 - self.fFadeInAnimation.currentProgress;

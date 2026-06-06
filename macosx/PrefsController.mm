@@ -2,16 +2,19 @@
 // It may be used under the MIT (SPDX: MIT) license.
 // License text can be found in the licenses/ folder.
 
-#import <Sparkle/Sparkle.h>
-
 #include <libtransmission/string-utils.h>
 
 #import "VDKQueue.h"
+
+#ifndef TR_ENABLE_SPARKLE
+#define TR_ENABLE_SPARKLE 1
+#endif
 
 #import "PrefsController.h"
 #import "BlocklistDownloaderViewController.h"
 #import "BlocklistScheduler.h"
 #import "Controller.h"
+#import "CocoaCompatibility.h"
 #import "DefaultAppHelper.h"
 #import "PortChecker.h"
 #import "BonjourController.h"
@@ -103,7 +106,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
 @property(nonatomic) IBOutlet NSTextField* fRPCPortField;
 @property(nonatomic) IBOutlet NSTextField* fRPCPasswordField;
 @property(nonatomic) IBOutlet NSTableView* fRPCWhitelistTable;
-@property(nonatomic, readonly) NSMutableArray<NSString*>* fRPCWhitelistArray;
+@property(nonatomic, readonly) NSMutableArray* fRPCWhitelistArray;
 @property(nonatomic) IBOutlet NSSegmentedControl* fRPCAddRemoveControl;
 @property(nonatomic, copy) NSString* fRPCPassword;
 @property(nonatomic, readonly) DefaultAppHelper* fDefaultAppHelper;
@@ -157,8 +160,8 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
         NSString* autoPath;
         if ([_fDefaults boolForKey:@"AutoImport"] && (autoPath = [_fDefaults stringForKey:@"AutoImportDirectory"]))
         {
-            [((Controller*)NSApp.delegate).fileWatcherQueue addPath:autoPath.stringByExpandingTildeInPath
-                                                     notifyingAbout:VDKQueueNotifyAboutWrite];
+            [((Controller*)[NSApp delegate]).fileWatcherQueue addPath:autoPath.stringByExpandingTildeInPath
+                                                       notifyingAbout:VDKQueueNotifyAboutWrite];
         }
 
         //set blocklist scheduler
@@ -214,6 +217,14 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     toolbar.sizeMode = NSToolbarSizeModeRegular;
     toolbar.selectedItemIdentifier = ToolbarTabGeneral;
     self.window.toolbar = toolbar;
+
+#if !TR_ENABLE_SPARKLE
+    self.fCheckForUpdatesLabel.hidden = YES;
+    self.fCheckForUpdatesButton.hidden = YES;
+    self.fCheckForUpdatesBetaButton.hidden = YES;
+    self.fCheckForUpdatesButton.enabled = NO;
+    self.fCheckForUpdatesBetaButton.enabled = NO;
+#endif
 
     [self setWindowSize];
     [self.window center];
@@ -306,7 +317,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     if ([ident isEqualToString:ToolbarTabGeneral])
     {
         item.label = NSLocalizedString(@"General", "Preferences -> toolbar item title");
-        item.image = [NSImage imageWithSystemSymbolName:@"gearshape" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"gearshape", nil);
         item.target = self;
         item.action = @selector(setPrefView:);
         item.autovalidates = NO;
@@ -314,7 +325,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     else if ([ident isEqualToString:ToolbarTabTransfers])
     {
         item.label = NSLocalizedString(@"Transfers", "Preferences -> toolbar item title");
-        item.image = [NSImage imageWithSystemSymbolName:@"arrow.up.arrow.down" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"arrow.up.arrow.down", nil);
         item.target = self;
         item.action = @selector(setPrefView:);
         item.autovalidates = NO;
@@ -322,7 +333,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     else if ([ident isEqualToString:ToolbarTabGroups])
     {
         item.label = NSLocalizedString(@"Groups", "Preferences -> toolbar item title");
-        item.image = [NSImage imageWithSystemSymbolName:@"pin" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"pin", nil);
         item.target = self;
         item.action = @selector(setPrefView:);
         item.autovalidates = NO;
@@ -330,7 +341,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     else if ([ident isEqualToString:ToolbarTabBandwidth])
     {
         item.label = NSLocalizedString(@"Bandwidth", "Preferences -> toolbar item title");
-        item.image = [NSImage imageWithSystemSymbolName:@"speedometer" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"speedometer", nil);
         item.target = self;
         item.action = @selector(setPrefView:);
         item.autovalidates = NO;
@@ -338,7 +349,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     else if ([ident isEqualToString:ToolbarTabPeers])
     {
         item.label = NSLocalizedString(@"Peers", "Preferences -> toolbar item title");
-        item.image = [NSImage imageWithSystemSymbolName:@"person.2" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"person.2", nil);
         item.target = self;
         item.action = @selector(setPrefView:);
         item.autovalidates = NO;
@@ -346,7 +357,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     else if ([ident isEqualToString:ToolbarTabNetwork])
     {
         item.label = NSLocalizedString(@"Network", "Preferences -> toolbar item title");
-        item.image = [NSImage imageWithSystemSymbolName:@"network" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"network", nil);
         item.target = self;
         item.action = @selector(setPrefView:);
         item.autovalidates = NO;
@@ -354,7 +365,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     else if ([ident isEqualToString:ToolbarTabRemote])
     {
         item.label = NSLocalizedString(@"Remote", "Preferences -> toolbar item title");
-        item.image = [NSImage imageWithSystemSymbolName:@"antenna.radiowaves.left.and.right" accessibilityDescription:nil];
+        item.image = TRImageForSystemSymbol(@"antenna.radiowaves.left.and.right", nil);
         item.target = self;
         item.action = @selector(setPrefView:);
         item.autovalidates = NO;
@@ -394,7 +405,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
                               state:(NSCoder*)state
                   completionHandler:(void (^)(NSWindow*, NSError*))completionHandler
 {
-    NSWindow* window = ((Controller*)NSApp.delegate).prefsController.window;
+    NSWindow* window = ((Controller*)[NSApp delegate]).prefsController.window;
     completionHandler(window, nil);
 }
 
@@ -495,7 +506,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     self.fPortChecker = nil;
 }
 
-- (NSArray<NSString*>*)sounds
+- (NSArray*)sounds
 {
     NSMutableArray* sounds = [NSMutableArray array];
 
@@ -778,7 +789,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
 + (int)dateToTimeSum:(NSDate*)date
 {
     NSCalendar* calendar = NSCalendar.currentCalendar;
-    NSDateComponents* components = [calendar components:NSCalendarUnitHour | NSCalendarUnitMinute fromDate:date];
+    NSDateComponents* components = [calendar components:NSHourCalendarUnit | NSMinuteCalendarUnit fromDate:date];
     return static_cast<int>(components.hour * 60 + components.minute);
 }
 
@@ -941,7 +952,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
         {
             [self.fFolderPopUp selectItemAtIndex:DownloadPopupIndexFolder];
 
-            NSString* folder = panel.URLs[0].path;
+            NSString* folder = [(NSURL*)[panel.URLs objectAtIndex:0] path];
             [self.fDefaults setObject:folder forKey:@"DownloadFolder"];
             [self.fDefaults setBool:YES forKey:@"DownloadLocationConstant"];
             [self updateShowAddMagnetWindowField];
@@ -971,7 +982,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     [panel beginSheetModalForWindow:self.window completionHandler:^(NSInteger result) {
         if (result == NSModalResponseOK)
         {
-            NSString* folder = panel.URLs[0].path;
+            NSString* folder = [(NSURL*)[panel.URLs objectAtIndex:0] path];
             [self.fDefaults setObject:folder forKey:@"IncompleteDownloadFolder"];
 
             assert(folder.length > 0);
@@ -994,7 +1005,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     [panel beginSheetModalForWindow:self.window completionHandler:^(NSInteger result) {
         if (result == NSModalResponseOK)
         {
-            NSString* filePath = panel.URLs[0].path;
+            NSString* filePath = [(NSURL*)[panel.URLs objectAtIndex:0] path];
 
             assert(filePath.length > 0);
 
@@ -1059,7 +1070,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     NSString* path;
     if ((path = [self.fDefaults stringForKey:@"AutoImportDirectory"]))
     {
-        VDKQueue* watcherQueue = ((Controller*)NSApp.delegate).fileWatcherQueue;
+        VDKQueue* watcherQueue = ((Controller*)[NSApp delegate]).fileWatcherQueue;
         if ([self.fDefaults boolForKey:@"AutoImport"])
         {
             path = path.stringByExpandingTildeInPath;
@@ -1091,10 +1102,10 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     [panel beginSheetModalForWindow:self.window completionHandler:^(NSInteger result) {
         if (result == NSModalResponseOK)
         {
-            VDKQueue* watcherQueue = ((Controller*)NSApp.delegate).fileWatcherQueue;
+            VDKQueue* watcherQueue = ((Controller*)[NSApp delegate]).fileWatcherQueue;
             [watcherQueue removeAllPaths];
 
-            NSString* path = (panel.URLs[0]).path;
+            NSString* path = [(NSURL*)[panel.URLs objectAtIndex:0] path];
             [self.fDefaults setObject:path forKey:@"AutoImportDirectory"];
             [watcherQueue addPath:path.stringByExpandingTildeInPath notifyingAbout:VDKQueueNotifyAboutWrite];
 
@@ -1576,7 +1587,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     }
 
     NSRect windowRect = window.frame;
-    CGFloat const difference = NSHeight(view.frame) - NSHeight(window.contentView.frame);
+    CGFloat const difference = NSHeight(view.frame) - NSHeight([[window contentView] frame]);
     windowRect.origin.y -= difference;
     windowRect.size.height += difference;
 
@@ -1612,14 +1623,14 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
 
 static NSString* getOSStatusDescription(OSStatus errorCode)
 {
-    return [NSError errorWithDomain:NSOSStatusErrorDomain code:errorCode userInfo:NULL].description;
+    return [[NSError errorWithDomain:NSOSStatusErrorDomain code:errorCode userInfo:NULL] description];
 }
 
 - (void)updateRPCPassword
 {
     CFTypeRef data;
     OSStatus result = SecItemCopyMatching(
-        (CFDictionaryRef) @{
+        (__bridge CFDictionaryRef) @{
             (NSString*)kSecClass : (NSString*)kSecClassGenericPassword,
             (NSString*)kSecAttrAccount : @(kRPCKeychainName),
             (NSString*)kSecAttrService : @(kRPCKeychainService),
@@ -1642,7 +1653,7 @@ static NSString* getOSStatusDescription(OSStatus errorCode)
 {
     CFTypeRef item;
     OSStatus result = SecItemCopyMatching(
-        (CFDictionaryRef) @{
+        (__bridge CFDictionaryRef) @{
             (NSString*)kSecClass : (NSString*)kSecClassGenericPassword,
             (NSString*)kSecAttrAccount : @(kRPCKeychainName),
             (NSString*)kSecAttrService : @(kRPCKeychainService),
@@ -1660,12 +1671,12 @@ static NSString* getOSStatusDescription(OSStatus errorCode)
         if (passwordLength > 0) // found and needed, so update it
         {
             result = SecItemUpdate(
-                (CFDictionaryRef) @{
+                (__bridge CFDictionaryRef) @{
                     (NSString*)kSecClass : (NSString*)kSecClassGenericPassword,
                     (NSString*)kSecAttrAccount : @(kRPCKeychainName),
                     (NSString*)kSecAttrService : @(kRPCKeychainService),
                 },
-                (CFDictionaryRef) @{
+                (__bridge CFDictionaryRef) @{
                     (NSString*)kSecValueData : [NSData dataWithBytes:password length:passwordLength],
                 });
             if (result != noErr)
@@ -1675,7 +1686,7 @@ static NSString* getOSStatusDescription(OSStatus errorCode)
         }
         else // found and not needed, so remove it
         {
-            result = SecItemDelete((CFDictionaryRef) @{
+            result = SecItemDelete((__bridge CFDictionaryRef) @{
                 (NSString*)kSecClass : (NSString*)kSecClassGenericPassword,
                 (NSString*)kSecAttrAccount : @(kRPCKeychainName),
                 (NSString*)kSecAttrService : @(kRPCKeychainService),
@@ -1692,7 +1703,7 @@ static NSString* getOSStatusDescription(OSStatus errorCode)
         if (passwordLength > 0) // not found and needed, so add it
         {
             result = SecItemAdd(
-                (CFDictionaryRef) @{
+                (__bridge CFDictionaryRef) @{
                     (NSString*)kSecClass : (NSString*)kSecClassGenericPassword,
                     (NSString*)kSecAttrAccount : @(kRPCKeychainName),
                     (NSString*)kSecAttrService : @(kRPCKeychainService),

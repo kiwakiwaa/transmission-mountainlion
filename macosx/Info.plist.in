@@ -81,14 +81,7 @@
 	<string>NSApplication</string>
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
-	<key>SUAllowsAutomaticUpdates</key>
-	<false/>
-	<key>SUFeedURL</key>
-	<string>https://update.transmissionbt.com/appcast.xml</string>
-	<key>SUPublicDSAKeyFile</key>
-	<string>sparkle_dsa_pub.pem</string>
-	<key>SUScheduledCheckInterval</key>
-	<string>86400</string>
+@TR_SPARKLE_INFO_PLIST_KEYS@
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

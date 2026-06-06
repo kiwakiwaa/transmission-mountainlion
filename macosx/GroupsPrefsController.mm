@@ -8,6 +8,7 @@
 #import "GroupsController.h"
 #import "ExpandedPathToPathTransformer.h"
 #import "ExpandedPathToIconTransformer.h"
+#import "LegacyArchiving.h"
 
 #include <libtransmission/transmission.h>
 
@@ -111,8 +112,7 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
 - (BOOL)tableView:(NSTableView*)tableView writeRowsWithIndexes:(NSIndexSet*)rowIndexes toPasteboard:(NSPasteboard*)pboard
 {
     [pboard declareTypes:@[ kGroupTableViewDataType ] owner:self];
-    [pboard setData:[NSKeyedArchiver archivedDataWithRootObject:rowIndexes requiringSecureCoding:YES error:nil]
-            forType:kGroupTableViewDataType];
+    [pboard setData:TRArchivedDataForObject(rowIndexes) forType:kGroupTableViewDataType];
     return YES;
 }
 
@@ -139,8 +139,9 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
     NSPasteboard* pasteboard = info.draggingPasteboard;
     if ([pasteboard.types containsObject:kGroupTableViewDataType])
     {
-        NSIndexSet* indexes = [NSKeyedUnarchiver unarchivedObjectOfClass:NSIndexSet.class fromData:[pasteboard dataForType:kGroupTableViewDataType]
-                                                                   error:nil];
+        NSIndexSet* indexes = TRUnarchiveObjectFromData(
+            [pasteboard dataForType:kGroupTableViewDataType],
+            [NSSet setWithObject:NSIndexSet.class]);
         NSInteger oldRow = indexes.firstIndex;
 
         if (oldRow < newRow)
@@ -227,7 +228,7 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
         NSInteger const index = [GroupsController.groups indexForRow:self.fTableView.selectedRow];
         if (result == NSModalResponseOK)
         {
-            NSString* path = panel.URLs[0].path;
+            NSString* path = [(NSURL*)[panel.URLs objectAtIndex:0] path];
             [GroupsController.groups setCustomDownloadLocation:path forIndex:index];
             [GroupsController.groups setUsesCustomDownloadLocation:YES forIndex:index];
         }

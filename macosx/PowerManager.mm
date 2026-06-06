@@ -4,7 +4,18 @@
 
 #import "PowerManager.h"
 
+#ifndef __has_include
+#define __has_include(x) 0
+#endif
+
+#if __has_include(<os/log.h>)
 #include <os/log.h>
+#else
+typedef void* os_log_t;
+#define os_log_create(...) NULL
+#define os_log_info(...) ((void)0)
+#define os_log_debug(...) ((void)0)
+#endif
 
 @interface PowerManager ()
 
@@ -17,7 +28,11 @@
 - (void)systemWillSleep:(NSNotification*)notification;
 - (void)systemDidWakeUp:(NSNotification*)notification;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 120000
 - (void)powerStateDidChange:(NSNotification*)notification NS_AVAILABLE_MAC(12_0);
+#else
+- (void)powerStateDidChange:(NSNotification*)notification;
+#endif
 
 @end
 

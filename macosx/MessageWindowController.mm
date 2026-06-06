@@ -7,6 +7,7 @@
 
 #import "MessageWindowController.h"
 #import "Controller.h"
+#import "CocoaCompatibility.h"
 #import "NSImageAdditions.h"
 #import "NSMutableArrayAdditions.h"
 #import "NSStringAdditions.h"
@@ -30,10 +31,10 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
 @property(nonatomic) IBOutlet NSButton* fClearButton;
 @property(nonatomic) IBOutlet NSSearchField* fFilterField;
 
-@property(nonatomic) NSMutableArray<NSDictionary*>* fMessages;
-@property(nonatomic) NSMutableArray<NSDictionary*>* fDisplayedMessages;
+@property(nonatomic) NSMutableArray* fMessages;
+@property(nonatomic) NSMutableArray* fDisplayedMessages;
 
-@property(nonatomic, copy) NSDictionary<NSAttributedStringKey, id>* fAttributes;
+@property(nonatomic, copy) NSDictionary* fAttributes;
 
 @property(nonatomic) NSTimer* fTimer;
 
@@ -81,9 +82,12 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
     [self.fLevelButton sizeToFit];
 
     //set table column text
-    [self.fMessageTable tableColumnWithIdentifier:@"Date"].headerCell.title = NSLocalizedString(@"Date", "Message window -> table column");
-    [self.fMessageTable tableColumnWithIdentifier:@"Name"].headerCell.title = NSLocalizedString(@"Process", "Message window -> table column");
-    [self.fMessageTable tableColumnWithIdentifier:@"Message"].headerCell.title = NSLocalizedString(@"Message", "Message window -> table column");
+    [[[self.fMessageTable tableColumnWithIdentifier:@"Date"] headerCell]
+        setStringValue:NSLocalizedString(@"Date", "Message window -> table column")];
+    [[[self.fMessageTable tableColumnWithIdentifier:@"Name"] headerCell]
+        setStringValue:NSLocalizedString(@"Process", "Message window -> table column")];
+    [[[self.fMessageTable tableColumnWithIdentifier:@"Message"] headerCell]
+        setStringValue:NSLocalizedString(@"Message", "Message window -> table column")];
 
     //set and size buttons
     self.fSaveButton.title = [NSLocalizedString(@"Save", "Message window -> save button") stringByAppendingEllipsis];
@@ -168,7 +172,7 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
 {
     NSAssert1([identifier isEqualToString:@"MessageWindow"], @"Trying to restore unexpected identifier %@", identifier);
 
-    NSWindow* window = ((Controller*)NSApp.delegate).messageWindowController.window;
+    NSWindow* window = ((Controller*)[NSApp delegate]).messageWindowController.window;
     completionHandler(window, nil);
 }
 
@@ -187,23 +191,23 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
     {
     case TR_LOG_CRITICAL:
     case TR_LOG_ERROR:
-        color = NSColor.systemRedColor;
+        color = TRSystemRedColor();
         break;
 
     case TR_LOG_WARN:
-        color = NSColor.systemOrangeColor;
+        color = TRSystemOrangeColor();
         break;
 
     case TR_LOG_INFO:
-        color = NSColor.systemGreenColor;
+        color = TRSystemGreenColor();
         break;
 
     case TR_LOG_DEBUG:
-        color = NSColor.systemTealColor;
+        color = TRSystemTealColor();
         break;
 
     case TR_LOG_TRACE:
-        color = NSColor.systemPurpleColor;
+        color = TRSystemPurpleColor();
         break;
 
     default:
@@ -212,7 +216,7 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
     }
 
     // cache dictionary
-    static NSMutableDictionary<NSColor*, NSImage*>* icons = [NSMutableDictionary dictionary];
+    static NSMutableDictionary* icons = [NSMutableDictionary dictionary];
     NSImage* icon;
     if ((icon = icons[color]))
     {
@@ -236,7 +240,7 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
     static NSUInteger currentIndex = 0;
 
     NSScroller* scroller = self.fMessageTable.enclosingScrollView.verticalScroller;
-    BOOL const shouldScroll = currentIndex == 0 || scroller.floatValue == 1.0 || scroller.hidden || scroller.knobProportion == 1.0;
+    BOOL const shouldScroll = currentIndex == 0 || scroller.floatValue == 1.0 || [scroller isHidden] || scroller.knobProportion == 1.0;
 
     NSInteger const maxLevel = [NSUserDefaults.standardUserDefaults integerForKey:@"MessageLevel"];
     NSString* filterString = self.fFilterField.stringValue;

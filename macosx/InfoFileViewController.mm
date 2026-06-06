@@ -10,7 +10,7 @@
 
 @interface InfoFileViewController ()
 
-@property(nonatomic, copy) NSArray<Torrent*>* fTorrents;
+@property(nonatomic, copy) NSArray* fTorrents;
 
 @property(nonatomic) BOOL fSet;
 
@@ -71,7 +71,7 @@
     self.fCheckAllButton.frame = checkAllFrame;
 }
 
-- (void)setInfoForTorrents:(NSArray<Torrent*>*)torrents
+- (void)setInfoForTorrents:(NSArray*)torrents
 {
     //don't check if it's the same in case the metadata changed
     self.fTorrents = torrents;
@@ -138,7 +138,7 @@
 
 - (void)toggleQuickLook:(id)sender
 {
-    if ([QLPreviewPanel sharedPreviewPanel].visible)
+    if ([[QLPreviewPanel sharedPreviewPanel] isVisible])
     {
         [[QLPreviewPanel sharedPreviewPanel] orderOut:nil];
     }
@@ -148,7 +148,7 @@
     }
 }
 
-- (NSArray<NSURL*>*)quickLookURLs
+- (NSArray*)quickLookURLs
 {
     FileOutlineView* fileOutlineView = self.fFileController.outlineView;
     Torrent* torrent = self.fTorrents[0];

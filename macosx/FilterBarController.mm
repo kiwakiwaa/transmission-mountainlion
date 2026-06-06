@@ -24,7 +24,11 @@ typedef NS_ENUM(NSInteger, FilterTypeTag) {
     FilterTypeTagTracker = 402,
 };
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
 @interface FilterBarController ()<NSSearchFieldDelegate>
+#else
+@interface FilterBarController ()<NSTextFieldDelegate>
+#endif
 
 @property(nonatomic) IBOutlet FilterButton* fNoFilterButton;
 @property(nonatomic) IBOutlet FilterButton* fActiveFilterButton;
@@ -59,15 +63,19 @@ typedef NS_ENUM(NSInteger, FilterTypeTag) {
     self.fPauseFilterButton.title = NSLocalizedString(@"Paused", "Filter Bar -> filter button");
     self.fErrorFilterButton.title = NSLocalizedString(@"Error", "Filter Bar -> filter button");
 
-    self.fNoFilterButton.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fActiveFilterButton.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fDownloadFilterButton.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fSeedFilterButton.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fPauseFilterButton.cell.backgroundStyle = NSBackgroundStyleRaised;
-    self.fErrorFilterButton.cell.backgroundStyle = NSBackgroundStyleRaised;
+    [[self.fNoFilterButton cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fActiveFilterButton cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fDownloadFilterButton cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fSeedFilterButton cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fPauseFilterButton cell] setBackgroundStyle:NSBackgroundStyleRaised];
+    [[self.fErrorFilterButton cell] setBackgroundStyle:NSBackgroundStyleRaised];
 
-    [self.fSearchField.searchMenuTemplate itemWithTag:FilterTypeTagName].title = NSLocalizedString(@"Name", "Filter Bar -> filter menu");
-    [self.fSearchField.searchMenuTemplate itemWithTag:FilterTypeTagTracker].title = NSLocalizedString(@"Tracker", "Filter Bar -> filter menu");
+    [[(NSSearchFieldCell*)[self.fSearchField cell] searchMenuTemplate] itemWithTag:FilterTypeTagName].title = NSLocalizedString(
+        @"Name",
+        "Filter Bar -> filter menu");
+    [[(NSSearchFieldCell*)[self.fSearchField cell] searchMenuTemplate] itemWithTag:FilterTypeTagTracker].title = NSLocalizedString(
+        @"Tracker",
+        "Filter Bar -> filter menu");
 
     [self.fGroupsButton.menu itemWithTag:kGroupFilterAllTag].title = NSLocalizedString(@"All Groups", "Filter Bar -> group filter menu");
 
@@ -109,7 +117,7 @@ typedef NS_ENUM(NSInteger, FilterTypeTag) {
     //set filter search type
     NSString* filterSearchType = [NSUserDefaults.standardUserDefaults stringForKey:@"FilterSearchType"];
 
-    NSMenu* filterSearchMenu = self.fSearchField.searchMenuTemplate;
+    NSMenu* filterSearchMenu = [(NSSearchFieldCell*)[self.fSearchField cell] searchMenuTemplate];
     NSString* filterSearchTypeTitle;
     if ([filterSearchType isEqualToString:FilterSearchTypeTracker])
     {
@@ -124,7 +132,7 @@ typedef NS_ENUM(NSInteger, FilterTypeTag) {
         }
         filterSearchTypeTitle = [filterSearchMenu itemWithTag:FilterTypeTagName].title;
     }
-    self.fSearchField.placeholderString = filterSearchTypeTitle;
+    [(NSSearchFieldCell*)[self.fSearchField cell] setPlaceholderString:filterSearchTypeTitle];
 
     NSString* searchString;
     if ((searchString = [NSUserDefaults.standardUserDefaults stringForKey:@"FilterSearchString"]))
@@ -269,12 +277,12 @@ typedef NS_ENUM(NSInteger, FilterTypeTag) {
 
 - (void)searchFieldDidStartSearching:(NSSearchField*)sender
 {
-    [self.fSearchFieldMinWidthConstraint animator].constant = 95;
+    [(NSLayoutConstraint*)[self.fSearchFieldMinWidthConstraint animator] setConstant:95];
 }
 
 - (void)searchFieldDidEndSearching:(NSSearchField*)sender
 {
-    [self.fSearchFieldMinWidthConstraint animator].constant = 48;
+    [(NSLayoutConstraint*)[self.fSearchFieldMinWidthConstraint animator] setConstant:48];
 }
 
 - (void)setSearchType:(id)sender
@@ -305,7 +313,7 @@ typedef NS_ENUM(NSInteger, FilterTypeTag) {
 
         [NSUserDefaults.standardUserDefaults setObject:filterType forKey:@"FilterSearchType"];
 
-        self.fSearchField.placeholderString = [sender title];
+        [(NSSearchFieldCell*)[self.fSearchField cell] setPlaceholderString:[sender title]];
     }
 
     [NSNotificationCenter.defaultCenter postNotificationName:@"ApplyFilter" object:nil];
@@ -331,7 +339,7 @@ typedef NS_ENUM(NSInteger, FilterTypeTag) {
     [self setSearchText:self.fSearchField];
 }
 
-- (NSArray<NSString*>*)searchStrings
+- (NSArray*)searchStrings
 {
     return [self.fSearchField.stringValue nonEmptyComponentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
 }

@@ -139,9 +139,9 @@
     return [self compare:string options:comparisonOptions range:NSMakeRange(0, self.length) locale:NSLocale.currentLocale];
 }
 
-- (NSArray<NSString*>*)nonEmptyComponentsSeparatedByCharactersInSet:(NSCharacterSet*)separators
+- (NSArray*)nonEmptyComponentsSeparatedByCharactersInSet:(NSCharacterSet*)separators
 {
-    NSMutableArray<NSString*>* components = [NSMutableArray array];
+    NSMutableArray* components = [NSMutableArray array];
     for (NSString* evaluatedObject in [self componentsSeparatedByCharactersInSet:separators])
     {
         if (evaluatedObject.length > 0)
@@ -162,11 +162,23 @@
     }
     // autodetection of the encoding (#3434)
     NSData* data = [NSData dataWithBytes:(void const*)bytes length:sizeof(unsigned char) * strlen(bytes)];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
     [NSString stringEncodingForData:data encodingOptions:nil convertedString:&fullPath usedLossyConversion:nil];
     if (fullPath)
     {
         return fullPath;
     }
+#else
+    NSStringEncoding encodings[] = { NSMacOSRomanStringEncoding, NSISOLatin1StringEncoding, NSWindowsCP1252StringEncoding };
+    for (NSUInteger i = 0; i < sizeof(encodings) / sizeof(encodings[0]); ++i)
+    {
+        fullPath = [[NSString alloc] initWithData:data encoding:encodings[i]];
+        if (fullPath)
+        {
+            return fullPath;
+        }
+    }
+#endif
     // hexa encoding
     return data.hexString;
 }

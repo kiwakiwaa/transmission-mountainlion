@@ -8,7 +8,7 @@
 
 - (instancetype)initForWindow:(NSWindow*)window;
 
-- (void)setTorrents:(NSArray<NSString*>*)files;
+- (void)setTorrents:(NSArray*)files;
 - (void)setFile:(NSString*)file;
 - (void)setURL:(NSString*)url;
 
