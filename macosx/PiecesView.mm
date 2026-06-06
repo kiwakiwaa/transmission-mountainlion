@@ -199,7 +199,7 @@ typedef struct PieceInfo
             NSRect cFillRects[kMaxCells];
             for (int i = 0; i < numCells; ++i)
             {
-                cFillRects[i] = cellBounds[i].rectValue;
+                cFillRects[i] = [(NSValue*)[cellBounds objectAtIndex:i] rectValue];
             }
             NSColor* cFillColors[kMaxCells];
             for (int i = 0; i < numCells; ++i)

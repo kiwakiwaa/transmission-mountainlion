@@ -4,6 +4,13 @@
 
 #import "ButtonToolbarItem.h"
 
+@interface ButtonToolbarItem ()
+
+@property(nonatomic) BOOL fEnabled;
+@property(nonatomic) BOOL fHasEnabledState;
+
+@end
+
 @implementation ButtonToolbarItem
 
 - (void)applyStateToButton
@@ -17,7 +24,7 @@
     button.image = self.image;
     button.target = self.target;
     button.action = self.action;
-    button.enabled = self.enabled;
+    button.enabled = self.fHasEnabledState ? self.fEnabled : YES;
 }
 
 - (void)setView:(NSView*)view
@@ -46,6 +53,8 @@
 
 - (void)setEnabled:(BOOL)enabled
 {
+    self.fEnabled = enabled;
+    self.fHasEnabledState = YES;
     [super setEnabled:enabled];
     [self applyStateToButton];
 }

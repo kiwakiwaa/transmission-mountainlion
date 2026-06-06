@@ -4,6 +4,13 @@
 
 #import "GroupToolbarItem.h"
 
+@interface GroupToolbarItem ()
+
+@property(nonatomic) BOOL fEnabled;
+@property(nonatomic) BOOL fHasEnabledState;
+
+@end
+
 @implementation GroupToolbarItem
 
 - (void)applyStateToControl
@@ -16,7 +23,7 @@
     NSControl* control = (NSControl*)self.view;
     control.target = self.target;
     control.action = self.action;
-    control.enabled = self.enabled;
+    control.enabled = self.fHasEnabledState ? self.fEnabled : YES;
 }
 
 - (void)setView:(NSView*)view
@@ -39,6 +46,8 @@
 
 - (void)setEnabled:(BOOL)enabled
 {
+    self.fEnabled = enabled;
+    self.fHasEnabledState = YES;
     [super setEnabled:enabled];
     [self applyStateToControl];
 }
@@ -50,7 +59,7 @@
     NSInteger const count = self.subitems.count;
     for (NSInteger i = 0; i < count; i++)
     {
-        NSToolbarItem* item = self.subitems[i];
+        NSToolbarItem* item = [self.subitems objectAtIndex:i];
         [control setEnabled:[self.target validateToolbarItem:item] forSegment:i];
     }
 }
@@ -66,7 +75,7 @@
     NSInteger const count = self.subitems.count;
     for (NSInteger i = 0; i < count; i++)
     {
-        NSMenuItem* addItem = [[NSMenuItem alloc] initWithTitle:labels[i] action:self.action keyEquivalent:@""];
+        NSMenuItem* addItem = [[NSMenuItem alloc] initWithTitle:[labels objectAtIndex:i] action:self.action keyEquivalent:@""];
         addItem.target = self.target;
         addItem.tag = i;
 
@@ -83,7 +92,7 @@
     NSInteger const count = self.subitems.count;
     for (NSInteger i = 0; i < count; i++)
     {
-        NSToolbarItem* item = self.subitems[i];
+        NSToolbarItem* item = [self.subitems objectAtIndex:i];
         [menuItem.submenu itemAtIndex:i].enabled = [self.target validateToolbarItem:item];
     }
 

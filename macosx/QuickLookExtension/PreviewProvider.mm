@@ -38,7 +38,7 @@ class FileTreeNode
 
 } // namespace
 
-NSString* generateIconData(UTType* type, NSUInteger width, NSMutableDictionary<NSString*, QLPreviewReplyAttachment*>* allImgProps)
+NSString* generateIconData(UTType* type, NSUInteger width, NSMutableDictionary* allImgProps)
 {
     // We need to do this once per file type, per image size
     NSString* iconFileName = [NSString stringWithFormat:@"%@.%ld.tiff", type.identifier, width];
@@ -97,7 +97,7 @@ NSString* generateIconData(UTType* type, NSUInteger width, NSMutableDictionary<N
     NSMutableString* htmlString = [NSMutableString string];
     [htmlString appendFormat:@"<html><style type=\"text/css\">%@</style><body>", styleContents];
 
-    NSMutableDictionary<NSString*, QLPreviewReplyAttachment*>* attachments = [NSMutableDictionary dictionary];
+    NSMutableDictionary* attachments = [NSMutableDictionary dictionary];
 
     NSString* name = @(metainfo.name().c_str());
 
