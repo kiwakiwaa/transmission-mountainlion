@@ -21,7 +21,7 @@ static CGFloat const kBorderWidth = 1.25;
         bp.lineWidth = kBorderWidth;
 
         //border
-        CGFloat fractionOfBlendedColor = NSApp.darkMode ? 0.15 : 0.3;
+        CGFloat fractionOfBlendedColor = [NSApp isDarkMode] ? 0.15 : 0.3;
         NSColor* borderColor = [color blendedColorWithFraction:fractionOfBlendedColor ofColor:NSColor.controlTextColor];
         [borderColor setStroke];
         [bp stroke];
@@ -36,13 +36,18 @@ static CGFloat const kBorderWidth = 1.25;
 
 - (NSImage*)imageWithColor:(NSColor*)color
 {
+    NSSize const size = self.size;
+    if (size.width <= 0.0 || size.height <= 0.0)
+    {
+        return nil;
+    }
+
     NSImage* coloredImage = [self copy];
 
     [coloredImage lockFocus];
 
     [color set];
 
-    NSSize const size = coloredImage.size;
     NSRectFillUsingOperation(NSMakeRect(0.0, 0.0, size.width, size.height), NSCompositingOperationSourceAtop);
 
     [coloredImage unlockFocus];

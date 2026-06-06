@@ -51,6 +51,24 @@
         [super drawWithFrame:cellFrame inView:controlView];
         if (self.seed)
         {
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+            NSBezierPath* check = [NSBezierPath bezierPath];
+            check.lineWidth = 1.5;
+            [check setLineCapStyle:NSRoundLineCapStyle];
+            [check setLineJoinStyle:NSRoundLineJoinStyle];
+
+            CGFloat const width = MIN(8.0, NSWidth(cellFrame) - 4.0);
+            CGFloat const height = MIN(6.0, NSHeight(cellFrame) - 4.0);
+            CGFloat const minX = floor(NSMidX(cellFrame) - width * 0.5);
+            CGFloat const minY = floor(NSMidY(cellFrame) - height * 0.5);
+
+            [check moveToPoint:NSMakePoint(minX, minY + height * 0.45)];
+            [check lineToPoint:NSMakePoint(minX + width * 0.38, minY)];
+            [check lineToPoint:NSMakePoint(minX + width, minY + height)];
+
+            [[NSColor whiteColor] setStroke];
+            [check stroke];
+#else
             NSImage* checkImage = [NSImage imageNamed:@"CompleteCheck"];
 
             NSSize const imageSize = checkImage.size;
@@ -63,6 +81,7 @@
             [checkImage drawInRect:rect fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0
                     respectFlipped:YES
                              hints:nil];
+#endif
         }
     }
 }

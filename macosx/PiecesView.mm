@@ -49,7 +49,7 @@ typedef struct PieceInfo
 
 - (NSColor*)backgroundColor
 {
-    return NSApp.darkMode ? NSColor.blackColor : NSColor.whiteColor;
+    return [NSApp isDarkMode] ? NSColor.blackColor : NSColor.whiteColor;
 }
 
 - (BOOL)isCompletenessDone:(float)val

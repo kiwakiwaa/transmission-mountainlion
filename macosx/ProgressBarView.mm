@@ -165,7 +165,7 @@ static NSInteger const kMaxPieces = 18 * 18;
     // Fill a solid color bar for magnet links
     if (torrent.magnet)
     {
-        if (NSApp.darkMode)
+        if ([NSApp isDarkMode])
         {
             [NSColor.controlColor set];
         }
@@ -192,7 +192,7 @@ static NSInteger const kMaxPieces = 18 * 18;
     NSIndexSet* previousFinishedIndexes = torrent.previousFinishedPieces;
     NSMutableIndexSet* finishedIndexes = [NSMutableIndexSet indexSet];
 
-    NSColor* const pieceBgColor = NSApp.darkMode ? NSColor.controlColor : NSColor.whiteColor;
+    NSColor* const pieceBgColor = [NSApp isDarkMode] ? NSColor.controlColor : NSColor.whiteColor;
 
     for (int i = 0; i < pieceCount; i++)
     {
