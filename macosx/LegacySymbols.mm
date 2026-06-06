@@ -68,6 +68,31 @@ static void TRDrawGearIcon(void)
     TRStrokeLine(NSMakePoint(12.6, 5.4), NSMakePoint(14.3, 3.7));
 }
 
+static void TRDrawInfoCircleIcon(void)
+{
+    NSBezierPath* circle = [NSBezierPath bezierPathWithOvalInRect:NSMakeRect(3.0, 3.0, 12.0, 12.0)];
+    circle.lineWidth = 1.4;
+    [circle stroke];
+
+    [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(8.1, 11.6, 1.8, 1.8)] fill];
+    TRStrokeLine(NSMakePoint(9.0, 6.0), NSMakePoint(9.0, 9.8));
+}
+
+static void TRDrawPushpinIcon(void)
+{
+    NSBezierPath* head = [NSBezierPath bezierPath];
+    head.lineWidth = 1.4;
+    [head moveToPoint:NSMakePoint(5.0, 14.0)];
+    [head lineToPoint:NSMakePoint(8.0, 16.0)];
+    [head lineToPoint:NSMakePoint(14.0, 10.0)];
+    [head lineToPoint:NSMakePoint(11.0, 7.0)];
+    [head closePath];
+    [head stroke];
+
+    TRStrokeLine(NSMakePoint(10.0, 8.6), NSMakePoint(4.4, 3.0));
+    TRStrokeLine(NSMakePoint(4.4, 3.0), NSMakePoint(3.0, 2.0));
+}
+
 static NSImage* TRLegacySystemSymbolImage(NSString* symbolName)
 {
     NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(18.0, 18.0)];
@@ -204,11 +229,13 @@ static NSImage* TRLegacySystemSymbolImage(NSString* symbolName)
         TRStrokeLine(NSMakePoint(9.0, 14.0), NSMakePoint(9.0, 4.0));
         TRStrokeChevron(4.5, 9.0, 13.5, 8.0, 4.0);
     }
+    else if ([symbolName isEqualToString:@"info.circle"])
+    {
+        TRDrawInfoCircleIcon();
+    }
     else if ([symbolName isEqualToString:@"pin"])
     {
-        TRStrokeCircle(6.0, 10.0, 6.0);
-        TRStrokeLine(NSMakePoint(9.0, 10.0), NSMakePoint(9.0, 2.5));
-        TRStrokeLine(NSMakePoint(6.0, 7.0), NSMakePoint(12.0, 7.0));
+        TRDrawPushpinIcon();
     }
     else if ([symbolName isEqualToString:@"speedometer"])
     {
@@ -268,7 +295,6 @@ NSImage* TRImageForSystemSymbol(NSString* symbolName, NSString* description)
             @"folder" : NSImageNameFolder,
             @"globe" : @"Globe",
             @"nosign" : @"CleanupTemplate",
-            @"info.circle" : NSImageNameInfo,
             @"pause.circle.fill" : @"PauseOff",
             @"arrow.clockwise.circle.fill" : @"ResumeOff",
             @"pause" : @"PauseOff",
