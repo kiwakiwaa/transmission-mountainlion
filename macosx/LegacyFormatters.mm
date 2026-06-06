@@ -92,6 +92,34 @@ static NSString* TRLegacyTrackerCountdownString(NSTimeInterval interval)
     return [NSString stringWithFormat:@"%lds", (long)seconds];
 }
 
+static NSString* TRLegacyShortDurationString(NSTimeInterval interval)
+{
+    NSInteger seconds = MAX(0, (NSInteger)interval);
+    NSInteger days = seconds / (60 * 60 * 24);
+    seconds %= 60 * 60 * 24;
+    NSInteger hours = seconds / (60 * 60);
+    seconds %= 60 * 60;
+    NSInteger minutes = seconds / 60;
+    seconds %= 60;
+
+    NSMutableArray* parts = [NSMutableArray arrayWithCapacity:4];
+    if (days > 0)
+    {
+        [parts addObject:[NSString stringWithFormat:@"%ldd", (long)days]];
+    }
+    if (hours > 0 || parts.count > 0)
+    {
+        [parts addObject:[NSString stringWithFormat:@"%ldh", (long)hours]];
+    }
+    if (minutes > 0 || parts.count > 0)
+    {
+        [parts addObject:[NSString stringWithFormat:@"%ldm", (long)minutes]];
+    }
+    [parts addObject:[NSString stringWithFormat:@"%lds", (long)seconds]];
+
+    return [parts componentsJoinedByString:@" "];
+}
+
 NSString* TRTimeRemainingString(NSTimeInterval interval)
 {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
@@ -111,6 +139,25 @@ NSString* TRTimeRemainingString(NSTimeInterval interval)
     return string ?: TRLegacyTimeRemainingString(interval);
 #else
     return TRLegacyTimeRemainingString(interval);
+#endif
+}
+
+NSString* TRShortDurationString(NSTimeInterval interval)
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+    static NSDateComponentsFormatter* formatter = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        formatter = [NSDateComponentsFormatter new];
+        formatter.unitsStyle = NSDateComponentsFormatterUnitsStyleShort;
+        formatter.allowedUnits = NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond;
+        formatter.zeroFormattingBehavior = NSDateComponentsFormatterZeroFormattingBehaviorDropLeading;
+    });
+
+    NSString* string = [formatter stringFromTimeInterval:interval];
+    return string ?: TRLegacyShortDurationString(interval);
+#else
+    return TRLegacyShortDurationString(interval);
 #endif
 }
 

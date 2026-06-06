@@ -7,3 +7,4 @@
 NSString* TRTimeRemainingString(NSTimeInterval interval);
 NSString* TRStatsDurationString(NSTimeInterval interval);
 NSString* TRTrackerCountdownString(NSTimeInterval interval);
+NSString* TRShortDurationString(NSTimeInterval interval);

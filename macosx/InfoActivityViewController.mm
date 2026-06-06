@@ -9,6 +9,7 @@
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
 #import "LegacyStackView.h"
 #endif
+#import "LegacyFormatters.h"
 #import "NSStringAdditions.h"
 #import "PiecesView.h"
 #import "Torrent.h"
@@ -288,17 +289,8 @@ static CGFloat const kStackViewVerticalSpacing = 8.0;
         //uses a relative date, so can't be set once
         self.fDateAddedField.objectValue = torrent.dateAdded;
 
-        static NSDateComponentsFormatter* timeFormatter;
-        static dispatch_once_t onceToken;
-        dispatch_once(&onceToken, ^{
-            timeFormatter = [NSDateComponentsFormatter new];
-            timeFormatter.unitsStyle = NSDateComponentsFormatterUnitsStyleShort;
-            timeFormatter.allowedUnits = NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond;
-            timeFormatter.zeroFormattingBehavior = NSDateComponentsFormatterZeroFormattingBehaviorDropLeading;
-        });
-
-        self.fDownloadTimeField.stringValue = [timeFormatter stringFromTimeInterval:torrent.secondsDownloading];
-        self.fSeedTimeField.stringValue = [timeFormatter stringFromTimeInterval:torrent.secondsSeeding];
+        self.fDownloadTimeField.stringValue = TRShortDurationString(torrent.secondsDownloading);
+        self.fSeedTimeField.stringValue = TRShortDurationString(torrent.secondsSeeding);
 
         [self.fPiecesView updateView];
     }
