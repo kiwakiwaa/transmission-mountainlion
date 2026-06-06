@@ -400,3 +400,6 @@
 
 /* Class = "NSButtonCell"; title = "Verify data when download completes"; ObjectID = "wM8-cD-WAB"; */
 /* "wM8-cD-WAB.title" = ""; */
+
+/* Class = "NSTextFieldCell"; title = "Announce as:"; ObjectID = "aci-label-cell"; */
+"aci-label-cell.title" = "Ανακοίνωση ως:";

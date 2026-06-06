@@ -1168,3 +1168,5 @@
 /* Inspector -> peer -> status */
 "You want to download, but peer does not want to send (interested and choked)" = "Ви зацікавлені в наявних у користувача частинах торрента, але він вас блокує";
 
+/* Groups preferences -> announced client identity */
+"Real (%@)" = "Справжній (%@)";

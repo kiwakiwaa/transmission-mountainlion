@@ -1168,3 +1168,5 @@
 /* Inspector -> peer -> status */
 "You want to download, but peer does not want to send (interested and choked)" = "你想要下载，但节点不想上传（有兴趣然而阻塞）";
 
+/* Groups preferences -> announced client identity */
+"Real (%@)" = "真实 (%@)";

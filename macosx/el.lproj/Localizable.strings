@@ -1168,3 +1168,5 @@
 /* Inspector -> peer -> status */
 "You want to download, but peer does not want to send (interested and choked)" = "Θέλετε να κάνετε λήψη, αλλά ο ομότιμος χρήστης δεν θέλει να αποστείλει (ενδιαφέρεται αλλά δεν επιτρέπει την ανταλλαγή δεδομένων)";
 
+/* Groups preferences -> announced client identity */
+"Real (%@)" = "Πραγματικό (%@)";
