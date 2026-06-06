@@ -655,7 +655,9 @@ static void removeKeRangerRansomware()
     //set table size
     BOOL const small = [self.fDefaults boolForKey:@"SmallView"];
     self.fTableView.rowHeight = small ? kRowHeightSmall : kRowHeightRegular;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
     self.fTableView.usesAutomaticRowHeights = NO;
+#endif
     self.fTableView.floatsGroupRows = YES;
     //self.fTableView.usesAlternatingRowBackgroundColors = !small;
 
@@ -2745,7 +2747,11 @@ static void removeKeRangerRansomware()
 {
     //actually sort
     [self sortTorrentsCallUpdates:YES includeQueueOrder:includeQueueOrder];
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    [self.fTableView reloadData];
+#else
     self.fTableView.needsDisplay = YES;
+#endif
 }
 
 - (void)sortTorrentsCallUpdates:(BOOL)callUpdates includeQueueOrder:(BOOL)includeQueueOrder
@@ -3366,8 +3372,10 @@ static void removeKeRangerRansomware()
     }
     [NSAnimationContext endGrouping];
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
     //reloaddata, otherwise the tableview has a bunch of empty cells
     [self.fTableView reloadData];
+#endif
 
     [self resetInfo]; //if group is already selected, but the torrents in it change
 
@@ -3644,6 +3652,13 @@ static void removeKeRangerRansomware()
 {
     return ![item isKindOfClass:[Torrent class]];
 }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+- (id)outlineView:(NSOutlineView*)outlineView objectValueForTableColumn:(NSTableColumn*)tableColumn byItem:(id)item
+{
+    return item;
+}
+#endif
 
 - (BOOL)outlineView:(NSOutlineView*)outlineView writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pasteboard
 {
