@@ -2,11 +2,13 @@
 // It may be used under the MIT (SPDX: MIT) license.
 // License text can be found in the licenses/ folder.
 
-#import <Sparkle/Sparkle.h>
-
 #include <libtransmission/string-utils.h>
 
 #import "VDKQueue.h"
+
+#ifndef TR_ENABLE_SPARKLE
+#define TR_ENABLE_SPARKLE 1
+#endif
 
 #import "PrefsController.h"
 #import "BlocklistDownloaderViewController.h"
@@ -215,6 +217,14 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     toolbar.sizeMode = NSToolbarSizeModeRegular;
     toolbar.selectedItemIdentifier = ToolbarTabGeneral;
     self.window.toolbar = toolbar;
+
+#if !TR_ENABLE_SPARKLE
+    self.fCheckForUpdatesLabel.hidden = YES;
+    self.fCheckForUpdatesButton.hidden = YES;
+    self.fCheckForUpdatesBetaButton.hidden = YES;
+    self.fCheckForUpdatesButton.enabled = NO;
+    self.fCheckForUpdatesBetaButton.enabled = NO;
+#endif
 
     [self setWindowSize];
     [self.window center];

@@ -508,12 +508,6 @@
                                     <action selector="showAboutWindow:" target="206" id="1927"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Check for Update…" tag="1234" id="975">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="checkForUpdates:" target="1812" id="1814"/>
-                                </connections>
-                            </menuItem>
                             <menuItem title="Donate…" tag="5678" id="3212">
                                 <imageReference key="secondaryImage" image="heart" catalog="system" symbolScale="default" variableValue="1"/>
                                 <connections>
@@ -1181,7 +1175,6 @@ CA
                 </menuItem>
             </items>
         </menu>
-        <customObject id="1812" userLabel="SUUpdater" customClass="SUUpdater"/>
         <userDefaultsController representsSharedInstance="YES" id="1815" userLabel="Shared Defaults"/>
     </objects>
     <resources>

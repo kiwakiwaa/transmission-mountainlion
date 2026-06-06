@@ -4,7 +4,11 @@
 
 #import <Foundation/Foundation.h>
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+#ifndef TR_ENABLE_SPARKLE
+#define TR_ENABLE_SPARKLE 1
+#endif
+
+#if TR_ENABLE_SPARKLE
 #import <Sparkle/SUVersionComparisonProtocol.h>
 #else
 @protocol SUVersionComparison<NSObject>

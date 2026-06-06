@@ -5,11 +5,12 @@
 #import <AppKit/AppKit.h>
 #import <Quartz/Quartz.h>
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+#ifndef TR_ENABLE_SPARKLE
+#define TR_ENABLE_SPARKLE 1
+#endif
+
+#if TR_ENABLE_SPARKLE
 #import <Sparkle/SUUpdaterDelegate.h>
-#else
-@class SUUpdater;
-@protocol SUVersionComparison;
 #endif
 
 #include <libtransmission/transmission.h>
@@ -41,7 +42,7 @@ typedef NS_ENUM(NSUInteger, AddType) { //
                             QLPreviewPanelDataSource,
                             QLPreviewPanelDelegate,
                             VDKQueueDelegate
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+#if TR_ENABLE_SPARKLE
                             ,
                             SUUpdaterDelegate
 #endif

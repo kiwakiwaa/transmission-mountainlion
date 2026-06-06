@@ -38,6 +38,24 @@ add_subdirectory(VDKQueue)
 
 add_executable(${TR_NAME}-mac MACOSX_BUNDLE)
 
+set(TR_ENABLE_SPARKLE ON)
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
+    set(TR_ENABLE_SPARKLE OFF)
+endif()
+
+set(TR_SPARKLE_INFO_PLIST_KEYS "")
+if(TR_ENABLE_SPARKLE)
+    set(TR_SPARKLE_INFO_PLIST_KEYS [=[
+	<key>SUAllowsAutomaticUpdates</key>
+	<false/>
+	<key>SUFeedURL</key>
+	<string>https://update.transmissionbt.com/appcast.xml</string>
+	<key>SUPublicDSAKeyFile</key>
+	<string>sparkle_dsa_pub.pem</string>
+	<key>SUScheduledCheckInterval</key>
+	<string>86400</string>]=])
+endif()
+
 target_sources(${TR_NAME}-mac
     PRIVATE
         AboutWindowController.h
@@ -188,7 +206,6 @@ target_sources(${TR_NAME}-mac
         ShareTorrentFileHelper.mm
         SmallTorrentCell.h
         SmallTorrentCell.mm
-        SparkleProxy.mm
         StatsWindowController.h
         StatsWindowController.mm
         StatusBarController.h
@@ -226,6 +243,16 @@ target_sources(${TR_NAME}-mac
         WebSeedTableView.h
         WebSeedTableView.mm)
 
+target_compile_definitions(${TR_NAME}-mac
+    PRIVATE
+        TR_ENABLE_SPARKLE=$<BOOL:${TR_ENABLE_SPARKLE}>)
+
+if(TR_ENABLE_SPARKLE)
+    target_sources(${TR_NAME}-mac
+        PRIVATE
+            SparkleProxy.mm)
+endif()
+
 if(TR_MACOS_LEGACY_COMPAT)
     target_compile_options(${TR_NAME}-mac PRIVATE
         -include ${CMAKE_CURRENT_SOURCE_DIR}/CocoaCompatibility.h
@@ -252,9 +279,11 @@ endif()
 set(RESOURCES
     Defaults.plist
     Credits.rtf
-    sparkle_dsa_pub.pem
     ../COPYING
     Images/TransmissionDocument.icns)
+if(TR_ENABLE_SPARKLE)
+    list(APPEND RESOURCES sparkle_dsa_pub.pem)
+endif()
 source_group(Resources
     FILES ${RESOURCES})
 
@@ -477,13 +506,12 @@ if(TR_MACOS_LEGACY_COMPAT)
         Base.lproj)
 endif()
 
-find_library(SPARKLE_FRAMEWORK Sparkle
-    PATHS ${CMAKE_CURRENT_SOURCE_DIR}
-    NO_DEFAULT_PATHS)
-
-set(SPARKLE_LINK_LIBRARIES ${SPARKLE_FRAMEWORK} "-weak_framework Sparkle")
-if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
-    set(SPARKLE_LINK_LIBRARIES)
+set(SPARKLE_LINK_LIBRARIES)
+if(TR_ENABLE_SPARKLE)
+    find_library(SPARKLE_FRAMEWORK Sparkle
+        PATHS ${CMAKE_CURRENT_SOURCE_DIR}
+        NO_DEFAULT_PATHS)
+    set(SPARKLE_LINK_LIBRARIES ${SPARKLE_FRAMEWORK} "-weak_framework Sparkle")
 endif()
 
 target_link_libraries(${TR_NAME}-mac

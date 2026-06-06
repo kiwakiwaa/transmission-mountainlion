@@ -2,12 +2,20 @@
 // It may be used under the MIT (SPDX: MIT) license.
 // License text can be found in the licenses/ folder.
 
+#ifndef TR_ENABLE_SPARKLE
+#define TR_ENABLE_SPARKLE 1
+#endif
+
 #if __has_feature(modules)
 @import Carbon;
+#if TR_ENABLE_SPARKLE
 @import Sparkle;
+#endif
 #else
 #import <Carbon/Carbon.h>
+#if TR_ENABLE_SPARKLE
 #import <Sparkle/Sparkle.h>
+#endif
 #endif
 
 #include <atomic> /* atomic, atomic_fetch_add_explicit, memory_order_relaxed */
@@ -605,7 +613,9 @@ static void removeKeRangerRansomware()
                 return TR_RPC_NOREMOVE; // we'll do the remove manually
             });
 
+#if TR_ENABLE_SPARKLE
         [SUUpdater sharedUpdater].delegate = self;
+#endif
         _fQuitRequested = NO;
 
         _fPauseOnLaunch = (GetCurrentKeyModifiers() & (optionKey | rightOptionKey)) != 0;
@@ -5564,6 +5574,7 @@ static void removeKeRangerRansomware()
 
 @end
 
+#if TR_ENABLE_SPARKLE
 @implementation Controller (SUUpdaterDelegate)
 
 - (void)updaterWillRelaunchApplication:(SUUpdater*)updater
@@ -5577,3 +5588,4 @@ static void removeKeRangerRansomware()
 }
 
 @end
+#endif
