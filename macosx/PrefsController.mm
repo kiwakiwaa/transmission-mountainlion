@@ -160,8 +160,8 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
         NSString* autoPath;
         if ([_fDefaults boolForKey:@"AutoImport"] && (autoPath = [_fDefaults stringForKey:@"AutoImportDirectory"]))
         {
-            [((Controller*)NSApp.delegate).fileWatcherQueue addPath:autoPath.stringByExpandingTildeInPath
-                                                     notifyingAbout:VDKQueueNotifyAboutWrite];
+            [((Controller*)[NSApp delegate]).fileWatcherQueue addPath:autoPath.stringByExpandingTildeInPath
+                                                       notifyingAbout:VDKQueueNotifyAboutWrite];
         }
 
         //set blocklist scheduler
@@ -405,7 +405,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
                               state:(NSCoder*)state
                   completionHandler:(void (^)(NSWindow*, NSError*))completionHandler
 {
-    NSWindow* window = ((Controller*)NSApp.delegate).prefsController.window;
+    NSWindow* window = ((Controller*)[NSApp delegate]).prefsController.window;
     completionHandler(window, nil);
 }
 
@@ -789,7 +789,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
 + (int)dateToTimeSum:(NSDate*)date
 {
     NSCalendar* calendar = NSCalendar.currentCalendar;
-    NSDateComponents* components = [calendar components:NSCalendarUnitHour | NSCalendarUnitMinute fromDate:date];
+    NSDateComponents* components = [calendar components:NSHourCalendarUnit | NSMinuteCalendarUnit fromDate:date];
     return static_cast<int>(components.hour * 60 + components.minute);
 }
 
@@ -952,7 +952,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
         {
             [self.fFolderPopUp selectItemAtIndex:DownloadPopupIndexFolder];
 
-            NSString* folder = panel.URLs[0].path;
+            NSString* folder = [(NSURL*)[panel.URLs objectAtIndex:0] path];
             [self.fDefaults setObject:folder forKey:@"DownloadFolder"];
             [self.fDefaults setBool:YES forKey:@"DownloadLocationConstant"];
             [self updateShowAddMagnetWindowField];
@@ -982,7 +982,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     [panel beginSheetModalForWindow:self.window completionHandler:^(NSInteger result) {
         if (result == NSModalResponseOK)
         {
-            NSString* folder = panel.URLs[0].path;
+            NSString* folder = [(NSURL*)[panel.URLs objectAtIndex:0] path];
             [self.fDefaults setObject:folder forKey:@"IncompleteDownloadFolder"];
 
             assert(folder.length > 0);
@@ -1005,7 +1005,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     [panel beginSheetModalForWindow:self.window completionHandler:^(NSInteger result) {
         if (result == NSModalResponseOK)
         {
-            NSString* filePath = panel.URLs[0].path;
+            NSString* filePath = [(NSURL*)[panel.URLs objectAtIndex:0] path];
 
             assert(filePath.length > 0);
 
@@ -1070,7 +1070,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     NSString* path;
     if ((path = [self.fDefaults stringForKey:@"AutoImportDirectory"]))
     {
-        VDKQueue* watcherQueue = ((Controller*)NSApp.delegate).fileWatcherQueue;
+        VDKQueue* watcherQueue = ((Controller*)[NSApp delegate]).fileWatcherQueue;
         if ([self.fDefaults boolForKey:@"AutoImport"])
         {
             path = path.stringByExpandingTildeInPath;
@@ -1102,10 +1102,10 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     [panel beginSheetModalForWindow:self.window completionHandler:^(NSInteger result) {
         if (result == NSModalResponseOK)
         {
-            VDKQueue* watcherQueue = ((Controller*)NSApp.delegate).fileWatcherQueue;
+            VDKQueue* watcherQueue = ((Controller*)[NSApp delegate]).fileWatcherQueue;
             [watcherQueue removeAllPaths];
 
-            NSString* path = (panel.URLs[0]).path;
+            NSString* path = [(NSURL*)[panel.URLs objectAtIndex:0] path];
             [self.fDefaults setObject:path forKey:@"AutoImportDirectory"];
             [watcherQueue addPath:path.stringByExpandingTildeInPath notifyingAbout:VDKQueueNotifyAboutWrite];
 
@@ -1587,7 +1587,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
     }
 
     NSRect windowRect = window.frame;
-    CGFloat const difference = NSHeight(view.frame) - NSHeight(window.contentView.frame);
+    CGFloat const difference = NSHeight(view.frame) - NSHeight([[window contentView] frame]);
     windowRect.origin.y -= difference;
     windowRect.size.height += difference;
 
@@ -1623,14 +1623,14 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
 
 static NSString* getOSStatusDescription(OSStatus errorCode)
 {
-    return [NSError errorWithDomain:NSOSStatusErrorDomain code:errorCode userInfo:NULL].description;
+    return [[NSError errorWithDomain:NSOSStatusErrorDomain code:errorCode userInfo:NULL] description];
 }
 
 - (void)updateRPCPassword
 {
     CFTypeRef data;
     OSStatus result = SecItemCopyMatching(
-        (CFDictionaryRef) @{
+        (__bridge CFDictionaryRef) @{
             (NSString*)kSecClass : (NSString*)kSecClassGenericPassword,
             (NSString*)kSecAttrAccount : @(kRPCKeychainName),
             (NSString*)kSecAttrService : @(kRPCKeychainService),
@@ -1653,7 +1653,7 @@ static NSString* getOSStatusDescription(OSStatus errorCode)
 {
     CFTypeRef item;
     OSStatus result = SecItemCopyMatching(
-        (CFDictionaryRef) @{
+        (__bridge CFDictionaryRef) @{
             (NSString*)kSecClass : (NSString*)kSecClassGenericPassword,
             (NSString*)kSecAttrAccount : @(kRPCKeychainName),
             (NSString*)kSecAttrService : @(kRPCKeychainService),
@@ -1671,12 +1671,12 @@ static NSString* getOSStatusDescription(OSStatus errorCode)
         if (passwordLength > 0) // found and needed, so update it
         {
             result = SecItemUpdate(
-                (CFDictionaryRef) @{
+                (__bridge CFDictionaryRef) @{
                     (NSString*)kSecClass : (NSString*)kSecClassGenericPassword,
                     (NSString*)kSecAttrAccount : @(kRPCKeychainName),
                     (NSString*)kSecAttrService : @(kRPCKeychainService),
                 },
-                (CFDictionaryRef) @{
+                (__bridge CFDictionaryRef) @{
                     (NSString*)kSecValueData : [NSData dataWithBytes:password length:passwordLength],
                 });
             if (result != noErr)
@@ -1686,7 +1686,7 @@ static NSString* getOSStatusDescription(OSStatus errorCode)
         }
         else // found and not needed, so remove it
         {
-            result = SecItemDelete((CFDictionaryRef) @{
+            result = SecItemDelete((__bridge CFDictionaryRef) @{
                 (NSString*)kSecClass : (NSString*)kSecClassGenericPassword,
                 (NSString*)kSecAttrAccount : @(kRPCKeychainName),
                 (NSString*)kSecAttrService : @(kRPCKeychainService),
@@ -1703,7 +1703,7 @@ static NSString* getOSStatusDescription(OSStatus errorCode)
         if (passwordLength > 0) // not found and needed, so add it
         {
             result = SecItemAdd(
-                (CFDictionaryRef) @{
+                (__bridge CFDictionaryRef) @{
                     (NSString*)kSecClass : (NSString*)kSecClassGenericPassword,
                     (NSString*)kSecAttrAccount : @(kRPCKeychainName),
                     (NSString*)kSecAttrService : @(kRPCKeychainService),

@@ -279,7 +279,7 @@ typedef NS_ENUM(NSUInteger, PopupPriority) {
         if (result == NSModalResponseOK)
         {
             self.fLockDestination = YES;
-            [self setDestinationPath:panel.URLs[0].path determinationType:TorrentDeterminationUserSpecified];
+            [self setDestinationPath:[(NSURL*)[panel.URLs objectAtIndex:0] path] determinationType:TorrentDeterminationUserSpecified];
         }
         else
         {

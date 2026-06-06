@@ -216,7 +216,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
 
 - (void)windowWillClose:(NSNotification*)notification
 {
-    if (self.fCurrentTabTag == TabTagFile && ([QLPreviewPanel sharedPreviewPanelExists] && [QLPreviewPanel sharedPreviewPanel].visible))
+    if (self.fCurrentTabTag == TabTagFile && ([QLPreviewPanel sharedPreviewPanelExists] && [[QLPreviewPanel sharedPreviewPanel] isVisible]))
     {
         [[QLPreviewPanel sharedPreviewPanel] reloadData];
     }
@@ -420,7 +420,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
                                                                  views:@{ @"tabs" : self.fTabs, @"view" : view }]];
 
     if ((self.fCurrentTabTag == TabTagFile || oldTabTag == TabTagFile) &&
-        ([QLPreviewPanel sharedPreviewPanelExists] && [QLPreviewPanel sharedPreviewPanel].visible))
+        ([QLPreviewPanel sharedPreviewPanelExists] && [[QLPreviewPanel sharedPreviewPanel] isVisible]))
     {
         [[QLPreviewPanel sharedPreviewPanel] reloadData];
     }
@@ -486,7 +486,7 @@ typedef NS_ENUM(NSUInteger, TabTag) {
 
 - (BOOL)canQuickLook
 {
-    if (self.fCurrentTabTag != TabTagFile || !self.window.visible)
+    if (self.fCurrentTabTag != TabTagFile || ![self.window isVisible])
     {
         return NO;
     }

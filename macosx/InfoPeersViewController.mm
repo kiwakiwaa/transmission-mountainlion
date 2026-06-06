@@ -15,7 +15,7 @@
 static NSString* const kAnimationIdKey = @"animationId";
 static NSString* const kWebSeedAnimationId = @"webSeed";
 
-@interface InfoPeersViewController ()<CAAnimationDelegate>
+@interface InfoPeersViewController ()
 
 @property(nonatomic, copy) NSArray* fTorrents;
 
@@ -59,13 +59,19 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
     }
 
     //set table header text
-    [self.fPeerTable tableColumnWithIdentifier:@"IP"].headerCell.stringValue = NSLocalizedString(@"IP Address", "inspector -> peer table -> header");
-    [self.fPeerTable tableColumnWithIdentifier:@"Client"].headerCell.stringValue = NSLocalizedString(@"Client", "inspector -> peer table -> header");
-    [self.fPeerTable tableColumnWithIdentifier:@"DL From"].headerCell.stringValue = NSLocalizedString(@"DL", "inspector -> peer table -> header");
-    [self.fPeerTable tableColumnWithIdentifier:@"UL To"].headerCell.stringValue = NSLocalizedString(@"UL", "inspector -> peer table -> header");
+    [[[self.fPeerTable tableColumnWithIdentifier:@"IP"] headerCell]
+        setStringValue:NSLocalizedString(@"IP Address", "inspector -> peer table -> header")];
+    [[[self.fPeerTable tableColumnWithIdentifier:@"Client"] headerCell]
+        setStringValue:NSLocalizedString(@"Client", "inspector -> peer table -> header")];
+    [[[self.fPeerTable tableColumnWithIdentifier:@"DL From"] headerCell]
+        setStringValue:NSLocalizedString(@"DL", "inspector -> peer table -> header")];
+    [[[self.fPeerTable tableColumnWithIdentifier:@"UL To"] headerCell]
+        setStringValue:NSLocalizedString(@"UL", "inspector -> peer table -> header")];
 
-    [self.fWebSeedTable tableColumnWithIdentifier:@"Address"].headerCell.stringValue = NSLocalizedString(@"Web Seeds", "inspector -> web seed table -> header");
-    [self.fWebSeedTable tableColumnWithIdentifier:@"DL From"].headerCell.stringValue = NSLocalizedString(@"DL", "inspector -> web seed table -> header");
+    [[[self.fWebSeedTable tableColumnWithIdentifier:@"Address"] headerCell]
+        setStringValue:NSLocalizedString(@"Web Seeds", "inspector -> web seed table -> header")];
+    [[[self.fWebSeedTable tableColumnWithIdentifier:@"DL From"] headerCell]
+        setStringValue:NSLocalizedString(@"DL", "inspector -> web seed table -> header")];
 
     //set table header tool tips
     [self.fPeerTable tableColumnWithIdentifier:@"Encryption"].headerToolTip = NSLocalizedString(
@@ -611,14 +617,14 @@ static NSString* const kWebSeedAnimationId = @"webSeed";
 
 - (void)setWebSeedTableHidden:(BOOL)hide animate:(BOOL)animate
 {
-    if (animate && (!self.view.window || !self.view.window.visible))
+    if (animate && (!self.view.window || ![self.view.window isVisible]))
     {
         animate = NO;
     }
 
     CGFloat const webSeedTableTopMargin = hide ? -NSHeight(self.fWebSeedTable.enclosingScrollView.frame) : self.fViewTopMargin;
 
-    (animate ? [self.fWebSeedTableTopConstraint animator] : self.fWebSeedTableTopConstraint).constant = webSeedTableTopMargin;
+    [(NSLayoutConstraint*)(animate ? [self.fWebSeedTableTopConstraint animator] : self.fWebSeedTableTopConstraint) setConstant:webSeedTableTopMargin];
 }
 
 - (NSArray*)peerSortDescriptors

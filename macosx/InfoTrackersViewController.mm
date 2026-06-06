@@ -88,7 +88,7 @@ typedef NS_ENUM(NSInteger, TrackerSegmentTag) {
 
         if (self.fTorrents.count == 1)
         {
-            self.fTrackers = self.fTorrents[0].allTrackerStats;
+            self.fTrackers = ((Torrent*)[self.fTorrents objectAtIndex:0]).allTrackerStats;
         }
         else
         {
@@ -117,7 +117,7 @@ typedef NS_ENUM(NSInteger, TrackerSegmentTag) {
         NSIndexSet* addedIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(self.fTrackers.count - 2, 2)];
         NSArray* tierAndTrackerBeingAdded = [self.fTrackers objectsAtIndexes:addedIndexes];
 
-        self.fTrackers = self.fTorrents[0].allTrackerStats;
+        self.fTrackers = ((Torrent*)[self.fTorrents objectAtIndex:0]).allTrackerStats;
         [self.fTrackers addObjectsFromArray:tierAndTrackerBeingAdded];
 
         self.fTrackerTable.trackers = self.fTrackers;

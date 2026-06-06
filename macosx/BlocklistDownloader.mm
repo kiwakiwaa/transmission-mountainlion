@@ -267,7 +267,7 @@ BlocklistDownloader* fBLDownloader = nil;
 
         NSString* output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 
-        filename = [output componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet].firstObject;
+        filename = [[output componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet] objectAtIndex:0];
     }
     @catch (NSException* exception)
     {
@@ -366,7 +366,7 @@ BlocklistDownloader* fBLDownloader = nil;
 
         NSString* output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 
-        filename = [output componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet].firstObject;
+        filename = [[output componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet] objectAtIndex:0];
     }
     @catch (NSException* exception)
     {

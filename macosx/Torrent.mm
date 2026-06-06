@@ -14,6 +14,7 @@
 #include <libtransmission/string-utils.h>
 
 #import "Torrent.h"
+#import "CocoaCompatibility.h"
 #import "GroupsController.h"
 #import "FileListNode.h"
 #import "LegacyFormatters.h"
@@ -2085,7 +2086,7 @@ static tr_torrent_rename_done_func makeRenameDoneCallback(NSDictionary* contextI
                 (NSString*)kLSQuarantineTypeKey : (NSString*)kLSQuarantineTypeOtherDownload
             };
             NSError* error = nil;
-            if (![dataLocationUrl setResourceValue:quarantineProperties forKey:NSURLQuarantinePropertiesKey error:&error])
+            if (![dataLocationUrl setResourceValue:quarantineProperties forKey:TRURLQuarantinePropertiesKey error:&error])
             {
                 NSLog(@"Failed to quarantine %@: %@", dataLocation, error.description);
             }

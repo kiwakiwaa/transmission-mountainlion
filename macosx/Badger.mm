@@ -20,7 +20,7 @@
     if ((self = [super init]))
     {
         BadgeView* view = [[BadgeView alloc] init];
-        NSApp.dockTile.contentView = view;
+        [[NSApp dockTile] setContentView:view];
 
         _fHashes = [[NSMutableSet alloc] init];
     }
@@ -34,9 +34,9 @@
     CGFloat const displayUlRate = [NSUserDefaults.standardUserDefaults boolForKey:@"BadgeUploadRate"] ? uploadRate : 0.0;
 
     //only update if the badged values change
-    if ([(BadgeView*)NSApp.dockTile.contentView setRatesWithDownload:displayDlRate upload:displayUlRate])
+    if ([(BadgeView*)[[NSApp dockTile] contentView] setRatesWithDownload:displayDlRate upload:displayUlRate])
     {
-        [NSApp.dockTile display];
+        [[NSApp dockTile] display];
     }
 }
 
@@ -45,7 +45,7 @@
     NSParameterAssert(torrent != nil);
 
     [self.fHashes addObject:torrent.hashString];
-    NSApp.dockTile.badgeLabel = [NSString localizedStringWithFormat:@"%lu", self.fHashes.count];
+    [[NSApp dockTile] setBadgeLabel:[NSString localizedStringWithFormat:@"%lu", self.fHashes.count]];
 }
 
 - (void)removeTorrent:(Torrent*)torrent
@@ -55,11 +55,11 @@
         [self.fHashes removeObject:torrent.hashString];
         if (self.fHashes.count > 0)
         {
-            NSApp.dockTile.badgeLabel = [NSString localizedStringWithFormat:@"%lu", self.fHashes.count];
+            [[NSApp dockTile] setBadgeLabel:[NSString localizedStringWithFormat:@"%lu", self.fHashes.count]];
         }
         else
         {
-            NSApp.dockTile.badgeLabel = @"";
+            [[NSApp dockTile] setBadgeLabel:@""];
         }
     }
 }
@@ -69,7 +69,7 @@
     if (self.fHashes.count > 0)
     {
         [self.fHashes removeAllObjects];
-        NSApp.dockTile.badgeLabel = @"";
+        [[NSApp dockTile] setBadgeLabel:@""];
     }
 }
 

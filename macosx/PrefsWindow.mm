@@ -12,7 +12,9 @@
 {
     [super awakeFromNib];
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
     self.toolbarStyle = NSWindowToolbarStylePreference;
+#endif
 }
 
 - (void)keyDown:(NSEvent*)event

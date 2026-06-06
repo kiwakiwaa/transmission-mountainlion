@@ -41,7 +41,7 @@ tr_session* fLib = NULL;
     {
         if ((fStatsWindowInstance = [[self alloc] init]))
         {
-            fLib = ((Controller*)NSApp.delegate).sessionHandle;
+            fLib = ((Controller*)[NSApp delegate]).sessionHandle;
         }
     }
     return fStatsWindowInstance;

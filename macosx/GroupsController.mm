@@ -397,7 +397,11 @@ GroupsController* fGroupsInstance = nil;
     }
 
     NSPredicate* predicate = [self autoAssignRulesForIndex:index];
-    [predicate allowEvaluation];
+    if ([predicate respondsToSelector:@selector(allowEvaluation)])
+    {
+        [predicate allowEvaluation];
+    }
+
     BOOL eval = NO;
     @try
     {

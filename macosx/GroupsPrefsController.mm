@@ -218,7 +218,7 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
         NSInteger const index = [GroupsController.groups indexForRow:self.fTableView.selectedRow];
         if (result == NSModalResponseOK)
         {
-            NSString* path = panel.URLs[0].path;
+            NSString* path = [(NSURL*)[panel.URLs objectAtIndex:0] path];
             [GroupsController.groups setCustomDownloadLocation:path forIndex:index];
             [GroupsController.groups setUsesCustomDownloadLocation:YES forIndex:index];
         }

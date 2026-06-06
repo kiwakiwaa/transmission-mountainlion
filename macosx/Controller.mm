@@ -566,7 +566,7 @@ static void removeKeRangerRansomware()
                 });
             });
 
-        NSApp.delegate = self;
+        [NSApp setDelegate:self];
 
         //register for magnet URLs (has to be in init)
         [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self
@@ -661,9 +661,10 @@ static void removeKeRangerRansomware()
 
     self.fWindow.movableByWindowBackground = YES;
 
-    self.fTotalTorrentsField.cell.backgroundStyle = NSBackgroundStyleRaised;
+    [[self.fTotalTorrentsField cell] setBackgroundStyle:NSBackgroundStyleRaised];
 
     self.fActionButton.toolTip = NSLocalizedString(@"Shortcuts for changing global settings.", "Main window -> 1st bottom left button (action) tooltip");
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
     if (@available(macOS 26.0, *))
     {
         NSLayoutConstraint* constraint = [self.fActionButton.leadingAnchor constraintEqualToAnchor:self.fActionButton.superview.leadingAnchor
@@ -671,6 +672,7 @@ static void removeKeRangerRansomware()
         constraint.priority = NSLayoutPriorityRequired;
         TRSetConstraintActive(constraint, YES);
     }
+#endif
 
     self.fSpeedLimitButton.toolTip = NSLocalizedString(
         @"Speed Limit overrides the total bandwidth limits with its own limits.",
@@ -681,7 +683,7 @@ static void removeKeRangerRansomware()
         "Main window -> 3rd bottom left button (remove all) tooltip");
 
     [self.fTableView registerForDraggedTypes:@[ kTorrentTableViewDataType ]];
-    [self.fWindow registerForDraggedTypes:@[ NSPasteboardTypeFileURL, NSPasteboardTypeURL ]];
+    [self.fWindow registerForDraggedTypes:@[ TRPasteboardTypeFileURL, TRPasteboardTypeURL ]];
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(layoutMainWindowForLegacyAppKit)
                                                name:NSWindowDidResizeNotification
@@ -878,7 +880,7 @@ static void removeKeRangerRansomware()
         [NSUserDefaults.standardUserDefaults setBool:NO forKey:@"WarningLegal"];
     }
 
-    NSApp.servicesProvider = self;
+    [NSApp setServicesProvider:self];
 
     [PowerManager.shared setDelegate:self];
     [PowerManager.shared start];
@@ -955,8 +957,8 @@ static void removeKeRangerRansomware()
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication*)app hasVisibleWindows:(BOOL)visibleWindows
 {
-    NSWindow* mainWindow = NSApp.mainWindow;
-    if (!mainWindow || !mainWindow.visible)
+    NSWindow* mainWindow = [NSApp mainWindow];
+    if (!mainWindow || ![mainWindow isVisible])
     {
         [self.fWindow makeKeyAndOrderFront:nil];
     }
@@ -1044,7 +1046,7 @@ static void removeKeRangerRansomware()
 
     if (self.fAutoImportTimer)
     {
-        if (self.fAutoImportTimer.valid)
+        if ([self.fAutoImportTimer isValid])
         {
             [self.fAutoImportTimer invalidate];
         }
@@ -1058,15 +1060,15 @@ static void removeKeRangerRansomware()
     [self.fURLDownloadTasks removeAllObjects];
 
     //remember window states
-    [self.fDefaults setBool:self.fInfoController.window.visible forKey:@"InfoVisible"];
+    [self.fDefaults setBool:[self.fInfoController.window isVisible] forKey:@"InfoVisible"];
 
-    if ([QLPreviewPanel sharedPreviewPanelExists] && [QLPreviewPanel sharedPreviewPanel].visible)
+    if ([QLPreviewPanel sharedPreviewPanelExists] && [[QLPreviewPanel sharedPreviewPanel] isVisible])
     {
         [[QLPreviewPanel sharedPreviewPanel] updateController];
     }
 
     // close all windows
-    for (NSWindow* window in NSApp.windows)
+    for (NSWindow* window in [NSApp windows])
     {
         [window close];
     }
@@ -1873,7 +1875,7 @@ static void removeKeRangerRansomware()
             NSUInteger const selected = torrents.count;
             if (selected == 1)
             {
-                NSString* torrentName = torrents[0].name;
+                NSString* torrentName = ((Torrent*)[torrents objectAtIndex:0]).name;
 
                 if (deleteData)
                 {
@@ -2088,7 +2090,7 @@ static void removeKeRangerRansomware()
         NSString *message, *info;
         if (torrents.count == 1)
         {
-            NSString* torrentName = torrents[0].name;
+            NSString* torrentName = ((Torrent*)[torrents objectAtIndex:0]).name;
             message = [NSString
                 stringWithFormat:NSLocalizedString(@"Are you sure you want to remove \"%@\" from the transfer list?", "Remove completed confirm panel -> title"),
                                  torrentName];
@@ -2151,7 +2153,7 @@ static void removeKeRangerRansomware()
     {
         panel.message = [NSString
             stringWithFormat:NSLocalizedString(@"Select the new folder for \"%@\".", "Move torrent -> select destination folder"),
-                             torrents[0].name];
+                             ((Torrent*)[torrents objectAtIndex:0]).name];
     }
     else
     {
@@ -2165,7 +2167,7 @@ static void removeKeRangerRansomware()
         {
             for (Torrent* torrent in torrents)
             {
-                [torrent moveTorrentDataFileTo:panel.URLs[0].path];
+                [torrent moveTorrentDataFileTo:[(NSURL*)[panel.URLs objectAtIndex:0] path]];
             }
         }
     }];
@@ -2303,7 +2305,7 @@ static void removeKeRangerRansomware()
 - (void)showPreferenceWindow:(id)sender
 {
     NSWindow* window = _prefsController.window;
-    if (!window.visible)
+    if (![window isVisible])
     {
         [window center];
     }
@@ -2318,7 +2320,7 @@ static void removeKeRangerRansomware()
 
 - (void)showInfo:(id)sender
 {
-    if (self.fInfoController.window.visible)
+    if ([self.fInfoController.window isVisible])
     {
         [self.fInfoController close];
     }
@@ -2327,8 +2329,7 @@ static void removeKeRangerRansomware()
         [self.fInfoController updateInfoStats];
         [self.fInfoController.window makeKeyAndOrderFront:nil];
 
-        if (self.fInfoController.canQuickLook && [QLPreviewPanel sharedPreviewPanelExists] &&
-            [QLPreviewPanel sharedPreviewPanel].visible)
+        if (self.fInfoController.canQuickLook && [QLPreviewPanel sharedPreviewPanelExists] && [[QLPreviewPanel sharedPreviewPanel] isVisible])
         {
             [[QLPreviewPanel sharedPreviewPanel] reloadData];
         }
@@ -2341,7 +2342,7 @@ static void removeKeRangerRansomware()
 {
     [self.fInfoController setInfoForTorrents:self.fTableView.selectedTorrents];
 
-    if ([QLPreviewPanel sharedPreviewPanelExists] && [QLPreviewPanel sharedPreviewPanel].visible)
+    if ([QLPreviewPanel sharedPreviewPanelExists] && [[QLPreviewPanel sharedPreviewPanel] isVisible])
     {
         [[QLPreviewPanel sharedPreviewPanel] reloadData];
     }
@@ -2399,9 +2400,9 @@ static void removeKeRangerRansomware()
 
     PowerManager.shared.shouldPreventSleep = anyActive && [self.fDefaults boolForKey:@"SleepPrevent"];
 
-    if (!NSApp.hidden)
+    if (![NSApp isHidden])
     {
-        if (self.fWindow.visible)
+        if ([self.fWindow isVisible])
         {
             [self sortTorrentsAndIncludeQueueOrder:NO];
 
@@ -2411,7 +2412,7 @@ static void removeKeRangerRansomware()
         }
 
         //update non-constant parts of info window
-        if (self.fInfoController.window.visible)
+        if ([self.fInfoController.window isVisible])
         {
             [self.fInfoController updateInfoStats];
         }
@@ -2605,7 +2606,7 @@ static void removeKeRangerRansomware()
         [self.fNotificationController deliverDownloadCompleteNotificationWithTorrentName:torrent.name hashString:torrent.hashString
                                                                                 location:location];
 
-        if (!self.fWindow.mainWindow)
+        if (![self.fWindow isMainWindow])
         {
             [self.fBadger addCompletedTorrent:torrent];
         }
@@ -2649,7 +2650,7 @@ static void removeKeRangerRansomware()
     }
     else
     {
-        if (!self.fWindow.mainWindow)
+        if (![self.fWindow isMainWindow])
         {
             [self.fBadger addCompletedTorrent:torrent];
         }
@@ -3401,7 +3402,7 @@ static void removeKeRangerRansomware()
     NSView* senderView = sender;
     CGFloat width = NSWidth(senderView.frame);
 
-    if (NSMinX(self.fWindow.frame) < width || NSMaxX(self.fWindow.screen.visibleFrame) - NSMinX(self.fWindow.frame) < width * 2)
+    if (NSMinX(self.fWindow.frame) < width || NSMaxX([[self.fWindow screen] visibleFrame]) - NSMinX(self.fWindow.frame) < width * 2)
     {
         // Ugly hack to hide NSPopover arrow.
         self.fPositioningView = [[NSView alloc] initWithFrame:senderView.bounds];
@@ -3508,7 +3509,7 @@ static void removeKeRangerRansomware()
         return;
     }
 
-    if (self.fAutoImportTimer.valid)
+    if ([self.fAutoImportTimer isValid])
     {
         [self.fAutoImportTimer invalidate];
     }
@@ -3524,7 +3525,7 @@ static void removeKeRangerRansomware()
 
 - (void)changeAutoImport
 {
-    if (self.fAutoImportTimer.valid)
+    if ([self.fAutoImportTimer isValid])
     {
         [self.fAutoImportTimer invalidate];
     }
@@ -3835,12 +3836,12 @@ static void removeKeRangerRansomware()
 - (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)info
 {
     NSPasteboard* pasteboard = info.draggingPasteboard;
-    if ([pasteboard.types containsObject:NSPasteboardTypeFileURL])
+    if ([pasteboard.types containsObject:TRPasteboardTypeFileURL])
     {
         //check if any torrent files can be added
         BOOL torrent = NO;
         NSArray* files = [pasteboard readObjectsForClasses:@[ NSURL.class ]
-                                                           options:@{ NSPasteboardURLReadingFileURLsOnlyKey : @YES }];
+                                                   options:@{ NSPasteboardURLReadingFileURLsOnlyKey : @YES }];
         for (NSURL* fileToParse in files)
         {
             if ([[NSWorkspace.sharedWorkspace typeOfFile:fileToParse.path error:NULL] isEqualToString:@"org.bittorrent.torrent"] ||
@@ -3878,7 +3879,7 @@ static void removeKeRangerRansomware()
             return NSDragOperationCopy;
         }
     }
-    else if ([pasteboard.types containsObject:NSPasteboardTypeURL])
+    else if ([pasteboard.types containsObject:TRPasteboardTypeURL])
     {
         if (!self.fOverlayWindow)
         {
@@ -3908,13 +3909,13 @@ static void removeKeRangerRansomware()
     }
 
     NSPasteboard* pasteboard = info.draggingPasteboard;
-    if ([pasteboard.types containsObject:NSPasteboardTypeFileURL])
+    if ([pasteboard.types containsObject:TRPasteboardTypeFileURL])
     {
         BOOL torrent = NO, accept = YES;
 
         //create an array of files that can be opened
         NSArray* files = [pasteboard readObjectsForClasses:@[ NSURL.class ]
-                                                           options:@{ NSPasteboardURLReadingFileURLsOnlyKey : @YES }];
+                                                   options:@{ NSPasteboardURLReadingFileURLsOnlyKey : @YES }];
         NSMutableArray* filesToOpen = [NSMutableArray arrayWithCapacity:files.count];
         for (NSURL* file in files)
         {
@@ -3948,7 +3949,7 @@ static void removeKeRangerRansomware()
 
         return accept;
     }
-    else if ([pasteboard.types containsObject:NSPasteboardTypeURL])
+    else if ([pasteboard.types containsObject:TRPasteboardTypeURL])
     {
         NSURL* url;
         if ((url = [NSURL URLFromPasteboard:pasteboard]))
@@ -4173,7 +4174,7 @@ static void removeKeRangerRansomware()
     }
     else
     {
-        if (!self.fWindow.visible)
+        if (![self.fWindow isVisible])
         {
             return NSZeroRect;
         }
@@ -4186,7 +4187,7 @@ static void removeKeRangerRansomware()
 
         NSRect frame = [self.fTableView iconRectForRow:row];
 
-        if (!NSIntersectsRect(self.fTableView.visibleRect, frame))
+        if (!NSIntersectsRect([self.fTableView visibleRect], frame))
         {
             return NSZeroRect;
         }
@@ -4436,7 +4437,7 @@ static void removeKeRangerRansomware()
         NSButton* itemButton = (NSButton*)item.view;
         itemButton.target = self;
         itemButton.action = @selector(showToolbarShare:);
-        [itemButton sendActionOn:NSEventMaskLeftMouseDown];
+        [itemButton sendActionOn:NSLeftMouseDownMask];
 
         return item;
     }
@@ -4575,14 +4576,14 @@ static void removeKeRangerRansomware()
     //set info item
     if ([ident isEqualToString:ToolbarItemIdentifierInfo])
     {
-        ((NSButton*)toolbarItem.view).state = self.fInfoController.window.visible;
+        ((NSButton*)toolbarItem.view).state = [self.fInfoController.window isVisible];
         return YES;
     }
 
     //set filter item
     if ([ident isEqualToString:ToolbarItemIdentifierFilter])
     {
-        BOOL shown = !(self.fFilterBar == nil || self.fFilterBar.isHidden);
+        BOOL shown = !(self.fFilterBar == nil || [self.fFilterBar isHidden]);
         ((NSButton*)toolbarItem.view).state = shown ? NSControlStateValueOn : NSControlStateValueOff;
         return YES;
     }
@@ -4614,7 +4615,7 @@ static void removeKeRangerRansomware()
     }
 
     //only enable some items if it is in a context menu or the window is usable
-    BOOL canUseTable = self.fWindow.keyWindow || menuItem.menu.supermenu != NSApp.mainMenu;
+    BOOL canUseTable = [self.fWindow isKeyWindow] || menuItem.menu.supermenu != [NSApp mainMenu];
 
     //enable open items
     if (action == @selector(openShowSheet:) || action == @selector(openURLShowSheet:))
@@ -4661,7 +4662,7 @@ static void removeKeRangerRansomware()
         }
 
         menuItem.state = [sortType isEqualToString:[self.fDefaults stringForKey:@"Sort"]] ? NSControlStateValueOn : NSControlStateValueOff;
-        return self.fWindow.visible;
+        return [self.fWindow isVisible];
     }
 
     if (action == @selector(setGroup:))
@@ -4685,26 +4686,26 @@ static void removeKeRangerRansomware()
     if (action == @selector(toggleSmallView:))
     {
         menuItem.state = [self.fDefaults boolForKey:@"SmallView"] ? NSControlStateValueOn : NSControlStateValueOff;
-        return self.fWindow.visible;
+        return [self.fWindow isVisible];
     }
 
     if (action == @selector(togglePiecesBar:))
     {
         menuItem.state = [self.fDefaults boolForKey:@"PiecesBar"] ? NSControlStateValueOn : NSControlStateValueOff;
-        return self.fWindow.visible;
+        return [self.fWindow isVisible];
     }
 
     if (action == @selector(toggleAvailabilityBar:))
     {
         menuItem.state = [self.fDefaults boolForKey:@"DisplayProgressBarAvailable"] ? NSControlStateValueOn : NSControlStateValueOff;
-        return self.fWindow.visible;
+        return [self.fWindow isVisible];
     }
 
     //enable show info
     if (action == @selector(showInfo:))
     {
-        NSString* title = self.fInfoController.window.visible ? NSLocalizedString(@"Hide Inspector", "View menu -> Inspector") :
-                                                                NSLocalizedString(@"Show Inspector", "View menu -> Inspector");
+        NSString* title = [self.fInfoController.window isVisible] ? NSLocalizedString(@"Hide Inspector", "View menu -> Inspector") :
+                                                                    NSLocalizedString(@"Show Inspector", "View menu -> Inspector");
         menuItem.title = title;
 
         return YES;
@@ -4713,45 +4714,45 @@ static void removeKeRangerRansomware()
     //enable prev/next inspector tab
     if (action == @selector(setInfoTab:))
     {
-        return self.fInfoController.window.visible;
+        return [self.fInfoController.window isVisible];
     }
 
     //enable toggle status bar
-    BOOL statusBarVisible = self.fStatusBar && !self.fStatusBar.isHidden;
+    BOOL statusBarVisible = self.fStatusBar && ![self.fStatusBar isHidden];
     if (action == @selector(toggleStatusBar:))
     {
         NSString* title = !statusBarVisible ? NSLocalizedString(@"Show Status Bar", "View menu -> Status Bar") :
                                               NSLocalizedString(@"Hide Status Bar", "View menu -> Status Bar");
         menuItem.title = title;
 
-        return self.fWindow.visible;
+        return [self.fWindow isVisible];
     }
 
     //enable toggle filter bar
-    BOOL filterBarVisible = self.fFilterBar && !self.fFilterBar.isHidden;
+    BOOL filterBarVisible = self.fFilterBar && ![self.fFilterBar isHidden];
     if (action == @selector(toggleFilterBar:))
     {
         NSString* title = !filterBarVisible ? NSLocalizedString(@"Show Filter Bar", "View menu -> Filter Bar") :
                                               NSLocalizedString(@"Hide Filter Bar", "View menu -> Filter Bar");
         menuItem.title = title;
 
-        return self.fWindow.visible;
+        return [self.fWindow isVisible];
     }
 
     // enable toggle toolbar
     if (action == @selector(toggleToolbarShown:))
     {
-        NSString* title = !self.fWindow.toolbar.isVisible ? NSLocalizedString(@"Show Toolbar", "View menu -> Toolbar") :
-                                                            NSLocalizedString(@"Hide Toolbar", "View menu -> Toolbar");
+        NSString* title = ![[self.fWindow toolbar] isVisible] ? NSLocalizedString(@"Show Toolbar", "View menu -> Toolbar") :
+                                                                NSLocalizedString(@"Hide Toolbar", "View menu -> Toolbar");
         menuItem.title = title;
 
-        return self.fWindow.visible;
+        return [self.fWindow isVisible];
     }
 
     //enable prev/next filter button
     if (action == @selector(switchFilter:))
     {
-        return self.fWindow.visible && filterBarVisible;
+        return [self.fWindow isVisible] && filterBarVisible;
     }
 
     //enable reveal in finder
@@ -5019,7 +5020,7 @@ static void removeKeRangerRansomware()
 
     if (action == @selector(toggleQuickLook:))
     {
-        BOOL const visible = [QLPreviewPanel sharedPreviewPanelExists] && [QLPreviewPanel sharedPreviewPanel].visible;
+        BOOL const visible = [QLPreviewPanel sharedPreviewPanelExists] && [[QLPreviewPanel sharedPreviewPanel] isVisible];
         //text consistent with Finder
         NSString* title = !visible ? NSLocalizedString(@"Quick Look", "View menu -> Quick Look") :
                                      NSLocalizedString(@"Close Quick Look", "View menu -> Quick Look");
@@ -5399,7 +5400,7 @@ static void removeKeRangerRansomware()
 
 - (void)toggleQuickLook:(id)sender
 {
-    if ([QLPreviewPanel sharedPreviewPanel].visible)
+    if ([[QLPreviewPanel sharedPreviewPanel] isVisible])
     {
         [[QLPreviewPanel sharedPreviewPanel] orderOut:nil];
     }

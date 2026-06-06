@@ -82,9 +82,12 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
     [self.fLevelButton sizeToFit];
 
     //set table column text
-    [self.fMessageTable tableColumnWithIdentifier:@"Date"].headerCell.title = NSLocalizedString(@"Date", "Message window -> table column");
-    [self.fMessageTable tableColumnWithIdentifier:@"Name"].headerCell.title = NSLocalizedString(@"Process", "Message window -> table column");
-    [self.fMessageTable tableColumnWithIdentifier:@"Message"].headerCell.title = NSLocalizedString(@"Message", "Message window -> table column");
+    [[[self.fMessageTable tableColumnWithIdentifier:@"Date"] headerCell]
+        setStringValue:NSLocalizedString(@"Date", "Message window -> table column")];
+    [[[self.fMessageTable tableColumnWithIdentifier:@"Name"] headerCell]
+        setStringValue:NSLocalizedString(@"Process", "Message window -> table column")];
+    [[[self.fMessageTable tableColumnWithIdentifier:@"Message"] headerCell]
+        setStringValue:NSLocalizedString(@"Message", "Message window -> table column")];
 
     //set and size buttons
     self.fSaveButton.title = [NSLocalizedString(@"Save", "Message window -> save button") stringByAppendingEllipsis];
@@ -169,7 +172,7 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
 {
     NSAssert1([identifier isEqualToString:@"MessageWindow"], @"Trying to restore unexpected identifier %@", identifier);
 
-    NSWindow* window = ((Controller*)NSApp.delegate).messageWindowController.window;
+    NSWindow* window = ((Controller*)[NSApp delegate]).messageWindowController.window;
     completionHandler(window, nil);
 }
 
@@ -237,7 +240,7 @@ static NSTimeInterval const kUpdateSeconds = 0.75;
     static NSUInteger currentIndex = 0;
 
     NSScroller* scroller = self.fMessageTable.enclosingScrollView.verticalScroller;
-    BOOL const shouldScroll = currentIndex == 0 || scroller.floatValue == 1.0 || scroller.hidden || scroller.knobProportion == 1.0;
+    BOOL const shouldScroll = currentIndex == 0 || scroller.floatValue == 1.0 || [scroller isHidden] || scroller.knobProportion == 1.0;
 
     NSInteger const maxLevel = [NSUserDefaults.standardUserDefaults integerForKey:@"MessageLevel"];
     NSString* filterString = self.fFilterField.stringValue;

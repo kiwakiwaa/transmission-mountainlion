@@ -75,7 +75,7 @@
     }
     else
     {
-        if (NSApp.currentEvent.modifierFlags & NSEventModifierFlagOption)
+        if ([NSAppCurrentEvent() modifierFlags] & NSEventModifierFlagOption)
         {
             controlImage = [NSImage imageNamed:[@"ResumeNoWait" stringByAppendingString:self.controlImageSuffix]];
         }

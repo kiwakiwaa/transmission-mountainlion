@@ -27,6 +27,20 @@
 #define NSEventModifierFlagCommand NSCommandKeyMask
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101300
+#define TRPasteboardTypeFileURL NSFilenamesPboardType
+#define TRPasteboardTypeURL NSURLPboardType
+#else
+#define TRPasteboardTypeFileURL NSPasteboardTypeFileURL
+#define TRPasteboardTypeURL NSPasteboardTypeURL
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
+#define TRURLQuarantinePropertiesKey @"NSURLQuarantinePropertiesKey"
+#else
+#define TRURLQuarantinePropertiesKey NSURLQuarantinePropertiesKey
+#endif
+
 static inline NSEvent* NSAppCurrentEvent(void)
 {
     return [NSApp currentEvent];
@@ -73,6 +87,12 @@ static inline NSEvent* NSAppCurrentEvent(void)
 
 #ifndef NSMenuItemValidation
 #define NSMenuItemValidation NSUserInterfaceValidations
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+@interface NSPredicate (TRSecureCodingEvaluation)
+- (void)allowEvaluation;
+@end
 #endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101300
