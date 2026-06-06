@@ -4,7 +4,7 @@
 
 #import <AppKit/AppKit.h>
 
-#ifndef NSModalResponseOK
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
 typedef NSInteger NSModalResponse;
 static NSModalResponse const NSModalResponseOK = 1;
 static NSModalResponse const NSModalResponseCancel = 0;

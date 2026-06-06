@@ -32,11 +32,16 @@ static inline NSEvent* NSAppCurrentEvent(void)
     return [NSApp currentEvent];
 }
 
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+
 #ifndef NS_ASSUME_NONNULL_BEGIN
 #define NS_ASSUME_NONNULL_BEGIN
 #define NS_ASSUME_NONNULL_END
 #endif
 
+#if !__has_feature(nullability)
 #ifndef nullable
 #define nullable
 #endif
@@ -51,6 +56,7 @@ static inline NSEvent* NSAppCurrentEvent(void)
 #endif
 #ifndef _Nonnull
 #define _Nonnull
+#endif
 #endif
 
 #ifndef API_AVAILABLE
@@ -69,7 +75,7 @@ static inline NSEvent* NSAppCurrentEvent(void)
 #define NSMenuItemValidation NSUserInterfaceValidations
 #endif
 
-#ifndef NSControlStateValueOn
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101300
 typedef NSInteger NSControlStateValue;
 static NSControlStateValue const NSControlStateValueMixed = NSMixedState;
 static NSControlStateValue const NSControlStateValueOff = NSOffState;

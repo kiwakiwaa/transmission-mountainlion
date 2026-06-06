@@ -4,6 +4,15 @@
 
 #import <Foundation/Foundation.h>
 
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+
+#ifndef NS_ASSUME_NONNULL_BEGIN
+#define NS_ASSUME_NONNULL_BEGIN
+#define NS_ASSUME_NONNULL_END
+#endif
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NSData (NSDataAdditions)

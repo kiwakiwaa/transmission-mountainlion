@@ -4,7 +4,7 @@
 
 #import <Foundation/Foundation.h>
 
-#ifndef NSActivityIdleSystemSleepDisabled
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
 typedef NSUInteger NSActivityOptions;
 #define NSActivityIdleSystemSleepDisabled 0
 #define NSActivityUserInitiatedAllowingIdleSystemSleep 0
