@@ -18,6 +18,21 @@ typedef NS_ENUM(NSUInteger, PopupPriority) {
     PopupPriorityLow = 2,
 };
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+static void TRPrepareLegacySettingsLabel(NSTextField* label)
+{
+    NSTextFieldCell* cell = (NSTextFieldCell*)label.cell;
+    cell.usesSingleLineMode = YES;
+    cell.lineBreakMode = NSLineBreakByTruncatingTail;
+}
+
+static CGFloat TRLegacySettingsLabelWidth(NSTextField* label, CGFloat minimumWidth, CGFloat maximumWidth)
+{
+    CGFloat const measuredWidth = ceil([label.cell cellSize].width);
+    return MIN(MAX(measuredWidth, minimumWidth), maximumWidth);
+}
+#endif
+
 @interface AddWindowController ()
 
 @property(nonatomic) IBOutlet NSImageView* fIconView;
@@ -25,6 +40,9 @@ typedef NS_ENUM(NSUInteger, PopupPriority) {
 @property(nonatomic) IBOutlet NSTextField* fNameField;
 @property(nonatomic) IBOutlet NSTextField* fStatusField;
 @property(nonatomic) IBOutlet NSTextField* fLocationField;
+@property(nonatomic) IBOutlet NSTextField* fDownloadLabel;
+@property(nonatomic) IBOutlet NSTextField* fGroupLabel;
+@property(nonatomic) IBOutlet NSTextField* fPriorityLabel;
 @property(nonatomic) IBOutlet NSButton* fStartCheck;
 @property(nonatomic) IBOutlet NSButton* fDeleteCheck;
 @property(nonatomic) IBOutlet NSPopUpButton* fGroupPopUp;
@@ -224,31 +242,48 @@ typedef NS_ENUM(NSUInteger, PopupPriority) {
     }
 
     CGFloat const width = NSWidth(contentView.bounds);
+    CGFloat const leftMargin = 12.0;
     CGFloat const rightMargin = 12.0;
+    CGFloat const controlGap = 8.0;
     CGFloat const popupWidth = 112.0;
-    CGFloat const labelWidth = 66.0;
     CGFloat const popupX = width - rightMargin - popupWidth;
-    CGFloat const labelX = popupX - 8.0 - labelWidth;
 
-    NSTextField* downloadLabel = (NSTextField*)[self legacySettingsSiblingWithClass:[NSTextField class] title:@"Download to:"
-                                                                             action:NULL];
-    NSTextField* groupLabel = (NSTextField*)[self legacySettingsSiblingWithClass:[NSTextField class] title:@"Group:" action:NULL];
-    NSTextField* priorityLabel = (NSTextField*)[self legacySettingsSiblingWithClass:[NSTextField class] title:@"Priority:"
-                                                                             action:NULL];
+    NSTextField* downloadLabel = self.fDownloadLabel;
+    NSTextField* groupLabel = self.fGroupLabel;
+    NSTextField* priorityLabel = self.fPriorityLabel;
     NSButton* verifyButton = (NSButton*)[self legacySettingsSiblingWithClass:[NSButton class] title:nil
                                                                       action:@selector(verifyLocalData:)];
     NSButton* changeButton = (NSButton*)[self legacySettingsSiblingWithClass:[NSButton class] title:nil
                                                                       action:@selector(setDestination:)];
     NSView* locationBox = self.fLocationField.superview.superview;
 
-    downloadLabel.frame = NSMakeRect(12.0, 68.0, 84.0, 16.0);
+    if (downloadLabel == nil || groupLabel == nil || priorityLabel == nil || verifyButton == nil || changeButton == nil || locationBox == nil)
+    {
+        return;
+    }
+
+    TRPrepareLegacySettingsLabel(downloadLabel);
+    TRPrepareLegacySettingsLabel(groupLabel);
+    TRPrepareLegacySettingsLabel(priorityLabel);
+
+    CGFloat const downloadLabelWidth = TRLegacySettingsLabelWidth(downloadLabel, 84.0, 132.0);
+    CGFloat const locationX = leftMargin + downloadLabelWidth + controlGap;
+
+    downloadLabel.frame = NSMakeRect(leftMargin, 68.0, downloadLabelWidth, 16.0);
     changeButton.frame = NSMakeRect(width - rightMargin - 72.0, 66.0, 72.0, 22.0);
-    locationBox.frame = NSMakeRect(100.0, 64.0, MAX(120.0, NSMinX(changeButton.frame) - 108.0), 24.0);
+    locationBox.frame = NSMakeRect(locationX, 64.0, MAX(120.0, NSMinX(changeButton.frame) - controlGap - locationX), 24.0);
     self.fLocationImageView.frame = NSMakeRect(4.0, 4.0, 16.0, 16.0);
     self.fLocationField.frame = NSMakeRect(24.0, 5.0, MAX(40.0, NSWidth(locationBox.frame) - 42.0), 14.0);
 
-    verifyButton.frame = NSMakeRect(12.0, 36.0, 132.0, 24.0);
-    self.fVerifyIndicator.frame = NSMakeRect(12.0, 16.0, 132.0, 12.0);
+    verifyButton.frame = NSMakeRect(leftMargin, 36.0, 132.0, 24.0);
+    self.fVerifyIndicator.frame = NSMakeRect(leftMargin, 16.0, 132.0, 12.0);
+
+    CGFloat const labelLeftLimit = NSMaxX(verifyButton.frame) + controlGap;
+    CGFloat const availableLabelWidth = MAX(48.0, popupX - controlGap - labelLeftLimit);
+    CGFloat const labelWidth = MIN(MAX(TRLegacySettingsLabelWidth(groupLabel, 66.0, 120.0),
+                                       TRLegacySettingsLabelWidth(priorityLabel, 66.0, 120.0)),
+                                  availableLabelWidth);
+    CGFloat const labelX = popupX - controlGap - labelWidth;
 
     groupLabel.frame = NSMakeRect(labelX, 40.0, labelWidth, 16.0);
     self.fGroupPopUp.frame = NSMakeRect(popupX, 36.0, popupWidth, 24.0);

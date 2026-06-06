@@ -12,11 +12,14 @@
                 <outlet property="fFileController" destination="53" id="57"/>
                 <outlet property="fFileFilterField" destination="112" id="114"/>
                 <outlet property="fFileScrollView" destination="42" id="116"/>
+                <outlet property="fDownloadLabel" destination="10" id="TRD-dl-label"/>
+                <outlet property="fGroupLabel" destination="40" id="TRD-gr-label"/>
                 <outlet property="fGroupPopUp" destination="33" id="39"/>
                 <outlet property="fIconView" destination="3" id="27"/>
                 <outlet property="fLocationField" destination="12" id="25"/>
                 <outlet property="fLocationImageView" destination="11" id="28"/>
                 <outlet property="fNameField" destination="5" id="23"/>
+                <outlet property="fPriorityLabel" destination="84" id="TRD-pr-label"/>
                 <outlet property="fPriorityPopUp" destination="85" id="99"/>
                 <outlet property="fStartCheck" destination="17" id="26"/>
                 <outlet property="fStatusField" destination="4" id="24"/>
