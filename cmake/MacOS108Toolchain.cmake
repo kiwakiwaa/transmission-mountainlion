@@ -25,6 +25,25 @@ foreach(_tr_macos_10_8_prefix IN LISTS CMAKE_PREFIX_PATH)
     list(APPEND _tr_macos_10_8_tool_paths "${_tr_macos_10_8_prefix}/bin")
 endforeach()
 
+if(DEFINED ENV{DEVELOPER_DIR})
+    file(TO_CMAKE_PATH "$ENV{DEVELOPER_DIR}" _tr_macos_10_8_developer_dir)
+    if(EXISTS "${_tr_macos_10_8_developer_dir}/usr/bin")
+        list(APPEND _tr_macos_10_8_tool_paths "${_tr_macos_10_8_developer_dir}/usr/bin")
+    endif()
+endif()
+
+if(EXISTS "/Applications/Xcode.app/Contents/Developer/usr/bin")
+    list(APPEND _tr_macos_10_8_tool_paths "/Applications/Xcode.app/Contents/Developer/usr/bin")
+endif()
+
+if(_tr_macos_10_8_tool_paths)
+    list(REMOVE_DUPLICATES _tr_macos_10_8_tool_paths)
+    list(APPEND CMAKE_PROGRAM_PATH ${_tr_macos_10_8_tool_paths})
+    list(REMOVE_DUPLICATES CMAKE_PROGRAM_PATH)
+    set(CMAKE_PROGRAM_PATH "${CMAKE_PROGRAM_PATH}"
+        CACHE STRING "Program search paths for the OS X 10.8 compatibility build")
+endif()
+
 if(CMAKE_PREFIX_PATH)
     set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}"
         CACHE STRING "Installation prefixes for dependency lookup")
