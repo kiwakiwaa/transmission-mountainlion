@@ -4232,10 +4232,22 @@ static void removeKeRangerRansomware()
 {
     ButtonToolbarItem* item = [[klass alloc] initWithItemIdentifier:ident];
 
-    NSButton* button = [[NSButton alloc] init];
+    NSButton* button;
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    button = [[NSButton alloc] initWithFrame:NSMakeRect(0.0, 0.0, 32.0, 25.0)];
+#else
+    button = [[NSButton alloc] init];
+#endif
     button.bezelStyle = NSBezelStyleTexturedRounded;
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    button.imagePosition = NSImageOnly;
+#endif
     button.stringValue = @"";
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+    item.minSize = button.frame.size;
+    item.maxSize = button.frame.size;
+#endif
     item.view = button;
 
     return item;
@@ -4322,7 +4334,9 @@ static void removeKeRangerRansomware()
 
         NSSegmentedControl* segmentedControl = [[NSSegmentedControl alloc] initWithFrame:NSZeroRect];
         segmentedControl.segmentStyle = NSSegmentStyleTexturedRounded;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
         segmentedControl.trackingMode = NSSegmentSwitchTrackingMomentary;
+#endif
         segmentedControl.segmentCount = 2;
 
         TRSetSegmentTag(segmentedControl, ToolbarGroupTagPause, ToolbarGroupTagPause);
@@ -4332,12 +4346,17 @@ static void removeKeRangerRansomware()
         TRSetSegmentTag(segmentedControl, ToolbarGroupTagResume, ToolbarGroupTagResume);
         [segmentedControl setImage:TRImageForSystemSymbol(@"arrow.clockwise.circle.fill", nil) forSegment:ToolbarGroupTagResume];
         TRSetSegmentToolTip(segmentedControl, NSLocalizedString(@"Resume all transfers", "All toolbar item -> tooltip"), ToolbarGroupTagResume);
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+        [segmentedControl setWidth:32 forSegment:ToolbarGroupTagPause];
+        [segmentedControl setWidth:32 forSegment:ToolbarGroupTagResume];
+#else
         if ([toolbar isKindOfClass:Toolbar.class] && ((Toolbar*)toolbar).isRunningCustomizationPalette)
         {
             // On macOS 13.2, the palette autolayout will hang unless the segmentedControl width is longer than the groupItem paletteLabel (matters especially in Russian and French).
             [segmentedControl setWidth:64 forSegment:ToolbarGroupTagPause];
             [segmentedControl setWidth:64 forSegment:ToolbarGroupTagResume];
         }
+#endif
 
         groupItem.label = NSLocalizedString(@"Apply All", "All toolbar item -> label");
         groupItem.paletteLabel = NSLocalizedString(@"Pause / Resume All", "All toolbar item -> palette label");
@@ -4363,7 +4382,9 @@ static void removeKeRangerRansomware()
 
         NSSegmentedControl* segmentedControl = [[NSSegmentedControl alloc] initWithFrame:NSZeroRect];
         segmentedControl.segmentStyle = NSSegmentStyleTexturedRounded;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
         segmentedControl.trackingMode = NSSegmentSwitchTrackingMomentary;
+#endif
         segmentedControl.segmentCount = 2;
 
         TRSetSegmentTag(segmentedControl, ToolbarGroupTagPause, ToolbarGroupTagPause);
@@ -4373,12 +4394,17 @@ static void removeKeRangerRansomware()
         TRSetSegmentTag(segmentedControl, ToolbarGroupTagResume, ToolbarGroupTagResume);
         [segmentedControl setImage:TRImageForSystemSymbol(@"arrow.clockwise", nil) forSegment:ToolbarGroupTagResume];
         TRSetSegmentToolTip(segmentedControl, NSLocalizedString(@"Resume selected transfers", "Selected toolbar item -> tooltip"), ToolbarGroupTagResume);
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+        [segmentedControl setWidth:32 forSegment:ToolbarGroupTagPause];
+        [segmentedControl setWidth:32 forSegment:ToolbarGroupTagResume];
+#else
         if ([toolbar isKindOfClass:Toolbar.class] && ((Toolbar*)toolbar).isRunningCustomizationPalette)
         {
             // On macOS 13.2, the palette autolayout will hang unless the segmentedControl width is longer than the groupItem paletteLabel (matters especially in Russian and French).
             [segmentedControl setWidth:64 forSegment:ToolbarGroupTagPause];
             [segmentedControl setWidth:64 forSegment:ToolbarGroupTagResume];
         }
+#endif
 
         groupItem.label = NSLocalizedString(@"Apply Selected", "Selected toolbar item -> label");
         groupItem.paletteLabel = NSLocalizedString(@"Pause / Resume Selected", "Selected toolbar item -> palette label");

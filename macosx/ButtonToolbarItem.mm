@@ -6,6 +6,50 @@
 
 @implementation ButtonToolbarItem
 
+- (void)applyStateToButton
+{
+    if (![self.view isKindOfClass:[NSButton class]])
+    {
+        return;
+    }
+
+    NSButton* button = (NSButton*)self.view;
+    button.image = self.image;
+    button.target = self.target;
+    button.action = self.action;
+    button.enabled = self.enabled;
+}
+
+- (void)setView:(NSView*)view
+{
+    [super setView:view];
+    [self applyStateToButton];
+}
+
+- (void)setImage:(NSImage*)image
+{
+    [super setImage:image];
+    [self applyStateToButton];
+}
+
+- (void)setTarget:(id)target
+{
+    [super setTarget:target];
+    [self applyStateToButton];
+}
+
+- (void)setAction:(SEL)action
+{
+    [super setAction:action];
+    [self applyStateToButton];
+}
+
+- (void)setEnabled:(BOOL)enabled
+{
+    [super setEnabled:enabled];
+    [self applyStateToButton];
+}
+
 - (void)validate
 {
     self.enabled = [self.target validateToolbarItem:self];

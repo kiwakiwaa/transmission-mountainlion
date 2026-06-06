@@ -6,6 +6,43 @@
 
 @implementation GroupToolbarItem
 
+- (void)applyStateToControl
+{
+    if (![self.view isKindOfClass:[NSControl class]])
+    {
+        return;
+    }
+
+    NSControl* control = (NSControl*)self.view;
+    control.target = self.target;
+    control.action = self.action;
+    control.enabled = self.enabled;
+}
+
+- (void)setView:(NSView*)view
+{
+    [super setView:view];
+    [self applyStateToControl];
+}
+
+- (void)setTarget:(id)target
+{
+    [super setTarget:target];
+    [self applyStateToControl];
+}
+
+- (void)setAction:(SEL)action
+{
+    [super setAction:action];
+    [self applyStateToControl];
+}
+
+- (void)setEnabled:(BOOL)enabled
+{
+    [super setEnabled:enabled];
+    [self applyStateToControl];
+}
+
 - (void)validate
 {
     NSSegmentedControl* control = (NSSegmentedControl*)self.view;
