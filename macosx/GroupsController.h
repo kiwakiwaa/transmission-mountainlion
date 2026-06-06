@@ -35,6 +35,9 @@
 - (NSPredicate*)autoAssignRulesForIndex:(NSInteger)index;
 - (void)setAutoAssignRules:(NSPredicate*)predicate forIndex:(NSInteger)index;
 
+- (NSString*)announcedClientIdentityForIndex:(NSInteger)index;
+- (void)setAnnouncedClientIdentity:(NSString*)identity forIndex:(NSInteger)index;
+
 - (void)addNewGroup;
 - (void)removeGroupWithRowIndex:(NSInteger)row;
 

@@ -23,6 +23,8 @@ target_sources(${TR_NAME}
     PRIVATE
         announce-list.cc
         announce-list.h
+        announced-client-identity.cc
+        announced-client-identity.h
         announcer-common.h
         announcer-http.cc
         announcer-udp.cc

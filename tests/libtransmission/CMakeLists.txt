@@ -5,6 +5,7 @@ add_executable(libtransmission-test)
 target_sources(libtransmission-test
     PRIVATE
         announce-list-test.cc
+        announced-client-identity-test.cc
         announcer-test.cc
         announcer-udp-test.cc
         api-compat-test.cc

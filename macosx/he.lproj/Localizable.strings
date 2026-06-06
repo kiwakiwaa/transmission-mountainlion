@@ -1168,3 +1168,5 @@
 /* Inspector -> peer -> status */
 "You want to download, but peer does not want to send (interested and choked)" = "אנחנו מעוניינים להוריד, אך העמית לא מעוניין לשלוח (מעוניינים אך נבלמנו)";
 
+/* Groups preferences -> announced client identity */
+"Real (%@)" = "אמיתי (%@)";

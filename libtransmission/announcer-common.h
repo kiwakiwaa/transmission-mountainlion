@@ -91,6 +91,9 @@ struct tr_announce_request
      * this changes when a torrent is stopped -> restarted. */
     tr_peer_id_t peer_id;
 
+    /* optional user agent for HTTP announces */
+    std::string announce_user_agent;
+
     /* the torrent's info_hash */
     tr_sha1_digest_t info_hash;
 

@@ -24,6 +24,7 @@
 #include <sigslot/signal.hpp>
 
 #include "libtransmission/announce-list.h"
+#include "libtransmission/announced-client-identity.h"
 #include "libtransmission/bandwidth.h"
 #include "libtransmission/bitfield.h"
 #include "libtransmission/block-info.h"
@@ -958,6 +959,11 @@ struct tr_torrent
         return peer_id_;
     }
 
+    [[nodiscard]] std::string_view announced_client_identity_id() const noexcept;
+    bool set_announced_client_identity(std::string_view identity_id);
+    [[nodiscard]] std::string_view announce_user_agent() const noexcept;
+    [[nodiscard]] std::string_view extended_protocol_client_version() const noexcept;
+
     void on_block_received(tr_block_index_t block);
 
     [[nodiscard]] constexpr auto& error() noexcept
@@ -1402,6 +1408,8 @@ private:
      * and in the handshake are expected to match.
      */
     tr_peer_id_t peer_id_ = tr_peerIdInit();
+    tr_announced_client_identity const* announced_client_identity_ = &tr_announced_client_identity_real();
+    tr_announced_client_identity const* active_announced_client_identity_ = &tr_announced_client_identity_real();
 
     time_t date_active_ = 0;
     time_t date_added_ = 0;

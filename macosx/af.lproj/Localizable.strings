@@ -1168,3 +1168,5 @@
 /* Inspector -> peer -> status */
 "You want to download, but peer does not want to send (interested and choked)" = "U wil aflaai maar die eweknie wil niks stuur nie (stel belang en gewurg)";
 
+/* Groups preferences -> announced client identity */
+"Real (%@)" = "Werklik (%@)";

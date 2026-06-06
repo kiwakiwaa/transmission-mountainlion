@@ -10,6 +10,7 @@
 #include <cstddef> // size_t
 #include <ctime>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <ranges>
 #include <string>
@@ -22,6 +23,7 @@
 
 #include "libtransmission/transmission.h"
 
+#include "libtransmission/announced-client-identity.h"
 #include "libtransmission/announcer.h"
 #include "libtransmission/bandwidth.h"
 #include "libtransmission/completion.h"
@@ -234,6 +236,62 @@ bool tr_torrentIsSeedRatioDone(tr_torrent const* tor)
     return tr_torrentGetSeedRatioBytes(tor, &bytes_left, nullptr) && bytes_left == 0;
 }
 } // namespace
+
+std::string_view tr_torrent::announced_client_identity_id() const noexcept
+{
+    return announced_client_identity_->id;
+}
+
+bool tr_torrent::set_announced_client_identity(std::string_view identity_id)
+{
+    auto const* const identity = tr_announced_client_identity_find(identity_id);
+
+    if (identity == nullptr)
+    {
+        return false;
+    }
+
+    if (identity == announced_client_identity_)
+    {
+        return true;
+    }
+
+    announced_client_identity_ = identity;
+
+    if (!is_running())
+    {
+        active_announced_client_identity_ = identity;
+        std::copy_n(std::data(identity->peer_id_prefix), std::size(identity->peer_id_prefix), std::data(peer_id_));
+    }
+
+    set_dirty();
+    return true;
+}
+
+std::string_view tr_torrent::announce_user_agent() const noexcept
+{
+    return active_announced_client_identity_->http_user_agent;
+}
+
+std::string_view tr_torrent::extended_protocol_client_version() const noexcept
+{
+    return active_announced_client_identity_->ltep_client;
+}
+
+char const* tr_torrentGetAnnouncedClientIdentity(tr_torrent const* torrent)
+{
+    tr_return_val_if_fail(tr_isTorrent(torrent), "real");
+
+    return std::data(torrent->announced_client_identity_id());
+}
+
+bool tr_torrentSetAnnouncedClientIdentity(tr_torrent* torrent, char const* identity_id)
+{
+    tr_return_val_if_fail(tr_isTorrent(torrent), false);
+
+    auto const identity_id_sv = identity_id != nullptr ? std::string_view{ identity_id } : std::string_view{};
+    return torrent->set_announced_client_identity(identity_id_sv);
+}
 
 // --- PER-TORRENT UL / DL SPEEDS
 
@@ -672,6 +730,12 @@ void tr_torrent::start_in_session_thread()
     recheck_completeness();
     set_is_queued(false);
 
+    active_announced_client_identity_ = announced_client_identity_;
+    std::copy_n(
+        std::data(active_announced_client_identity_->peer_id_prefix),
+        std::size(active_announced_client_identity_->peer_id_prefix),
+        std::data(peer_id_));
+
     time_t const now = tr_time();
 
     is_running_ = true;
@@ -712,6 +776,12 @@ void tr_torrent::stop_now()
 
     stopped_(this);
     session->announcer_->stopTorrent(this);
+
+    active_announced_client_identity_ = announced_client_identity_;
+    std::copy_n(
+        std::data(active_announced_client_identity_->peer_id_prefix),
+        std::size(active_announced_client_identity_->peer_id_prefix),
+        std::data(peer_id_));
 
     session->close_torrent_files(id());
 

@@ -1168,3 +1168,5 @@
 /* Inspector -> peer -> status */
 "You want to download, but peer does not want to send (interested and choked)" = "Szeretne letölteni, de a partner nem szeretne küldeni (érdeklődő és elfojtott)";
 
+/* Groups preferences -> announced client identity */
+"Real (%@)" = "Valódi (%@)";
