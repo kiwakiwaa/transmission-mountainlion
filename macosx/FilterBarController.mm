@@ -24,7 +24,11 @@ typedef NS_ENUM(NSInteger, FilterTypeTag) {
     FilterTypeTagTracker = 402,
 };
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
+@interface FilterBarController ()<NSSearchFieldDelegate>
+#else
 @interface FilterBarController ()<NSTextFieldDelegate>
+#endif
 
 @property(nonatomic) IBOutlet FilterButton* fNoFilterButton;
 @property(nonatomic) IBOutlet FilterButton* fActiveFilterButton;

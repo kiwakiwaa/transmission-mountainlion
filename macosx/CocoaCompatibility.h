@@ -12,18 +12,16 @@
 #import "LegacySymbols.h"
 #import "LegacyTitlebarAccessory.h"
 
-#ifndef NSBezelStyleTexturedRounded
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
 #define NSBezelStyleTexturedRounded NSTexturedRoundedBezelStyle
 #endif
 
-#ifndef NSBackgroundStyleEmphasized
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
 #define NSBackgroundStyleEmphasized NSBackgroundStyleDark
 #endif
 
-#ifndef NSEventModifierFlagOption
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
 #define NSEventModifierFlagOption NSAlternateKeyMask
-#endif
-#ifndef NSEventModifierFlagCommand
 #define NSEventModifierFlagCommand NSCommandKeyMask
 #endif
 
@@ -102,35 +100,28 @@ static NSControlStateValue const NSControlStateValueOff = NSOffState;
 static NSControlStateValue const NSControlStateValueOn = NSOnState;
 #endif
 
-#ifndef NSAlertStyleWarning
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
 #define NSAlertStyleWarning NSWarningAlertStyle
-#endif
-
-#ifndef NSAlertStyleCritical
 #define NSAlertStyleCritical NSCriticalAlertStyle
+#define NSAlertStyleInformational NSInformationalAlertStyle
 #endif
 
-#ifndef NSAlertStyleInformational
-#define NSAlertStyleInformational NSInformationalAlertStyle
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
+#define TRFullScreenWindowMask NSFullScreenWindowMask
+#define TRLeftMouseDownMask NSLeftMouseDownMask
+#else
+#define TRFullScreenWindowMask NSWindowStyleMaskFullScreen
+#define TRLeftMouseDownMask NSEventMaskLeftMouseDown
 #endif
 
 #ifndef NSWindowCollectionBehaviorFullScreenNone
 #define NSWindowCollectionBehaviorFullScreenNone 0
 #endif
 
-#ifndef NSCompositingOperationSourceOver
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
 #define NSCompositingOperationSourceOver NSCompositeSourceOver
-#endif
-
-#ifndef NSCompositingOperationSourceAtop
 #define NSCompositingOperationSourceAtop NSCompositeSourceAtop
-#endif
-
-#ifndef NSCompositingOperationSourceIn
 #define NSCompositingOperationSourceIn NSCompositeSourceIn
-#endif
-
-#ifndef NSCompositingOperationCopy
 #define NSCompositingOperationCopy NSCompositeCopy
 #endif
 
@@ -151,12 +142,8 @@ typedef NS_ENUM(NSInteger, NSColorWellStyle) {
 
 NS_ASSUME_NONNULL_END
 
-#ifndef NSTextAlignmentRight
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
 #define NSTextAlignmentRight NSRightTextAlignment
-#endif
-#ifndef NSTextAlignmentCenter
 #define NSTextAlignmentCenter NSCenterTextAlignment
-#endif
-#ifndef NSTextAlignmentLeft
 #define NSTextAlignmentLeft NSLeftTextAlignment
 #endif

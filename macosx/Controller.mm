@@ -4478,7 +4478,7 @@ static void removeKeRangerRansomware()
         NSButton* itemButton = (NSButton*)item.view;
         itemButton.target = self;
         itemButton.action = @selector(showToolbarShare:);
-        [itemButton sendActionOn:NSLeftMouseDownMask];
+        [itemButton sendActionOn:TRLeftMouseDownMask];
 
         return item;
     }
@@ -5404,7 +5404,7 @@ static void removeKeRangerRansomware()
 
 - (BOOL)isFullScreen
 {
-    return (self.fWindow.styleMask & NSFullScreenWindowMask) == NSFullScreenWindowMask;
+    return (self.fWindow.styleMask & TRFullScreenWindowMask) == TRFullScreenWindowMask;
 }
 
 - (void)windowWillEnterFullScreen:(NSNotification*)notification

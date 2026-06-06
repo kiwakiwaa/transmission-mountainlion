@@ -3,6 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "TorrentCellControlButton.h"
+#import "CocoaCompatibility.h"
 #import "TorrentTableView.h"
 #import "Torrent.h"
 #import "TorrentCell.h"

@@ -172,6 +172,8 @@ BlocklistDownloader* fBLDownloader = nil;
     NSURLRequest* request = [NSURLRequest requestWithURL:url];
     self.fTask = [TRURLRequestTask downloadTaskWithRequest:request
         progressHandler:^(long long bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite) {
+            (void)bytesWritten;
+
             dispatch_async(dispatch_get_main_queue(), ^{
                 self.fState = BlocklistDownloadStateDownloading;
 

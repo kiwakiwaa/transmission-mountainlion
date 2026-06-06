@@ -15,7 +15,11 @@
 static NSString* const kAnimationIdKey = @"animationId";
 static NSString* const kWebSeedAnimationId = @"webSeed";
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+@interface InfoPeersViewController ()<CAAnimationDelegate>
+#else
 @interface InfoPeersViewController ()
+#endif
 
 @property(nonatomic, copy) NSArray* fTorrents;
 
