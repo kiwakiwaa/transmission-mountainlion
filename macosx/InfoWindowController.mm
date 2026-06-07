@@ -566,9 +566,13 @@ typedef NS_ENUM(NSUInteger, TabTag) {
                                      [NSString stringWithFormat:NSLocalizedString(@"%@ total", "Inspector -> selected torrents"),
                                                                 [NSString stringForFileSize:size]]];
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
                 NSByteCountFormatter* formatter = [[NSByteCountFormatter alloc] init];
                 formatter.allowedUnits = NSByteCountFormatterUseBytes;
                 self.fBasicInfoField.toolTip = [formatter stringFromByteCount:size];
+#else
+                self.fBasicInfoField.toolTip = [NSString stringWithFormat:@"%llu bytes", static_cast<unsigned long long>(size)];
+#endif
             }
             else
             {
@@ -621,9 +625,13 @@ typedef NS_ENUM(NSUInteger, TabTag) {
             }
             self.fBasicInfoField.stringValue = basicString;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
             NSByteCountFormatter* formatter = [[NSByteCountFormatter alloc] init];
             formatter.allowedUnits = NSByteCountFormatterUseBytes;
             self.fBasicInfoField.toolTip = [formatter stringFromByteCount:torrent.size];
+#else
+            self.fBasicInfoField.toolTip = [NSString stringWithFormat:@"%llu bytes", static_cast<unsigned long long>(torrent.size)];
+#endif
         }
         else
         {

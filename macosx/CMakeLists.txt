@@ -104,6 +104,7 @@ target_sources(${TR_NAME}-mac
         CocoaCompatibility.mm
         ColorTextField.h
         ColorTextField.mm
+        ObjectiveCCompatibility.h
         Controller.h
         Controller.mm
         CreatorWindowController.h

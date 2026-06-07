@@ -4,6 +4,8 @@
 
 #import <AppKit/AppKit.h>
 
+#import "ObjectiveCCompatibility.h"
+
 #import "LegacyColors.h"
 #import "LegacyConstraints.h"
 #import "LegacyPowerActivity.h"

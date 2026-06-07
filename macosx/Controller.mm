@@ -146,6 +146,7 @@ static void initUnits()
 {
     using Config = tr::Values::Config;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
     // use a random value to avoid possible pluralization issues with 1 or 0 (an example is if we use 1 for bytes,
     // we'd get "byte" when we'd want "bytes" for the generic libtransmission value at least)
     int const ArbitraryPluralNumber = 17;
@@ -163,6 +164,13 @@ static void initUnits()
     NSString* g_str = [unitFormatter stringFromByteCount:ArbitraryPluralNumber];
     unitFormatter.allowedUnits = NSByteCountFormatterUseTB;
     NSString* t_str = [unitFormatter stringFromByteCount:ArbitraryPluralNumber];
+#else
+    NSString* b_str = @"bytes";
+    NSString* k_str = @"KB";
+    NSString* m_str = @"MB";
+    NSString* g_str = @"GB";
+    NSString* t_str = @"TB";
+#endif
     Config::memory = { Config::Base::Kilo, b_str.UTF8String, k_str.UTF8String,
                        m_str.UTF8String,   g_str.UTF8String, t_str.UTF8String };
     Config::storage = { Config::Base::Kilo, b_str.UTF8String, k_str.UTF8String,
