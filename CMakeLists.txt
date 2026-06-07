@@ -8,7 +8,7 @@ endif()
 
 # Value should follow latest stable Xcode's RECOMMENDED_MACOSX_DEPLOYMENT_TARGET
 set(MACOS_SUPPORT_MINIMUM 11.0)
-set(TR_MACOS_LEGACY_SUPPORT_MINIMUM 10.8)
+set(TR_MACOS_LEGACY_SUPPORT_MINIMUM 10.6)
 
 # The value of this variable should be set prior to the first project() command invocation.
 # See: https://cmake.org/cmake/help/latest/variable/CMAKE_OSX_DEPLOYMENT_TARGET.html

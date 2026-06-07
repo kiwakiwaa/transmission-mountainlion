@@ -13,7 +13,7 @@ cmake --preset macos-10.8
 cmake --build --preset macos-10.8
 ```
 
-The preset uses `cmake/MacOS108Toolchain.cmake`.
+The preset uses `cmake/MacOSLegacyToolchain.cmake` with a 10.8 deployment target and SDK.
 
 Override nonstandard paths with:
 

@@ -3,8 +3,17 @@ if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS TR_MACOS_LEGACY_SUPPORT_MINIMUM)
     message(FATAL_ERROR "Targeting macOS versions before ${TR_MACOS_LEGACY_SUPPORT_MINIMUM} is not supported for the macOS project, please adjust CMAKE_OSX_DEPLOYMENT_TARGET (${CMAKE_OSX_DEPLOYMENT_TARGET})")
 endif()
 
-find_program(ACTOOL_EXECUTABLE actool REQUIRED)
+set(TR_MACOS_USE_SOURCE_IMAGE_ASSETS OFF)
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.7)
+    set(TR_MACOS_USE_SOURCE_IMAGE_ASSETS ON)
+endif()
+
 find_program(CODESIGN_EXECUTABLE codesign REQUIRED)
+if(TR_MACOS_USE_SOURCE_IMAGE_ASSETS)
+    find_program(SIPS_EXECUTABLE sips REQUIRED)
+else()
+    find_program(ACTOOL_EXECUTABLE actool REQUIRED)
+endif()
 
 set(MAC_BUNDLE_NAME Transmission)
 
@@ -355,35 +364,55 @@ endforeach()
 set(COMPILED_IMAGE_ASSETS
     "${CMAKE_CURRENT_BINARY_DIR}/${APPICON_NAME}.icns")
 
-if(TR_MACOS_LEGACY_COMPAT)
+if(TR_MACOS_USE_SOURCE_IMAGE_ASSETS)
+    set(TR_LEGACY_IMAGE_ASSET_COMMANDS)
     foreach(IMG IN LISTS IMAGESETS)
         list(APPEND COMPILED_IMAGE_ASSETS
             "${CMAKE_CURRENT_BINARY_DIR}/${IMG}.png"
             "${CMAKE_CURRENT_BINARY_DIR}/${IMG}@2x.png")
+        list(APPEND TR_LEGACY_IMAGE_ASSET_COMMANDS
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_CURRENT_SOURCE_DIR}/${IMAGE_ASSETS_DIR}/${IMG}.imageset/${IMG}.png"
+                "${CMAKE_CURRENT_BINARY_DIR}/${IMG}.png"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_CURRENT_SOURCE_DIR}/${IMAGE_ASSETS_DIR}/${IMG}.imageset/${IMG}@2x.png"
+                "${CMAKE_CURRENT_BINARY_DIR}/${IMG}@2x.png")
     endforeach()
+    add_custom_command(
+        OUTPUT ${COMPILED_IMAGE_ASSETS}
+        COMMAND
+            ${SIPS_EXECUTABLE}
+            -s format icns
+            "${CMAKE_CURRENT_SOURCE_DIR}/${APPICONSET_DIR}/icon_512x512.png"
+            --out "${CMAKE_CURRENT_BINARY_DIR}/${APPICON_NAME}.icns"
+        ${TR_LEGACY_IMAGE_ASSET_COMMANDS}
+        DEPENDS ${IMAGE_ASSETS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        VERBATIM)
+    source_group("Generated Files"
+        FILES ${COMPILED_IMAGE_ASSETS})
 else()
     list(APPEND COMPILED_IMAGE_ASSETS
         "${CMAKE_CURRENT_BINARY_DIR}/Assets.car")
+    add_custom_command(
+        OUTPUT
+            ${COMPILED_IMAGE_ASSETS}
+            ${APPICON_NAME}.Info.plist
+        COMMAND
+            ${ACTOOL_EXECUTABLE}
+            --compile "${CMAKE_CURRENT_BINARY_DIR}"
+            --platform macosx
+            --minimum-deployment-target ${CMAKE_OSX_DEPLOYMENT_TARGET}
+            --app-icon ${APPICON_NAME}
+            --output-partial-info-plist "${CMAKE_CURRENT_BINARY_DIR}/${APPICON_NAME}.Info.plist"
+            ${IMAGE_ASSETS_DIR}
+        DEPENDS ${IMAGE_ASSETS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    source_group("Generated Files"
+        FILES
+            ${COMPILED_IMAGE_ASSETS}
+            ${APPICON_NAME}.Info.plist)
 endif()
-
-add_custom_command(
-    OUTPUT
-        ${COMPILED_IMAGE_ASSETS}
-        ${APPICON_NAME}.Info.plist
-    COMMAND
-        ${ACTOOL_EXECUTABLE}
-        --compile "${CMAKE_CURRENT_BINARY_DIR}"
-        --platform macosx
-        --minimum-deployment-target ${CMAKE_OSX_DEPLOYMENT_TARGET}
-        --app-icon ${APPICON_NAME}
-        --output-partial-info-plist "${CMAKE_CURRENT_BINARY_DIR}/${APPICON_NAME}.Info.plist"
-        ${IMAGE_ASSETS_DIR}
-    DEPENDS ${IMAGE_ASSETS}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-source_group("Generated Files"
-    FILES
-        ${COMPILED_IMAGE_ASSETS}
-        ${APPICON_NAME}.Info.plist)
 
 list(APPEND RESOURCES
     ${COMPILED_IMAGE_ASSETS})
