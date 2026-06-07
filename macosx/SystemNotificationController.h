@@ -17,7 +17,7 @@
 
 @interface SystemNotificationController : NSObject
 
-@property(nonatomic, weak) id<SystemNotificationControllerDelegate> delegate;
+@property(nonatomic, TR_OBJC_WEAK) id<SystemNotificationControllerDelegate> delegate;
 
 - (void)configureUserNotifications;
 - (void)handleLaunchNotificationFromApplicationNotification:(NSNotification*)notification;

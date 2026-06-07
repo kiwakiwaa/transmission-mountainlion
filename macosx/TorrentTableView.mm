@@ -25,7 +25,7 @@
 #import "ProgressBarView.h"
 
 @interface LegacyTorrentTableCell : NSCell
-@property(nonatomic, weak) TorrentTableView* tableView;
+@property(nonatomic, TR_OBJC_WEAK) TorrentTableView* tableView;
 @property(nonatomic, strong) id legacyObjectValue;
 @end
 

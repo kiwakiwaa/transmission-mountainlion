@@ -37,7 +37,7 @@ static UNNotificationCategoryOptions const UNNotificationCategoryOptionNone = 0;
 extern NSString* const UNNotificationDefaultActionIdentifier;
 
 @interface UNUserNotificationCenter : NSObject
-@property(nonatomic, weak) id delegate;
+@property(nonatomic, TR_OBJC_WEAK) id delegate;
 + (UNUserNotificationCenter*)currentNotificationCenter;
 - (void)setNotificationCategories:(NSSet*)categories;
 - (void)requestAuthorizationWithOptions:(UNAuthorizationOptions)options

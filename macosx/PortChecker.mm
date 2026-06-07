@@ -9,7 +9,7 @@ static NSTimeInterval const kCheckFireInterval = 3.0;
 
 @interface PortChecker ()
 
-@property(nonatomic, weak) NSObject<PortCheckerDelegate>* fDelegate;
+@property(nonatomic, TR_OBJC_WEAK) NSObject<PortCheckerDelegate>* fDelegate;
 @property(nonatomic) PortStatus fStatus;
 @property(nonatomic) TRURLRequestTask* fTask;
 

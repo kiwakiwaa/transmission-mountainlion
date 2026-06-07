@@ -670,7 +670,7 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
     __block NSUInteger retIndex = NSNotFound;
 
     using FindFileNode = void (^)(FileListNode*, NSArray*, NSIndexSet*, FileListNode*);
-    __weak __block FindFileNode weakFindFileNode;
+    __block TR_OBJC_WEAK_REF FindFileNode weakFindFileNode;
     FindFileNode findFileNode;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"

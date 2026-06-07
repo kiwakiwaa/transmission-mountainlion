@@ -146,7 +146,7 @@ extern NSString const* VDKQueueAccessRevocationNotification;
 - (void)removePath:(NSString*)aPath;
 - (void)removeAllPaths;
 
-@property(nonatomic, weak) id<VDKQueueDelegate> delegate;
+@property(nonatomic, TR_OBJC_WEAK) id<VDKQueueDelegate> delegate;
 
 /// By default, notifications are posted only if there is no delegate set. Set this value to YES to have notes posted even when there is a delegate.
 @property(nonatomic, assign) BOOL alwaysPostNotifications;

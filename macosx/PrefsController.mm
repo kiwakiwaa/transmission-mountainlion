@@ -864,7 +864,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
 
 - (IBAction)setDefaultForMagnets:(id)sender
 {
-    PrefsController* __weak weakSelf = self;
+    PrefsController* TR_OBJC_WEAK_REF weakSelf = self;
     [self.fDefaultAppHelper setDefaultForMagnetURLs:^{
         [weakSelf updateDefaultsStates];
     }];
@@ -872,7 +872,7 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
 
 - (IBAction)setDefaultForTorrentFiles:(id)sender
 {
-    PrefsController* __weak weakSelf = self;
+    PrefsController* TR_OBJC_WEAK_REF weakSelf = self;
     [self.fDefaultAppHelper setDefaultForTorrentFiles:^{
         [weakSelf updateDefaultsStates];
     }];

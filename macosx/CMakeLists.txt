@@ -15,6 +15,19 @@ else()
     find_program(ACTOOL_EXECUTABLE actool REQUIRED)
 endif()
 
+set(TR_OBJC_WEAK_PROPERTY weak)
+set(TR_OBJC_WEAK_REF __weak)
+set(TR_MACOS_OBJC_WEAK_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:C,CXX>:-fobjc-weak>")
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.7)
+    set(TR_OBJC_WEAK_PROPERTY assign)
+    set(TR_OBJC_WEAK_REF __unsafe_unretained)
+    set(TR_MACOS_OBJC_WEAK_COMPILE_OPTIONS)
+endif()
+
+add_compile_definitions(
+    TR_OBJC_WEAK=${TR_OBJC_WEAK_PROPERTY}
+    TR_OBJC_WEAK_REF=${TR_OBJC_WEAK_REF})
+
 set(MAC_BUNDLE_NAME Transmission)
 
 add_compile_options(
@@ -27,7 +40,7 @@ add_compile_options(
     $<$<COMPILE_LANGUAGE:C,CXX>:-fobjc-arc>
 
     # equivalent of XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_WEAK YES for this directory
-    $<$<COMPILE_LANGUAGE:C,CXX>:-fobjc-weak>
+    ${TR_MACOS_OBJC_WEAK_COMPILE_OPTIONS}
 
     # GNU extensions are good practice in Objective-C
     $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-gnu>

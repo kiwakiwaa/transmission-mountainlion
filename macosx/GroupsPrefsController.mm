@@ -31,8 +31,8 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
 @property(nonatomic) IBOutlet NSButton* fAutoAssignRulesEditButton;
 
 @property(nonatomic) IBOutlet NSWindow* groupRulesSheetWindow;
-@property(nonatomic, weak) IBOutlet NSPredicateEditor* ruleEditor;
-@property(nonatomic, weak) IBOutlet NSLayoutConstraint* ruleEditorHeightConstraint;
+@property(nonatomic, TR_OBJC_WEAK) IBOutlet NSPredicateEditor* ruleEditor;
+@property(nonatomic, TR_OBJC_WEAK) IBOutlet NSLayoutConstraint* ruleEditorHeightConstraint;
 
 @end
 
