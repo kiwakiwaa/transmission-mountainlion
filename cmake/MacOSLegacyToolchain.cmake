@@ -109,6 +109,35 @@ if(CMAKE_GENERATOR MATCHES "Ninja" AND NOT CMAKE_MAKE_PROGRAM)
     endif()
 endif()
 
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.7)
+    find_program(TR_MACOS_LINKER
+        NAMES ld-latest ld
+        PATHS ${_tr_macos_tool_paths})
+
+    if(TR_MACOS_LINKER)
+        set(_tr_macos_linker_flag "-fuse-ld=${TR_MACOS_LINKER}")
+        foreach(_tr_macos_linker_flags_var
+                CMAKE_EXE_LINKER_FLAGS_INIT
+                CMAKE_MODULE_LINKER_FLAGS_INIT
+                CMAKE_SHARED_LINKER_FLAGS_INIT)
+            string(APPEND ${_tr_macos_linker_flags_var}
+                " ${_tr_macos_linker_flag}")
+        endforeach()
+
+        foreach(_tr_macos_linker_flags_var
+                CMAKE_EXE_LINKER_FLAGS
+                CMAKE_MODULE_LINKER_FLAGS
+                CMAKE_SHARED_LINKER_FLAGS)
+            if(NOT "${${_tr_macos_linker_flags_var}}" MATCHES "(^| )${_tr_macos_linker_flag}($| )")
+                string(APPEND ${_tr_macos_linker_flags_var}
+                    " ${_tr_macos_linker_flag}")
+                set(${_tr_macos_linker_flags_var} "${${_tr_macos_linker_flags_var}}"
+                    CACHE STRING "Linker flags for the macOS compatibility build" FORCE)
+            endif()
+        endforeach()
+    endif()
+endif()
+
 foreach(_tr_macos_prefix IN LISTS CMAKE_PREFIX_PATH)
     set(_tr_macos_libcxx_dir "${_tr_macos_prefix}/libexec/llvm-16/lib/libc++")
     if(EXISTS "${_tr_macos_libcxx_dir}/libc++.dylib")
