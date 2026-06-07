@@ -528,23 +528,23 @@ tr_target_xib_files(${TR_NAME}-mac
 
 if(TR_MACOS_LEGACY_COMPAT)
     tr_wrap_xib(${TR_NAME}-mac
-        LegacyXibs/FilterBar.xib
+        MountainLionXibs/FilterBar.xib
         "${CMAKE_CURRENT_BINARY_DIR}/FilterBar.nib"
         "")
     tr_wrap_xib(${TR_NAME}-mac
-        LegacyXibs/StatsWindow.xib
+        MountainLionXibs/StatsWindow.xib
         "${CMAKE_CURRENT_BINARY_DIR}/StatsWindow.nib"
         "")
     tr_wrap_xib(${TR_NAME}-mac
-        LegacyXibs/Base.lproj/InfoActivityView.xib
+        MountainLionXibs/Base.lproj/InfoActivityView.xib
         "${CMAKE_CURRENT_BINARY_DIR}/Base.lproj/InfoActivityView.nib"
         Base.lproj)
     tr_wrap_xib(${TR_NAME}-mac
-        LegacyXibs/Base.lproj/InfoOptionsView.xib
+        MountainLionXibs/Base.lproj/InfoOptionsView.xib
         "${CMAKE_CURRENT_BINARY_DIR}/Base.lproj/InfoOptionsView.nib"
         Base.lproj)
     tr_wrap_xib(${TR_NAME}-mac
-        LegacyXibs/Base.lproj/MainMenu.xib
+        MountainLionXibs/Base.lproj/MainMenu.xib
         "${CMAKE_CURRENT_BINARY_DIR}/Base.lproj/MainMenu.nib"
         Base.lproj)
 endif()
