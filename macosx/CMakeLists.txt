@@ -4,7 +4,7 @@ if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS TR_MACOS_LEGACY_SUPPORT_MINIMUM)
 endif()
 
 set(TR_MACOS_USE_SOURCE_IMAGE_ASSETS OFF)
-if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.7)
+if(TR_MACOS_SNOW_LEOPARD_COMPAT)
     set(TR_MACOS_USE_SOURCE_IMAGE_ASSETS ON)
 endif()
 
@@ -17,10 +17,12 @@ endif()
 
 set(TR_OBJC_WEAK_PROPERTY weak)
 set(TR_OBJC_WEAK_REF __weak)
+set(TR_MACOS_OBJC_ARC_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:C,CXX>:-fobjc-arc>")
 set(TR_MACOS_OBJC_WEAK_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:C,CXX>:-fobjc-weak>")
-if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.7)
+if(TR_MACOS_SNOW_LEOPARD_COMPAT)
     set(TR_OBJC_WEAK_PROPERTY assign)
     set(TR_OBJC_WEAK_REF __unsafe_unretained)
+    set(TR_MACOS_OBJC_ARC_COMPILE_OPTIONS)
     set(TR_MACOS_OBJC_WEAK_COMPILE_OPTIONS)
 endif()
 
@@ -37,7 +39,7 @@ add_compile_options(
     "$<$<COMPILE_LANG_AND_ID:CXX,AppleClang,Clang>:-fno-modules;-Xclang;-fno-cxx-modules>"
 
     # equivalent of XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES for this directory
-    $<$<COMPILE_LANGUAGE:C,CXX>:-fobjc-arc>
+    ${TR_MACOS_OBJC_ARC_COMPILE_OPTIONS}
 
     # equivalent of XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_WEAK YES for this directory
     ${TR_MACOS_OBJC_WEAK_COMPILE_OPTIONS}
@@ -276,7 +278,7 @@ if(TR_ENABLE_SPARKLE)
             SparkleProxy.mm)
 endif()
 
-if(TR_MACOS_LEGACY_COMPAT)
+if(TR_MACOS_MOUNTAIN_LION_COMPAT)
     target_compile_options(${TR_NAME}-mac PRIVATE
         -include ${CMAKE_CURRENT_SOURCE_DIR}/CocoaCompatibility.h
         -Wno-nullability-completeness)
@@ -293,7 +295,7 @@ set(XIB_FILES
     MessageWindow.xib
     StatusBar.xib
     URLSheetWindow.xib)
-if(NOT TR_MACOS_LEGACY_COMPAT)
+if(NOT TR_MACOS_MOUNTAIN_LION_COMPAT)
     list(APPEND XIB_FILES
         FilterBar.xib
         StatsWindow.xib)
@@ -476,7 +478,7 @@ set(BASE_XIB_FILES
     MainMenu.xib
     PrefsWindow.xib)
 set(BASE_XIB_SOURCE_FILES ${BASE_XIB_FILES})
-if(TR_MACOS_LEGACY_COMPAT)
+if(TR_MACOS_MOUNTAIN_LION_COMPAT)
     list(REMOVE_ITEM BASE_XIB_SOURCE_FILES
         InfoActivityView.xib
         InfoOptionsView.xib
@@ -526,7 +528,7 @@ tr_target_xib_files(${TR_NAME}-mac
     ${XIB_FILES}
     ${BASE_XIB_SOURCE_FILES})
 
-if(TR_MACOS_LEGACY_COMPAT)
+if(TR_MACOS_MOUNTAIN_LION_COMPAT)
     tr_wrap_xib(${TR_NAME}-mac
         MountainLionXibs/FilterBar.xib
         "${CMAKE_CURRENT_BINARY_DIR}/FilterBar.nib"
