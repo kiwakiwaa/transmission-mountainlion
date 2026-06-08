@@ -132,6 +132,10 @@ typedef NS_ENUM(NSInteger, SegmentTag) {
         NSIndexSet* indexes = TRUnarchiveObjectFromData(
             [pasteboard dataForType:kGroupTableViewDataType],
             [NSSet setWithObject:NSIndexSet.class]);
+        if (indexes == nil || indexes.firstIndex == NSNotFound)
+        {
+            return NO;
+        }
         NSInteger oldRow = indexes.firstIndex;
 
         if (oldRow < newRow)
