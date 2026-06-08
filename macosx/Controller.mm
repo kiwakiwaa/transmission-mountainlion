@@ -32,7 +32,10 @@
 
 #import "CocoaCompatibility.h"
 #import "LegacyArchiving.h"
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
 #import "LegacyURLRequest.h"
+#endif
 
 #import "Controller.h"
 #import "Torrent.h"
@@ -275,7 +278,11 @@ static void removeKeRangerRansomware()
     NSLog(@"OSX.KeRanger.A ransomware removal completed, proceeding to normal operation");
 }
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+@interface Controller ()<NSURLSessionDataDelegate, NSURLSessionDownloadDelegate, PowerManagerDelegate, SystemNotificationControllerDelegate>
+#else
 @interface Controller ()<PowerManagerDelegate, SystemNotificationControllerDelegate>
+#endif
 
 @property(nonatomic) IBOutlet NSWindow* fWindow;
 @property(nonatomic) NSLayoutConstraint* fMinHeightConstraint;
@@ -332,7 +339,11 @@ static void removeKeRangerRansomware()
 @property(nonatomic) NSMutableArray* fAutoImportedNames;
 @property(nonatomic) NSTimer* fAutoImportTimer;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+@property(nonatomic) NSURLSession* fSession;
+#else
 @property(nonatomic) NSMutableDictionary* fURLDownloadTasks;
+#endif
 
 @property(nonatomic) NSMutableSet* fAddingTransfers;
 
@@ -586,7 +597,13 @@ static void removeKeRangerRansomware()
         _fDisplayedTorrents = [[NSMutableArray alloc] init];
         _fTorrentHashes = [[NSMutableDictionary alloc] init];
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+        NSURLSessionConfiguration* configuration = NSURLSessionConfiguration.defaultSessionConfiguration;
+        configuration.requestCachePolicy = NSURLRequestReloadIgnoringLocalAndRemoteCacheData;
+        _fSession = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:nil];
+#else
         _fURLDownloadTasks = [[NSMutableDictionary alloc] init];
+#endif
 
         _fInfoController = [[InfoWindowController alloc] init];
 
@@ -1062,12 +1079,17 @@ static void removeKeRangerRansomware()
         }
     }
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+    //remove all torrent downloads
+    [self.fSession invalidateAndCancel];
+#else
     //remove all torrent downloads
     for (TRURLRequestTask* task in [self.fURLDownloadTasks allValues])
     {
         [task cancel];
     }
     [self.fURLDownloadTasks removeAllObjects];
+#endif
 
     //remember window states
     [self.fDefaults setBool:[self.fInfoController.window isVisible] forKey:@"InfoVisible"];
@@ -1136,6 +1158,8 @@ static void removeKeRangerRansomware()
 
 #pragma mark - URL Downloads
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+
 - (void)forgetURLDownloadForKey:(NSString*)urlKey
 {
     if (urlKey)
@@ -1143,6 +1167,8 @@ static void removeKeRangerRansomware()
         [self.fURLDownloadTasks removeObjectForKey:urlKey];
     }
 }
+
+#endif
 
 - (BOOL)validateTorrentDownloadResponse:(NSURLResponse*)response originalURLString:(NSString*)originalURLString
 {
@@ -1219,6 +1245,62 @@ static void removeKeRangerRansomware()
         [alert runModal];
     });
 }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+
+#pragma mark - NSURLSessionDelegate
+
+- (void)URLSession:(NSURLSession*)session
+              dataTask:(NSURLSessionDataTask*)dataTask
+    didReceiveResponse:(NSURLResponse*)response
+     completionHandler:(void (^)(NSURLSessionResponseDisposition))completionHandler
+{
+    (void)session;
+
+    if ([self validateTorrentDownloadResponse:response originalURLString:dataTask.originalRequest.URL.absoluteString])
+    {
+        completionHandler(NSURLSessionResponseBecomeDownload);
+        return;
+    }
+
+    completionHandler(NSURLSessionResponseCancel);
+}
+
+- (void)URLSession:(NSURLSession*)session
+                 dataTask:(NSURLSessionDataTask*)dataTask
+    didBecomeDownloadTask:(NSURLSessionDownloadTask*)downloadTask
+{
+    (void)session;
+    (void)dataTask;
+    (void)downloadTask;
+}
+
+- (void)URLSession:(NSURLSession*)session
+                 downloadTask:(NSURLSessionDownloadTask*)downloadTask
+    didFinishDownloadingToURL:(NSURL*)location
+{
+    (void)session;
+
+    [self openDownloadedTorrentAtURL:location
+                            response:downloadTask.response
+                   originalURLString:downloadTask.originalRequest.URL.absoluteString];
+}
+
+- (void)URLSession:(NSURLSession*)session task:(NSURLSessionTask*)task didCompleteWithError:(NSError*)error
+{
+    (void)session;
+
+    if (!error)
+    {
+        return;
+    }
+
+    NSString* originalURLString = task.originalRequest.URL.absoluteString;
+    NSString* currentURLString = task.currentRequest.URL.absoluteString ?: originalURLString;
+    [self showTorrentDownloadError:error originalURLString:originalURLString currentURLString:currentURLString];
+}
+
+#endif
 
 #pragma mark -
 
@@ -1668,6 +1750,21 @@ static void removeKeRangerRansomware()
             return;
         }
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+        [self.fSession getAllTasksWithCompletionHandler:^(NSArray* tasks) {
+            for (NSURLSessionTask* task in tasks)
+            {
+                if ([task.originalRequest.URL isEqual:url])
+                {
+                    NSLog(@"Already downloading %@", url);
+                    return;
+                }
+            }
+
+            NSURLSessionDataTask* download = [self.fSession dataTaskWithURL:url];
+            [download resume];
+        }];
+#else
         NSString* urlKey = url.absoluteString;
         if ([self.fURLDownloadTasks objectForKey:urlKey])
         {
@@ -1694,6 +1791,7 @@ static void removeKeRangerRansomware()
                   }];
         [self.fURLDownloadTasks setObject:task forKey:urlKey];
         [task resume];
+#endif
     }
 }
 
