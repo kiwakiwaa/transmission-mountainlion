@@ -18,6 +18,21 @@
 #endif
 #endif
 
+#ifndef __has_include
+#define __has_include(x) 0
+#endif
+
+#if __has_include(<UserNotifications/UserNotifications.h>)
+#define TR_HAS_USER_NOTIFICATIONS 1
+#if __has_feature(modules)
+@import UserNotifications;
+#else
+#import <UserNotifications/UserNotifications.h>
+#endif
+#else
+#define TR_HAS_USER_NOTIFICATIONS 0
+#endif
+
 #include <atomic> /* atomic, atomic_fetch_add_explicit, memory_order_relaxed */
 
 #include <libtransmission/transmission.h>
@@ -71,7 +86,9 @@
 #import "ExpandedPathToIconTransformer.h"
 #import "VersionComparator.h"
 #import "PowerManager.h"
+#if !TR_HAS_USER_NOTIFICATIONS
 #import "SystemNotificationController.h"
+#endif
 #import "Utils.h"
 
 typedef NSString* ToolbarItemIdentifier NS_TYPED_EXTENSIBLE_ENUM;
@@ -137,6 +154,14 @@ static CGFloat const kBottomBarHeight = 24.0;
 static NSTimeInterval const kUpdateUISeconds = 1.0;
 
 static NSString* const kTransferPlist = @"Transfers.plist";
+
+#if TR_HAS_USER_NOTIFICATIONS
+static NSString* const kNotificationActionShow = @"actionShow";
+static NSString* const kNotificationCategoryShow = @"categoryShow";
+#endif
+
+static NSString* const kNotificationUserInfoHashKey = @"Hash";
+static NSString* const kNotificationUserInfoLocationKey = @"Location";
 
 static NSString* const kWebsiteURL = @"https://transmissionbt.com/";
 static NSString* const kForumURL = @"https://forum.transmissionbt.com/";
@@ -279,9 +304,17 @@ static void removeKeRangerRansomware()
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+#if TR_HAS_USER_NOTIFICATIONS
+@interface Controller ()<NSURLSessionDataDelegate, NSURLSessionDownloadDelegate, PowerManagerDelegate, UNUserNotificationCenterDelegate>
+#else
 @interface Controller ()<NSURLSessionDataDelegate, NSURLSessionDownloadDelegate, PowerManagerDelegate, SystemNotificationControllerDelegate>
+#endif
+#else
+#if TR_HAS_USER_NOTIFICATIONS
+@interface Controller ()<PowerManagerDelegate, UNUserNotificationCenterDelegate>
 #else
 @interface Controller ()<PowerManagerDelegate, SystemNotificationControllerDelegate>
+#endif
 #endif
 
 @property(nonatomic) IBOutlet NSWindow* fWindow;
@@ -334,7 +367,9 @@ static void removeKeRangerRansomware()
 @property(nonatomic, readonly) BOOL fPauseOnLaunch;
 
 @property(nonatomic) Badger* fBadger;
+#if !TR_HAS_USER_NOTIFICATIONS
 @property(nonatomic) SystemNotificationController* fNotificationController;
+#endif
 
 @property(nonatomic) NSMutableArray* fAutoImportedNames;
 @property(nonatomic) NSTimer* fAutoImportTimer;
@@ -402,8 +437,10 @@ static void removeKeRangerRansomware()
     if ((self = [super init]))
     {
         _fDefaults = NSUserDefaults.standardUserDefaults;
+#if !TR_HAS_USER_NOTIFICATIONS
         _fNotificationController = [[SystemNotificationController alloc] init];
         _fNotificationController.delegate = self;
+#endif
 
         //checks for old version speeds of -1
         if ([_fDefaults integerForKey:@"UploadLimit"] < 0)
@@ -880,7 +917,31 @@ static void removeKeRangerRansomware()
 
 - (void)applicationWillFinishLaunching:(NSNotification*)notification
 {
+#if TR_HAS_USER_NOTIFICATIONS
+    if (@available(macOS 10.14, *))
+    {
+        UNUserNotificationCenter.currentNotificationCenter.delegate = self;
+
+        UNNotificationAction* actionShow = [UNNotificationAction actionWithIdentifier:kNotificationActionShow
+                                                                                title:NSLocalizedString(@"Show", "notification button")
+                                                                              options:UNNotificationActionOptionForeground];
+        UNNotificationCategory* categoryShow = [UNNotificationCategory categoryWithIdentifier:kNotificationCategoryShow
+                                                                                      actions:@[ actionShow ]
+                                                                            intentIdentifiers:@[]
+                                                                                      options:UNNotificationCategoryOptionNone];
+        [UNUserNotificationCenter.currentNotificationCenter setNotificationCategories:[NSSet setWithObject:categoryShow]];
+        [UNUserNotificationCenter.currentNotificationCenter
+            requestAuthorizationWithOptions:(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge)
+                          completionHandler:^(BOOL /*granted*/, NSError* _Nullable error) {
+                              if (error.code > 0)
+                              {
+                                  NSLog(@"UserNotifications not configured: %@", error.localizedDescription);
+                              }
+                          }];
+    }
+#else
     [self.fNotificationController configureUserNotifications];
+#endif
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification
@@ -918,7 +979,20 @@ static void removeKeRangerRansomware()
                                                         andEventID:kAEOpenContents];
 
     //if we were opened from a user notification, do the corresponding action
+#if TR_HAS_USER_NOTIFICATIONS
+    if (@available(macOS 10.14, *))
+    {
+        UNNotificationResponse* launchNotification = notification.userInfo[NSApplicationLaunchUserNotificationKey];
+        if (launchNotification)
+        {
+            [self userNotificationCenter:UNUserNotificationCenter.currentNotificationCenter
+                didReceiveNotificationResponse:launchNotification withCompletionHandler:^{
+                }];
+        }
+    }
+#else
     [self.fNotificationController handleLaunchNotificationFromApplicationNotification:notification];
+#endif
 
     //auto importing
     [self checkAutoImportDirectory];
@@ -2570,6 +2644,85 @@ static void removeKeRangerRansomware()
     self.fTotalTorrentsField.stringValue = totalTorrentsString;
 }
 
+#pragma mark - User Notifications
+
+- (void)deliverDownloadCompleteNotificationWithTorrent:(Torrent*)torrent location:(NSString*)location
+{
+    NSString* title = NSLocalizedString(@"Download Complete", "notification title");
+    NSMutableDictionary* userInfo = [NSMutableDictionary dictionaryWithObject:torrent.hashString forKey:kNotificationUserInfoHashKey];
+    if (location)
+    {
+        userInfo[kNotificationUserInfoLocationKey] = location;
+    }
+
+    [self deliverNotificationWithIdentifier:[@"Download Complete " stringByAppendingString:torrent.hashString] title:title body:torrent.name
+                                   userInfo:userInfo
+                              hasShowAction:YES];
+}
+
+- (void)deliverSeedingCompleteNotificationWithTorrent:(Torrent*)torrent location:(NSString*)location
+{
+    NSString* title = NSLocalizedString(@"Seeding Complete", "notification title");
+    NSMutableDictionary* userInfo = [NSMutableDictionary dictionaryWithObject:torrent.hashString forKey:kNotificationUserInfoHashKey];
+    if (location)
+    {
+        userInfo[kNotificationUserInfoLocationKey] = location;
+    }
+
+    [self deliverNotificationWithIdentifier:[@"Seeding Complete " stringByAppendingString:torrent.hashString] title:title body:torrent.name
+                                   userInfo:userInfo
+                              hasShowAction:YES];
+}
+
+- (void)deliverSpeedLimitChangedNotificationIsLimited:(BOOL)isLimited
+{
+    NSString* title = isLimited ? NSLocalizedString(@"Speed Limit Auto Enabled", "notification title") :
+                                  NSLocalizedString(@"Speed Limit Auto Disabled", "notification title");
+    NSString* body = NSLocalizedString(@"Bandwidth settings changed", "notification description");
+
+    [self deliverNotificationWithIdentifier:@"Bandwidth settings changed" title:title body:body userInfo:nil hasShowAction:NO];
+}
+
+- (void)deliverTorrentFileAutoAddedNotificationWithFileName:(NSString*)fileName
+{
+    NSString* title = NSLocalizedString(@"Torrent File Auto Added", "notification title");
+
+    [self deliverNotificationWithIdentifier:[@"Torrent File Auto Added " stringByAppendingString:fileName] title:title body:fileName
+                                   userInfo:nil
+                              hasShowAction:NO];
+}
+
+- (void)deliverNotificationWithIdentifier:(NSString*)identifier
+                                    title:(NSString*)title
+                                     body:(NSString*)body
+                                 userInfo:(NSDictionary*)userInfo
+                            hasShowAction:(BOOL)hasShowAction
+{
+#if TR_HAS_USER_NOTIFICATIONS
+    if (@available(macOS 10.14, *))
+    {
+        UNMutableNotificationContent* content = [[UNMutableNotificationContent alloc] init];
+        content.title = title;
+        content.body = body;
+        if (hasShowAction)
+        {
+            content.categoryIdentifier = kNotificationCategoryShow;
+        }
+        if (userInfo)
+        {
+            content.userInfo = userInfo;
+        }
+
+        UNNotificationRequest* request = [UNNotificationRequest requestWithIdentifier:identifier content:content trigger:nil];
+        [UNUserNotificationCenter.currentNotificationCenter addNotificationRequest:request withCompletionHandler:nil];
+    }
+#else
+    [self.fNotificationController deliverNotificationWithIdentifier:identifier title:title body:body userInfo:userInfo
+                                                     hasShowAction:hasShowAction];
+#endif
+}
+
+#if !TR_HAS_USER_NOTIFICATIONS
 #pragma mark - SystemNotificationControllerDelegate
 
 - (void)systemNotificationController:(SystemNotificationController*)controller
@@ -2583,14 +2736,47 @@ static void removeKeRangerRansomware()
 {
     [self didActivateNotificationByActionShowWithUserInfo:userInfo];
 }
+#endif
+
+#if TR_HAS_USER_NOTIFICATIONS
+#pragma mark - UNUserNotificationCenterDelegate
+
+- (void)userNotificationCenter:(UNUserNotificationCenter*)center
+       willPresentNotification:(UNNotification*)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
+{
+    completionHandler((UNNotificationPresentationOptions)-1);
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter*)center
+    didReceiveNotificationResponse:(UNNotificationResponse*)response
+             withCompletionHandler:(void (^)(void))completionHandler
+{
+    if (!response.notification.request.content.userInfo.count)
+    {
+        completionHandler();
+        return;
+    }
+
+    if ([response.actionIdentifier isEqualToString:UNNotificationDefaultActionIdentifier])
+    {
+        [self didActivateNotificationByDefaultActionWithUserInfo:response.notification.request.content.userInfo];
+    }
+    else if ([response.actionIdentifier isEqualToString:kNotificationActionShow])
+    {
+        [self didActivateNotificationByActionShowWithUserInfo:response.notification.request.content.userInfo];
+    }
+    completionHandler();
+}
+#endif
 
 - (void)didActivateNotificationByActionShowWithUserInfo:(NSDictionary*)userInfo
 {
-    Torrent* torrent = [self torrentForHash:userInfo[@"Hash"]];
+    Torrent* torrent = [self torrentForHash:userInfo[kNotificationUserInfoHashKey]];
     NSString* location = torrent.dataLocation;
     if (!location)
     {
-        location = userInfo[@"Location"];
+        location = userInfo[kNotificationUserInfoLocationKey];
     }
     if (location)
     {
@@ -2600,7 +2786,7 @@ static void removeKeRangerRansomware()
 
 - (void)didActivateNotificationByDefaultActionWithUserInfo:(NSDictionary*)userInfo
 {
-    Torrent* torrent = [self torrentForHash:userInfo[@"Hash"]];
+    Torrent* torrent = [self torrentForHash:userInfo[kNotificationUserInfoHashKey]];
     if (!torrent)
     {
         return;
@@ -2711,8 +2897,7 @@ static void removeKeRangerRansomware()
         }
 
         NSString* location = torrent.dataLocation;
-        [self.fNotificationController deliverDownloadCompleteNotificationWithTorrentName:torrent.name hashString:torrent.hashString
-                                                                                location:location];
+        [self deliverDownloadCompleteNotificationWithTorrent:torrent location:location];
 
         if (![self.fWindow isMainWindow])
         {
@@ -2748,8 +2933,7 @@ static void removeKeRangerRansomware()
     }
 
     NSString* location = torrent.dataLocation;
-    [self.fNotificationController deliverSeedingCompleteNotificationWithTorrentName:torrent.name hashString:torrent.hashString
-                                                                           location:location];
+    [self deliverSeedingCompleteNotificationWithTorrent:torrent location:location];
 
     //removing from the list calls fullUpdateUI
     if (torrent.removeWhenFinishSeeding)
@@ -3605,7 +3789,7 @@ static void removeKeRangerRansomware()
 
     if (![dict[@"ByUser"] boolValue])
     {
-        [self.fNotificationController deliverSpeedLimitChangedNotificationIsLimited:isLimited];
+        [self deliverSpeedLimitChangedNotificationIsLimited:isLimited];
     }
 }
 
@@ -3711,7 +3895,7 @@ static void removeKeRangerRansomware()
 
         [self openFiles:@[ fullFile ] addType:AddTypeAuto forcePath:nil];
 
-        [self.fNotificationController deliverTorrentFileAutoAddedNotificationWithFileName:file];
+        [self deliverTorrentFileAutoAddedNotificationWithFileName:file];
     }
 }
 
