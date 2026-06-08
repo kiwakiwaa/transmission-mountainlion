@@ -125,6 +125,15 @@ static SortType const SortTypeActivity = @"Activity";
 static SortType const SortTypeSize = @"Size";
 static SortType const SortTypeETA = @"ETA";
 
+static NSString* TRStringByRemovingPercentEncoding(NSString* string)
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+    return string.stringByRemovingPercentEncoding;
+#else
+    return [string stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+#endif
+}
+
 typedef NS_ENUM(NSUInteger, SortTag) {
     SortTagOrder = 0,
     SortTagDate = 1,
@@ -1255,7 +1264,7 @@ static void removeKeRangerRansomware()
     NSString* message = [NSString
         stringWithFormat:NSLocalizedString(@"It appears that the file \"%@\" from %@ is not a torrent file.", "Download not a torrent -> message"),
                          suggestedName ?: @"",
-                         [originalURLString stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                         TRStringByRemovingPercentEncoding(originalURLString)];
     dispatch_async(dispatch_get_main_queue(), ^{
         NSAlert* alert = [[NSAlert alloc] init];
         [alert addButtonWithTitle:NSLocalizedString(@"OK", "Download not a torrent -> button")];
@@ -1309,7 +1318,7 @@ static void removeKeRangerRansomware()
 
     NSString* message = [NSString
         stringWithFormat:NSLocalizedString(@"The torrent could not be downloaded from %@: %@.", "Torrent download failed -> message"),
-                         [originalURLString stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding],
+                         TRStringByRemovingPercentEncoding(originalURLString),
                          error.localizedDescription];
     dispatch_async(dispatch_get_main_queue(), ^{
         NSAlert* alert = [[NSAlert alloc] init];
@@ -4934,6 +4943,23 @@ static void removeKeRangerRansomware()
 
     return YES;
 }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+- (BOOL)validateUserInterfaceItem:(id<NSValidatedUserInterfaceItem>)item
+{
+    if ([(id)item isKindOfClass:NSToolbarItem.class])
+    {
+        return [self validateToolbarItem:(NSToolbarItem*)item];
+    }
+
+    if ([(id)item isKindOfClass:NSMenuItem.class])
+    {
+        return [self validateMenuItem:(NSMenuItem*)item];
+    }
+
+    return YES;
+}
+#endif
 
 - (BOOL)validateMenuItem:(NSMenuItem*)menuItem
 {

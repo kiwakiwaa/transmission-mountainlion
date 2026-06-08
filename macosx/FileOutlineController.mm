@@ -437,6 +437,18 @@ typedef NS_ENUM(NSUInteger, FilePriorityMenuTag) { //
 #pragma mark - NSMenuItemValidation
 
 #warning make real view controller (Leopard-only) so that Command-R will work
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+- (BOOL)validateUserInterfaceItem:(id<NSValidatedUserInterfaceItem>)item
+{
+    if ([(id)item isKindOfClass:NSMenuItem.class])
+    {
+        return [self validateMenuItem:(NSMenuItem*)item];
+    }
+
+    return YES;
+}
+#endif
+
 - (BOOL)validateMenuItem:(NSMenuItem*)menuItem
 {
     if (!self.torrent)

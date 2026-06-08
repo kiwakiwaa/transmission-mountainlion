@@ -789,7 +789,11 @@ static NSString* const kWebUIURLFormat = @"http://localhost:%ld/";
 + (int)dateToTimeSum:(NSDate*)date
 {
     NSCalendar* calendar = NSCalendar.currentCalendar;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+    NSDateComponents* components = [calendar components:NSCalendarUnitHour | NSCalendarUnitMinute fromDate:date];
+#else
     NSDateComponents* components = [calendar components:NSHourCalendarUnit | NSMinuteCalendarUnit fromDate:date];
+#endif
     return static_cast<int>(components.hour * 60 + components.minute);
 }
 
