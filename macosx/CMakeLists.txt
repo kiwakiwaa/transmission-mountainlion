@@ -380,8 +380,8 @@ endforeach()
 set(COMPILED_IMAGE_ASSETS
     "${CMAKE_CURRENT_BINARY_DIR}/${APPICON_NAME}.icns")
 
-if(TR_MACOS_USE_SOURCE_IMAGE_ASSETS)
-    set(TR_LEGACY_IMAGE_ASSET_COMMANDS)
+set(TR_LEGACY_IMAGE_ASSET_COMMANDS)
+if(TR_MACOS_LEGACY_COMPAT)
     foreach(IMG IN LISTS IMAGESETS)
         list(APPEND COMPILED_IMAGE_ASSETS
             "${CMAKE_CURRENT_BINARY_DIR}/${IMG}.png"
@@ -394,6 +394,12 @@ if(TR_MACOS_USE_SOURCE_IMAGE_ASSETS)
                 "${CMAKE_CURRENT_SOURCE_DIR}/${IMAGE_ASSETS_DIR}/${IMG}.imageset/${IMG}@2x.png"
                 "${CMAKE_CURRENT_BINARY_DIR}/${IMG}@2x.png")
     endforeach()
+else()
+    list(APPEND COMPILED_IMAGE_ASSETS
+        "${CMAKE_CURRENT_BINARY_DIR}/Assets.car")
+endif()
+
+if(TR_MACOS_USE_SOURCE_IMAGE_ASSETS)
     add_custom_command(
         OUTPUT ${COMPILED_IMAGE_ASSETS}
         COMMAND
@@ -408,8 +414,6 @@ if(TR_MACOS_USE_SOURCE_IMAGE_ASSETS)
     source_group("Generated Files"
         FILES ${COMPILED_IMAGE_ASSETS})
 else()
-    list(APPEND COMPILED_IMAGE_ASSETS
-        "${CMAKE_CURRENT_BINARY_DIR}/Assets.car")
     add_custom_command(
         OUTPUT
             ${COMPILED_IMAGE_ASSETS}
@@ -422,6 +426,7 @@ else()
             --app-icon ${APPICON_NAME}
             --output-partial-info-plist "${CMAKE_CURRENT_BINARY_DIR}/${APPICON_NAME}.Info.plist"
             ${IMAGE_ASSETS_DIR}
+        ${TR_LEGACY_IMAGE_ASSET_COMMANDS}
         DEPENDS ${IMAGE_ASSETS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     source_group("Generated Files"
