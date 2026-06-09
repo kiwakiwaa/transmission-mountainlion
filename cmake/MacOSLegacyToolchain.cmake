@@ -180,12 +180,26 @@ endif()
 foreach(_tr_macos_prefix IN LISTS CMAKE_PREFIX_PATH)
     set(_tr_macos_libcxx_dir "${_tr_macos_prefix}/libexec/llvm-16/lib/libc++")
     if(EXISTS "${_tr_macos_libcxx_dir}/libc++.dylib")
+        set(_tr_macos_libcxx_link_flags "-L${_tr_macos_libcxx_dir} -Wl,-rpath,${_tr_macos_libcxx_dir}")
         foreach(_tr_macos_linker_flags_var
                 CMAKE_EXE_LINKER_FLAGS_INIT
                 CMAKE_MODULE_LINKER_FLAGS_INIT
                 CMAKE_SHARED_LINKER_FLAGS_INIT)
             string(APPEND ${_tr_macos_linker_flags_var}
-                " -L${_tr_macos_libcxx_dir} -Wl,-rpath,${_tr_macos_libcxx_dir}")
+                " ${_tr_macos_libcxx_link_flags}")
+        endforeach()
+
+        foreach(_tr_macos_linker_flags_var
+                CMAKE_EXE_LINKER_FLAGS
+                CMAKE_MODULE_LINKER_FLAGS
+                CMAKE_SHARED_LINKER_FLAGS)
+            string(FIND "${${_tr_macos_linker_flags_var}}" "-L${_tr_macos_libcxx_dir}" _tr_macos_libcxx_link_flags_pos)
+            if(_tr_macos_libcxx_link_flags_pos EQUAL -1)
+                string(APPEND ${_tr_macos_linker_flags_var}
+                    " ${_tr_macos_libcxx_link_flags}")
+                set(${_tr_macos_linker_flags_var} "${${_tr_macos_linker_flags_var}}"
+                    CACHE STRING "Linker flags for the macOS compatibility build" FORCE)
+            endif()
         endforeach()
         break()
     endif()
