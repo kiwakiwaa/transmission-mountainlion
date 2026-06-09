@@ -207,6 +207,24 @@ typedef NSUInteger NSMatchingOptions;
 #endif
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+@interface NSArray (TRObjectSubscripting)
+- (id)objectAtIndexedSubscript:(NSUInteger)idx;
+@end
+
+@interface NSMutableArray (TRObjectSubscripting)
+- (void)setObject:(id)obj atIndexedSubscript:(NSUInteger)idx;
+@end
+
+@interface NSDictionary (TRObjectSubscripting)
+- (id)objectForKeyedSubscript:(id)key;
+@end
+
+@interface NSMutableDictionary (TRObjectSubscripting)
+- (void)setObject:(id)obj forKeyedSubscript:(id<NSCopying>)key;
+@end
+#endif
+
 #import "LegacyColors.h"
 #import "LegacyConstraints.h"
 #import "LegacyPowerActivity.h"

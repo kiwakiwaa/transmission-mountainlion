@@ -211,6 +211,7 @@ target_sources(${TR_NAME}-mac
         LegacySheets.mm
         LegacyStackView.h
         LegacyStackView.mm
+        LegacySubscripting.mm
         LegacySymbols.h
         LegacySymbols.mm
         LegacyTitlebarAccessory.h
