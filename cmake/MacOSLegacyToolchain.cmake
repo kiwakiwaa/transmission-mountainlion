@@ -98,6 +98,45 @@ if(NOT CMAKE_CXX_COMPILER)
     endif()
 endif()
 
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.7)
+    set(_tr_macos_arclite_candidates)
+
+    if(CMAKE_C_COMPILER MATCHES "^/Developer/usr/bin/clang")
+        list(APPEND _tr_macos_arclite_candidates
+            "/Developer/usr/lib/arc/libarclite_macosx.a")
+    elseif(CMAKE_C_COMPILER MATCHES "^/opt/local/bin/clang.*-mp-([0-9]+)$")
+        list(APPEND _tr_macos_arclite_candidates
+            "/opt/local/libexec/llvm-${CMAKE_MATCH_1}/lib/arc/libarclite_macosx.a")
+    elseif(CMAKE_C_COMPILER MATCHES "^/opt/local/libexec/llvm-([0-9]+)/bin/clang")
+        list(APPEND _tr_macos_arclite_candidates
+            "/opt/local/libexec/llvm-${CMAKE_MATCH_1}/lib/arc/libarclite_macosx.a")
+    endif()
+
+    list(APPEND _tr_macos_arclite_candidates
+        "/Developer/usr/lib/arc/libarclite_macosx.a"
+        "/opt/local/libexec/llvm-16/lib/arc/libarclite_macosx.a")
+    list(REMOVE_DUPLICATES _tr_macos_arclite_candidates)
+
+    set(_tr_macos_arclite_found OFF)
+    foreach(_tr_macos_arclite_candidate IN LISTS _tr_macos_arclite_candidates)
+        if(EXISTS "${_tr_macos_arclite_candidate}")
+            set(_tr_macos_arclite_found ON)
+            set(TR_MACOS_ARCLITE_LIBRARY "${_tr_macos_arclite_candidate}"
+                CACHE FILEPATH "ARC-lite runtime archive for macOS 10.6 compatibility builds" FORCE)
+            break()
+        endif()
+    endforeach()
+
+    if(NOT _tr_macos_arclite_found)
+        string(REPLACE ";" "\n  " _tr_macos_arclite_expected "${_tr_macos_arclite_candidates}")
+        message(FATAL_ERROR
+            "Objective-C ARC targeting Mac OS X 10.6 requires libarclite_macosx.a, "
+            "but it was not found for the active compiler (${CMAKE_C_COMPILER}).\n"
+            "Install the Xcode 4.6.1 Mac ARC-lite archive at one of:\n"
+            "  ${_tr_macos_arclite_expected}")
+    endif()
+endif()
+
 if(CMAKE_GENERATOR MATCHES "Ninja" AND NOT CMAKE_MAKE_PROGRAM)
     find_program(TR_MACOS_NINJA
         NAMES ninja

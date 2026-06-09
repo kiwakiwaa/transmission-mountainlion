@@ -19,11 +19,37 @@ set(TR_OBJC_WEAK_PROPERTY weak)
 set(TR_OBJC_WEAK_REF __weak)
 set(TR_MACOS_OBJC_ARC_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:C,CXX>:-fobjc-arc>")
 set(TR_MACOS_OBJC_WEAK_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:C,CXX>:-fobjc-weak>")
+set(TR_MACOS_ARCLITE_LINK_OPTIONS)
 if(TR_MACOS_SNOW_LEOPARD_COMPAT)
-    set(TR_OBJC_WEAK_PROPERTY assign)
-    set(TR_OBJC_WEAK_REF __unsafe_unretained)
-    set(TR_MACOS_OBJC_ARC_COMPILE_OPTIONS)
-    set(TR_MACOS_OBJC_WEAK_COMPILE_OPTIONS)
+    set(TR_MACOS_OBJC_WEAK_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:C,CXX>:SHELL:-Xclang -fobjc-runtime-has-weak>")
+
+    if(NOT TR_MACOS_ARCLITE_LIBRARY OR NOT EXISTS "${TR_MACOS_ARCLITE_LIBRARY}")
+        message(FATAL_ERROR "Snow Leopard ARC builds require libarclite_macosx.a, but TR_MACOS_ARCLITE_LIBRARY is not set")
+    endif()
+
+    list(APPEND TR_MACOS_ARCLITE_LINK_OPTIONS "$<$<LINK_LANGUAGE:C,CXX>:-Wl,-force_load,${TR_MACOS_ARCLITE_LIBRARY}>")
+
+    # ARC-lite patches these lazy runtime/class references on 10.6 at load time.
+    foreach(TR_MACOS_ARCLITE_SYMBOL IN ITEMS
+            _objc_retain
+            _objc_release
+            _objc_autorelease
+            _objc_retainAutorelease
+            _objc_retainAutoreleaseReturnValue
+            _objc_retainAutoreleasedReturnValue
+            _objc_unsafeClaimAutoreleasedReturnValue
+            _objc_autoreleaseReturnValue
+            _objc_storeStrong
+            _objc_retainBlock
+            _objc_autoreleasePoolPush
+            _objc_autoreleasePoolPop
+            _objc_alloc
+            _objc_allocWithZone
+            _objc_alloc_init
+            _OBJC_CLASS_$_NSOrderedSet
+            _OBJC_CLASS_$_NSMutableOrderedSet)
+        list(APPEND TR_MACOS_ARCLITE_LINK_OPTIONS "$<$<LINK_LANGUAGE:C,CXX>:-Wl,-U,${TR_MACOS_ARCLITE_SYMBOL}>")
+    endforeach()
 endif()
 
 add_compile_definitions(
@@ -52,7 +78,8 @@ add_compile_options(
 
 add_link_options(
     # equivalent of XCODE_ATTRIBUTE_DEAD_CODE_STRIPPING YES for this directory
-    $<$<LINK_LANGUAGE:C,CXX>:-dead_strip>)
+    $<$<LINK_LANGUAGE:C,CXX>:-dead_strip>
+    ${TR_MACOS_ARCLITE_LINK_OPTIONS})
 
 if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_GREATER_EQUAL 12.0)
     add_subdirectory(QuickLookExtension)
@@ -267,6 +294,13 @@ target_sources(${TR_NAME}-mac
         VersionComparator.mm
         WebSeedTableView.h
         WebSeedTableView.mm)
+
+if(TR_MACOS_SNOW_LEOPARD_COMPAT)
+    target_sources(${TR_NAME}-mac
+        PRIVATE
+            PLWeakCompatibilityStubs.h
+            PLWeakCompatibilityStubs.mm)
+endif()
 
 target_compile_definitions(${TR_NAME}-mac
     PRIVATE

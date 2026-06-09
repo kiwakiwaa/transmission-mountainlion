@@ -77,6 +77,18 @@ static inline NSEvent* NSAppCurrentEvent(void)
 #define API_AVAILABLE(...)
 #endif
 
+#ifndef NS_UNAVAILABLE
+#define NS_UNAVAILABLE
+#endif
+
+#ifndef CFBridgingRetain
+#define CFBridgingRetain(X) ((__bridge_retained CFTypeRef)(X))
+#endif
+
+#ifndef CFBridgingRelease
+#define CFBridgingRelease(X) ((__bridge_transfer id)(X))
+#endif
+
 #ifndef NS_TYPED_EXTENSIBLE_ENUM
 #define NS_TYPED_EXTENSIBLE_ENUM
 #endif
