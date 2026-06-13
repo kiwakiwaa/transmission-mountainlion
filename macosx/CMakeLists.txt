@@ -305,7 +305,8 @@ endif()
 
 target_compile_definitions(${TR_NAME}-mac
     PRIVATE
-        TR_ENABLE_SPARKLE=$<BOOL:${TR_ENABLE_SPARKLE}>)
+        TR_ENABLE_SPARKLE=$<BOOL:${TR_ENABLE_SPARKLE}>
+        TR_MACOS_SNOW_LEOPARD_COMPAT=$<BOOL:${TR_MACOS_SNOW_LEOPARD_COMPAT}>)
 
 if(TR_ENABLE_SPARKLE)
     target_sources(${TR_NAME}-mac
@@ -330,7 +331,7 @@ set(XIB_FILES
     MessageWindow.xib
     StatusBar.xib
     URLSheetWindow.xib)
-if(NOT TR_MACOS_MOUNTAIN_LION_COMPAT)
+if(NOT (TR_MACOS_MOUNTAIN_LION_COMPAT AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9))
     list(APPEND XIB_FILES
         FilterBar.xib
         StatsWindow.xib)
@@ -518,7 +519,7 @@ set(BASE_XIB_FILES
     MainMenu.xib
     PrefsWindow.xib)
 set(BASE_XIB_SOURCE_FILES ${BASE_XIB_FILES})
-if(TR_MACOS_MOUNTAIN_LION_COMPAT)
+if(TR_MACOS_MOUNTAIN_LION_COMPAT AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
     list(REMOVE_ITEM BASE_XIB_SOURCE_FILES
         InfoActivityView.xib
         InfoOptionsView.xib
@@ -564,11 +565,47 @@ target_sources(${TR_NAME}-mac
     PRIVATE
         ${RESOURCES})
 
-tr_target_xib_files(${TR_NAME}-mac
-    ${XIB_FILES}
-    ${BASE_XIB_SOURCE_FILES})
+if(TR_MACOS_SNOW_LEOPARD_COMPAT)
+    set(TR_MACOS_SNOW_LEOPARD_XIB_FILES
+        ${XIB_FILES}
+        FilterBar.xib
+        StatsWindow.xib)
 
-if(TR_MACOS_MOUNTAIN_LION_COMPAT)
+    foreach(XIB_FILE IN LISTS TR_MACOS_SNOW_LEOPARD_XIB_FILES)
+        get_filename_component(XIB_NAME_WLE "${XIB_FILE}" NAME_WLE)
+
+        tr_wrap_xib(${TR_NAME}-mac
+            SnowLeopardXibs/${XIB_FILE}
+            "${CMAKE_CURRENT_BINARY_DIR}/${XIB_NAME_WLE}.nib"
+            "")
+    endforeach()
+
+    foreach(LANG IN LISTS ENABLED_LINGUAS)
+        foreach(XIB_FILE IN LISTS BASE_XIB_FILES)
+            get_filename_component(XIB_NAME_WLE "${XIB_FILE}" NAME_WLE)
+            set(TR_MACOS_LOCALIZED_XIB_STRINGS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${LANG}.lproj/${XIB_NAME_WLE}.strings")
+
+            if(EXISTS "${TR_MACOS_LOCALIZED_XIB_STRINGS_FILE}")
+                tr_wrap_localized_xib(${TR_NAME}-mac
+                    SnowLeopardXibs/${XIB_FILE}
+                    "${CMAKE_CURRENT_BINARY_DIR}/${LANG}.lproj/${XIB_NAME_WLE}.nib"
+                    ${LANG}.lproj
+                    "${TR_MACOS_LOCALIZED_XIB_STRINGS_FILE}")
+            else()
+                tr_wrap_xib(${TR_NAME}-mac
+                    SnowLeopardXibs/${XIB_FILE}
+                    "${CMAKE_CURRENT_BINARY_DIR}/${LANG}.lproj/${XIB_NAME_WLE}.nib"
+                    ${LANG}.lproj)
+            endif()
+        endforeach()
+    endforeach()
+else()
+    tr_target_xib_files(${TR_NAME}-mac
+        ${XIB_FILES}
+        ${BASE_XIB_SOURCE_FILES})
+endif()
+
+if(TR_MACOS_MOUNTAIN_LION_COMPAT AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9 AND NOT TR_MACOS_SNOW_LEOPARD_COMPAT)
     tr_wrap_xib(${TR_NAME}-mac
         MountainLionXibs/FilterBar.xib
         "${CMAKE_CURRENT_BINARY_DIR}/FilterBar.nib"
@@ -626,7 +663,7 @@ if(USERNOTIFICATIONS_FRAMEWORK)
     target_link_libraries(${TR_NAME}-mac PRIVATE "-weak_framework UserNotifications")
 endif()
 
-if(NOT CMAKE_GENERATOR STREQUAL Xcode)
+if(NOT CMAKE_GENERATOR STREQUAL Xcode AND NOT TR_MACOS_SNOW_LEOPARD_COMPAT)
     add_custom_command(
         TARGET ${TR_NAME}-mac
         POST_BUILD
