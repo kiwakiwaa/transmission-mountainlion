@@ -6,9 +6,7 @@
 #include <libtransmission/utils.h> //tr_getRatio()
 
 #import "InfoActivityViewController.h"
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
 #import "LegacyStackView.h"
-#endif
 #import "LegacyFormatters.h"
 #import "NSStringAdditions.h"
 #import "PiecesView.h"
@@ -75,6 +73,7 @@ static CGFloat const kStackViewVerticalSpacing = 8.0;
 - (void)awakeFromNib
 {
     [super awakeFromNib];
+    TRCheckExpectedStackViewClass(self.fActivityStackView, NSStringFromClass(self.class), @"fActivityStackView");
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
     self.fActivityStackView.translatesAutoresizingMaskIntoConstraints = YES;
     self.fActivityStackView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;

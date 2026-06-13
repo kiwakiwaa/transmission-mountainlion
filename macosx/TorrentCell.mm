@@ -4,12 +4,19 @@
 
 #import "TorrentCell.h"
 #import "CocoaCompatibility.h"
+#import "LegacyStackView.h"
 #import "ProgressBarView.h"
 #import "ProgressGradients.h"
 #import "Torrent.h"
 #import "NSImageAdditions.h"
 
 @implementation TorrentCell
+
+- (void)awakeFromNib
+{
+    [super awakeFromNib];
+    TRCheckExpectedStackViewClass(self.fStackView, NSStringFromClass(self.class), @"fStackView");
+}
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
 - (void)layout

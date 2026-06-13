@@ -3,9 +3,7 @@
 // License text can be found in the licenses/ folder.
 
 #import "InfoOptionsViewController.h"
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
 #import "LegacyStackView.h"
-#endif
 #import "NSStringAdditions.h"
 #import "Torrent.h"
 #import "Utils.h"
@@ -83,6 +81,7 @@ static CGFloat const kStackViewSpacing = 8.0;
 - (void)awakeFromNib
 {
     [super awakeFromNib];
+    TRCheckExpectedStackViewClass(self.fOptionsStackView, NSStringFromClass(self.class), @"fOptionsStackView");
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
     self.fOptionsStackView.translatesAutoresizingMaskIntoConstraints = YES;
     self.fOptionsStackView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
